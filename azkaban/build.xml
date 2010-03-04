@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<project name="azkaban" basedir="." default="all">
+	<property name="batch.base.dir" value="${basedir}/.." />
+	<property file="${batch.base.dir}/build.properties" />
+
+	<property name="name" value="azkaban" />
+	<property name="display.name" value="Azkaban" />
+	<property name="author" value="Richard Park" />
+	<property environment="env" />
+
+	<property name="module.dist.name" value="azkaban" />
+	<property name="module.dist.base" value="${batch.base.dir}/${dist.dir}/azkaban" />
+	<property name="module.dist.dir.war" value="${batch.base.dir}/${dist.dir}/war" />
+	<property name="module.dist.dir" value="${batch.base.dir}/${dist.dir}/azkaban/jars" />
+	<property name="module.dist.static"
+		value="${batch.base.dir}/${dist.dir}/azkaban/web/static" />
+	<property name="module.lib.dir" value="${batch.base.dir}/${lib.dir}" />
+	<property name="module.classes.dir" value="${batch.base.dir}/${dist.dir}/azkaban/classes" />
+	<property name="module.javadoc.dir" value="${batch.base.dir}/${dist.dir}/azkaban/javadoc" />
+	<property name="module.java.dir" value="src/java" />
+
+	<path id="main-classpath">
+		<fileset dir="${batch.base.dir}/${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${batch.base.dir}/${dist.dir}/azkaban-common/jars">
+			<include name="*.jar" />
+		</fileset>
+		<pathelement path="${module.classes.dir}" />
+	</path>
+
+	<!--
+		set the build number based on environment variable, otherwise blank
+	-->
+	<property environment="env"
+		description="System environment variables (including those set by Hudson)" />
+	<condition property="curr.release.snapshot"
+		value="${curr.release}-snapshot-${env.BUILD_NUMBER}" else="${curr.release}">
+		<and>
+			<isset property="env.BUILD_NUMBER" />
+			<not>
+				<equals arg1="" arg2="${env.BUILD_NUMBER}" trim="yes" />
+			</not>
+		</and>
+	</condition>
+
+	<macrodef name="replace-dir">
+		<attribute name="dir" />
+		<sequential>
+			<delete dir="@{dir}" />
+			<mkdir dir="@{dir}" />
+		</sequential>
+	</macrodef>
+
+	<target name="all" depends="clean, jar, srcjar" description="Builds all.." />
+
+	<target name="clean" description="Delete generated files.">
+		<delete dir="${module.dist.base}" />
+	</target>
+
+	<target name="build" description="Compile main source tree java files">
+		<replace-dir dir="${module.classes.dir}" />
+		<!-- copy non-java files to classes dir to load from classpath -->
+		<copy todir="${module.classes.dir}">
+			<fileset dir="${module.java.dir}">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+
+		<replace-dir dir="${module.dist.static}" />
+		<copy todir="${module.dist.static}">
+			<fileset dir="${batch.base.dir}/azkaban/web/static">
+				<exclude name="**/web.xml" />
+			</fileset>
+		</copy>
+		<javac fork="true" executable="${java6.home}/bin/javac" destdir="${module.classes.dir}"
+			target="1.6" debug="true" deprecation="false" failonerror="true">
+			<src path="${module.java.dir}" />
+			<classpath refid="main-classpath" />
+		</javac>
+	</target>
+
+	<target name="jar" depends="build" description="Build server jar file">
+		<mkdir dir="${module.dist.dir}" />
+		<jar destfile="${module.dist.dir}/${module.dist.name}-${curr.release}.jar">
+			<fileset dir="${module.classes.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<!-- include xsds -->
+			<fileset dir="${java.dir}">
+				<include name="**/*.xsd" />
+			</fileset>
+		</jar>
+	</target>
+
+	<target name="srcjar" description="Build source jar file">
+		<mkdir dir="${module.dist.dir}" />
+		<jar destfile="${module.dist.dir}/${module.dist.name}-${curr.release}-src.jar">
+			<fileset dir="${java.dir}">
+				<include name="**/*.java" />
+			</fileset>
+		</jar>
+	</target>
+
+
+	<target name="war" depends="build" description="Build server war file">
+		<replace-dir dir="${module.dist.dir.war}" />
+		<war destfile="${module.dist.dir.war}/${name}.war" webxml="${basedir}/web/web.xml">
+			<classes dir="${module.classes.dir}" />
+			<lib dir="${module.lib.dir}">
+				<exclude name="${module.lib.dir}/servlet-api.jar" />
+				<exclude name="${module.lib.dir}/src/**" />
+			</lib>
+			<lib dir="${batch.base.dir}/${dist.dir}/azkaban-common/jars">
+			</lib>
+			<lib dir="${batch.base.dir}/${dist.dir}/azkaban-common/jars">
+			</lib>
+			<fileset dir="${module.dist.static}/.." />
+		</war>
+	</target>
+
+
+	<target name="snapshot"
+		description="Create a release-snapshot zip file with everything pre-built.">
+		<create-release-artifacts version="${curr.release.snapshot}" />
+	</target>
+
+	<target name="release"
+		description="Create a release zip file with everything pre-built.">
+		<create-release-artifacts version="${curr.release}" />
+	</target>
+
+	<target name="docs" description="Create complete Javadoc documentation">
+		<make-javadocs dir="${module.javadoc.dir}/all"
+			packagenames="*" javadir="${java.dir}" />
+		<make-javadocs dir="${module.javadoc.dir}/client"
+			packagenames="voldemort.versioning.*, voldemort.client.*,voldemort.serialization.*"
+			javadir="${java.dir}" />
+	</target>
+
+	<target name="redeploy" depends="war, deploy">
+	</target>
+
+	<taskdef file="tomcat-tasks.properties">
+		<classpath>
+			<path location="${module.lib.dir}/catalina-ant.jar" />
+		</classpath>
+	</taskdef>
+
+	<target name="list" description="List Tomcat applications">
+		<list url="${tomcat.manager.url}" username="${tomcat.manager.username}"
+			password="${tomcat.manager.password}" />
+	</target>
+
+	<target name="deploy" description="Deploy application" depends="war">
+		<deploy url="${tomcat.manager.url}" username="${tomcat.manager.username}"
+			password="${tomcat.manager.password}" path="${tomcat.context}"
+			update="true" war="file:${module.dist.dir.war}/${name}.war" />
+	</target>
+
+	<target name="undeploy" description="Undeploy application">
+		<undeploy url="${tomcat.manager.url}" username="${tomcat.manager.username}"
+			password="${tomcat.manager.password}" path="${tomcat.context}" />
+	</target>
+
+</project>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<appender name="ConsoleAppender" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="%d{yyyy/MM/dd HH:mm:ss.SSS} %p [%c{1}] [Job-Control] %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="HadoopCLusterAppender" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="test/logs/hadoopCluster.log" />
+		<param name="Append" value="true" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy/MM/dd HH:mm:ss.SSS} %p [%c{1}] [%x] %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="testAppender" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="test/logs/test.log" />
+		<param name="Append" value="true" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy/MM/dd HH:mm:ss.SSS} %p [%c{1}] [%x] %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="jobControlAppender" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="test/logs/JobControl.log" />
+		<param name="Append" value="true" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy/MM/dd HH:mm:ss.SSS} %p [%c{1}] [%x] %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="org.apache.hadoop" additivity="false">
+		<level value="info" />
+		<appender-ref ref="HadoopCLusterAppender" />
+	</logger>
+
+	<logger name="test.batch" additivity="false">
+		<level value="info" />
+		<appender-ref ref="testAppender" />
+	</logger>
+
+	<logger name="azkaban" additivity="true">
+		<level value="info" />
+		<appender-ref ref="jobControlAppender" />
+	</logger>
+	
+	<logger name="org.mortbay" additivity="false">
+		<level value="warn" />
+		<appender-ref ref="ConsoleAppender" />
+	</logger>
+	
+	<logger name="org.apache.velocity" additivity="false">
+		<level value="warn" />
+		<appender-ref ref="ConsoleAppender" />
+	</logger>
+
+	<logger name="org.apache.hadoop.mapred.jobcontrol" additivity="false">
+		<level value="info" />
+		<appender-ref ref="jobControlAppender" />
+	</logger>
+
+	<root>
+		<priority value="info" />
+		<appender-ref ref="ConsoleAppender" />
+	</root>
+
+</log4j:configuration>
+

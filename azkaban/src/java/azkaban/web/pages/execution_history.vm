@@ -1,0 +1,92 @@
+#macro(execing_job $flow)
+  <li>
+    <a class="job-name-${flow.status}" href="${context}/job?id=${flow.name}" title="${flow.name}" name="sched-tree-link">
+      $flow.name
+    </a>
+    #if($flow.hasChildren())
+      <ul>
+        #foreach($subjob in $flow.children)
+          #execing_job($subjob)
+        #end
+      </ul>
+    #end
+  </li>
+#end
+
+
+<html>
+  <head>
+    <title>#appname()</title>
+      <link rel="stylesheet" href="${context}/static/js/jquery-treeview/jquery.treeview.css" />
+      <script src="${context}/static/js/jquery.js" type="text/javascript"></script>
+      <script src="${context}/static/js/jquery.cookie.js" type="text/javascript"></script>
+      <script src="${context}/static/js/jquery-treeview/jquery.treeview.pack.js" type="text/javascript"></script>
+
+      <link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"/>
+      <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"/>
+      <link rel="stylesheet" type="text/css" href="${context}/static/css/job_controller.css"/>
+      <script src="${context}/static/js/job_controller.js" type="text/javascript"></script>
+  </head>
+  <body>
+    #appnamebox()
+    <div id="container">
+      #messages()
+      
+      <h2>Execution History</h2>
+      #if($executions.size() > 0)
+        <table class="jobtable">
+          <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Started</th>
+            <th>Ended</th>
+            <th>Elapsed</th>
+            <th>Status</th>
+            <th>Log</th>
+            <th>Restart</th>
+          </tr>
+          #foreach($flow in $executions)
+            <tr>
+              <td>$flow.id</td>
+              <td><ul id="sched-tree">#execing_job($flow)</ul></td>
+              <td>
+                #if($utils.isNull($flow.started))
+                  &ndash;
+                #else
+                  $utils.formatDateTime($flow.started)
+                #end
+              </td>
+              <td>
+                #if($utils.isNull($flow.ended))
+                  &ndash; 
+                #else
+                  $utils.formatDateTime($flow.ended)
+                #end
+              </td>
+              <td>
+                #if($utils.isNull($flow.ended))
+                  &ndash;
+                #else
+                  $utils.formatPeriod($utils.period($flow.started, $flow.ended))
+                #end
+              </td>
+              <td>
+                $flow.status
+              </td>
+              <td>
+                <a href="${context}/logs?file=${exec.id}">
+                 log
+                </a>
+              </td>
+              <td>
+                <a href="${context}/history?action=restart&id=${flow.id}">restart</a>
+              </td>
+            </tr>
+          #end
+        </table>
+      #else
+        No recorded executions
+      #end
+    </div>
+  </body>
+</html>

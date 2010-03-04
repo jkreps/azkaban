@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+	<listener>
+		<listener-class>azkaban.web.AzkabanServletContextListener</listener-class>
+	</listener>
+
+	<!--
+		<servlet> <servlet-name>default</servlet-name> <servlet-class>
+		org.apache.catalina.servlets.DefaultServlet</servlet-class>
+		<init-param> <param-name>listings</param-name>
+		<param-value>true</param-value> </init-param>
+		<load-on-startup>1</load-on-startup> </servlet>
+	-->
+
+	<servlet>
+		<servlet-name>main</servlet-name>
+		<servlet-class>azkaban.web.pages.IndexServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>logs</servlet-name>
+		<servlet-class>azkaban.web.LogServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>job-detail</servlet-name>
+		<servlet-class>azkaban.web.pages.JobDetailServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>history</servlet-name>
+		<servlet-class>azkaban.web.pages.ExecutionHistoryServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>job-manager</servlet-name>
+		<servlet-class>azkaban.web.JobManagerServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>job-upload</servlet-name>
+		<servlet-class>azkaban.web.pages.JobUploadServlet</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>fs</servlet-name>
+		<servlet-class>azkaban.web.pages.HdfsBrowserServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>main</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>job-detail</servlet-name>
+		<url-pattern>/job</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>job-upload</servlet-name>
+		<url-pattern>/job-upload/*</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>logs</servlet-name>
+		<url-pattern>/logs</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>history</servlet-name>
+		<url-pattern>/history</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>job-manager</servlet-name>
+		<url-pattern>/api/jobs</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>fs</servlet-name>
+		<url-pattern>/fs/*</url-pattern>
+	</servlet-mapping>
+
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.css</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.js</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.gif</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.png</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.jpg</url-pattern>
+	</servlet-mapping>
+</web-app>

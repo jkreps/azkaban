@@ -1,0 +1,184 @@
+
+#macro(jobnames $jobName)
+  <li>
+    <input type="checkbox" name="jobs" value="${jobName}" class="sched-tree-checkbox"/>
+    <a class="job-name" href="${context}/job?id=${jobName}" name="sched-tree-link">
+      $jobName
+    </a>
+    
+    #if($flows.getFlow($jobName).hasChildren())
+      <ul>
+        #foreach($subjob in $flows.getFlow($jobName).children)
+          #jobnames($subjob.name)
+        #end
+      </ul>
+    #end
+  </li>
+#end
+
+#macro(execing_job $desc)
+  <li>
+    <a class="job-name" href="${context}/job?id=${desc.id}" title="${desc.jobClass.name}">
+      $desc.name
+    </a>
+    #if($desc.hasChildren())
+      <ul>
+        #foreach($subjob in $desc.children)
+          #execing_job($subjob)
+        #end
+      </ul>
+    #end
+  </li>
+#end
+
+#macro(formatPeriod $period)
+  #if($utils.isNull($period))
+    none
+  #else
+    $utils.formatPeriod($period)
+  #end
+#end
+
+<html>
+  <head>
+    <title>#appname()</title>
+    
+    <link rel="stylesheet" href="${context}/static/js/jquery-treeview/jquery.treeview.css" />
+    <script src="${context}/static/js/jquery.js" type="text/javascript"></script>
+    <script src="${context}/static/js/jquery.cookie.js" type="text/javascript"></script>
+    <script src="${context}/static/js/jquery-treeview/jquery.treeview.pack.js" type="text/javascript"></script>
+    
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"/>
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"/>
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/job_controller.css"/>
+    <script src="${context}/static/js/job_controller.js" type="text/javascript"></script>
+  </head>
+  <body>
+  #appnamebox()    
+
+    			
+  <div id="container">  
+    #messages()
+    
+    <h2>Scheduled Jobs</h2>
+    #if($scheduled.size() > 0)
+      <table class="jobtable">
+        <tr>
+          <th>Name</th>
+          <th>Next Execution</th>
+          <th>Period</th>
+          <th></th>
+        </tr>
+        #foreach($sched in $scheduled)
+          <tr>
+            <td>
+              <a class="job-name" href="${context}/job?id=${sched.id}">$sched.id</a>
+            </td>
+            <td>$utils.formatDateTime($sched.scheduledExecution)</td>
+            <td>
+              #formatPeriod($sched.period)
+            </td>
+            <td>
+              <form action="${context}/" method="post" style="display: inline">
+                <input type="hidden" name="action" value="unschedule"/>
+                <input type="hidden" name="job" value="${sched.id}"/>     
+                <input type="submit" value="Remove" />      
+              </form>
+            </td>
+          </tr>
+        #end
+      </table>
+    #else
+      No scheduled jobs at this time.
+    #end
+      
+    <h2>Executing Jobs</h2>
+    #if($executing.size() > 0)
+      <table class="jobtable execing-jobs-table">
+        <tr>
+          <th>Name</th>
+          <th>Start Time</th>
+          <th>Period</th>
+          <th></th>
+        </tr>
+        #set ($rowCount = 1)
+        #foreach($exec in $executing)
+          <tr>
+            <td>
+                <ul id="execing-jobs-tree-${rowCount}" class="execing-jobs">
+                  #execing_job($exec.executableFlow)
+                </ul>
+            </td>
+            <td>
+              $utils.formatDateTime($exec.scheduledJob.started)
+              <br/>
+              ($utils.formatPeriod($utils.period($exec.scheduledJob.started, $util.now)) ago)
+            </td>
+            <td>
+              #if($exec.scheduledJob.period)
+                $utils.formatPeriod($exec.scheduledJob.period) 
+              #else
+                - 
+              #end
+            </td>
+            <td>
+              <form action="${context}/" method="post" style="display:inline">
+                <input type="hidden" name="action" value="cancel"/>
+                <input type="hidden" name="job" value="${exec.jobInstance.id}"/>
+                <input type="submit" value="Cancel"/>
+              </form>
+            </td>
+          </tr>
+          #set ($rowCount = $rowCount + 1)
+        #end
+      </table>
+    #else
+      No jobs currently executing.
+    #end
+      
+    <h2>All Jobs</h2>
+    <div class="all-jobs">
+      <form method="post" action="${context}/">
+        <div class="sched-form">
+          <div>
+            Run immediately
+              (<input name="include_deps" type="checkbox" checked /> with dependencies)
+              <input type="submit" name="run_now" value="Run"/>
+          </div>
+          <div>
+            <input type="hidden" name="action" value="schedule"/>
+            Schedule to run at 
+            <input name="hour" type="text" size="2" value="12"/> :
+            <input name="minutes" type="text" size="2" value="00"/>
+            <select name="am_pm">
+              <option>pm</option>
+              <option>am</option>
+            </select>
+            and 
+            <input name="is_recurring" type="checkbox" checked  />
+            repeat every
+            <input name="period" type="text" size="2" value="1"/>
+            <select name="period_units">
+              <option value="d">Days</option>
+              <option value="h">Hours</option>
+              <option value="m">Minutes</option>
+              <option value="s">Seconds</option>
+            </select>
+            <input type="submit" name="schedule" value="Schedule"/>
+          </div>
+        </div>
+        <div>
+          <ul id="sched-tree">
+            #foreach($jobName in $rootJobNames)
+              #jobnames($jobName)
+            #end
+          </ul>
+        </div>
+      </form>
+    </div>
+      
+    </div>
+  </body>
+</html>
+
+

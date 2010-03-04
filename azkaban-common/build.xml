@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+
+<project name="azkaban-common" basedir="." default="all">
+
+	<!-- set the base directory -->
+	<property name="batch.base.dir" value="${basedir}/.." />
+	<property file="${batch.base.dir}/build.properties" />
+
+
+	<!-- Override/set  paths to module specific paths -->
+	<property name="module.dist.base" value="${batch.base.dir}/${dist.dir}/azkaban-common" />
+	<property name="module.dist.dir"
+		value="${batch.base.dir}/${dist.dir}/azkaban-common/jars" />
+	<property name="module.classes.dir"
+		value="${batch.base.dir}/${dist.dir}/azkaban-common/classes" />
+	<property name="module.javadoc.dir"
+		value="${batch.base.dir}/${dist.dir}/azkaban-common/javadoc" />
+
+	<property name="module.java.dir" value="src/java" />
+	<property name="module.conf.dir" value="conf" />
+
+	<property name="module.distconf.dir" value="${module.dist.dir}" />
+	<property name="module.distjar.dir" value="${module.dist.dir}" />
+	<property name="module.jar.name" value="${module.distjar.dir}/${ant.project.name}.jar" />
+
+	<path id="main-classpath">
+		<fileset dir="${batch.base.dir}/${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<pathelement path="${module.classes.dir}" />
+	</path>
+
+	<!-- macro to delete and recreate a directory -->
+	<macrodef name="replace-dir">
+		<attribute name="dir" />
+		<sequential>
+			<delete dir="@{dir}" />
+			<mkdir dir="@{dir}" />
+		</sequential>
+	</macrodef>
+
+	<target name="all" depends="clean, jar, srcjar" description="Builds all.." />
+
+	<target name="deploy" depends="jar"
+		description="build the jar file and copy job confs to dist.">
+		<echo message="Copying jobs/properties file in: ${module.distconf.dir}" />
+		<echo message="building job jar in: ${module.distjar.dir}" />
+	</target>
+
+
+	<target name="undeploy" depends="clean"
+		description="clean the dist and remove jar and conf." />
+
+	<target name="redeploy" depends="undeploy, deploy"
+		description="Clean and Build jar files and copy config to dist." />
+
+	<target name="clean" description="Delete generated files.">
+		<delete dir="${module.dist.base}" />
+	</target>
+
+	<target name="build" description="Compile main source tree java files">
+		<replace-dir dir="${module.classes.dir}" />
+		<!-- copy non-java files to classes dir to load from classpath -->
+		<copy todir="${module.classes.dir}">
+			<fileset dir="${module.java.dir}">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+		<javac fork="true" executable="${java6.home}/bin/javac" destdir="${module.classes.dir}"
+			target="1.6" debug="true" deprecation="false" failonerror="true">
+			<src path="${module.java.dir}" />
+			<classpath refid="main-classpath" />
+		</javac>
+	</target>
+
+	<!--
+		currently jar/copyconf writes to same directory hence we cant clean
+		them. hack for now
+	-->
+	<target name="jar" depends="build" description="Build server jar file">
+		<mkdir dir="${module.distjar.dir}" />
+		<jar destfile="${module.distjar.dir}/${name}-common-${curr.release}.jar">
+			<fileset dir="${module.classes.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<!-- include src code for ide convenience -->
+			<fileset dir="${module.java.dir}">
+				<include name="**/*.java" />
+			</fileset>
+		</jar>
+	</target>
+
+	<target name="srcjar" description="Build source jar file">
+		<mkdir dir="${module.distjar.dir}" />
+		<jar destfile="${module.distjar.dir}/${name}-common-${curr.release}-src.jar">
+			<fileset dir="${java.dir}">
+				<include name="**/*.java" />
+			</fileset>
+		</jar>
+	</target>
+
+	<target name="docs" description="Create complete Javadoc documentation">
+		<replace-dir dir="${module.javadoc.dir}" />
+		<javadoc sourcepath="${module.java.dir}" destdir="${module.javadoc.dir}"
+			windowtitle="${display.name}" source="1.5" author="true" version="true"
+			use="true" packagenames="*">
+			<doctitle>${display.name}</doctitle>
+			<classpath refid="main-classpath" />
+		</javadoc>
+	</target>
+
+</project>

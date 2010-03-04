@@ -1,0 +1,28 @@
+#sched-tree-control {
+	background-color: pink;
+	text-align: left;
+	padding-top: 1em;
+}
+
+#sched-tree-control a {
+	color: darkred;
+}
+
+#sched-tree {
+	background: #fff;
+	padding: .5em;
+}
+
+.treeview li {
+	padding: 1 0 3 16px;
+}
+
+.treeview .hitarea {
+	xpadding-right: 3px;
+}
+
+.sched-tree-checkbox {
+	padding: 0px;
+	margin: 0px;
+	margin-left: 3px;
+}

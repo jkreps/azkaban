@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <title>#appname()</title>
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"></link>
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"></link>
+	<script type='text/javascript'>
+		function changeFile() {
+			if(document.getElementById('path').value == '') {
+				var dir = document.getElementById('file').value;
+				var lastIndexOf = dir.lastIndexOf('.');
+
+				document.getElementById('path').value=dir.substring(0, lastIndexOf);
+			}
+		}
+
+	</script>
+  </head>
+  
+  <body>
+  
+      #appnamebox()
+    <div id="container">
+      #messages()
+	      <h2>Upload Jobs</h2>
+	  <div>
+	      <div style="margin: auto; width: 500px;  ">
+		      <form enctype="multipart/form-data" method="post" action="$!context/api/jobs">
+		        <input type="hidden" name="redirect" value="/"/>
+		        <input type="hidden" name="redirect_error" value="$!context/job-upload"/>
+		        <input type="hidden" name="redirect_success" value="$!context/job-upload"/>
+		        <table>
+		          <tr>
+		            <td>Path</td>
+		            <td><input id="path" name="path" type="text" size="20"/>
+		          </tr>
+		          <tr>
+		            <td>Job flow zip file</td>
+		            <td><input id="file" name="file" type="file" onChange="changeFile()" /></td>
+		          </tr>
+		          <tr>
+		            <td></td><td><input type="submit" value="Deploy"/></td>
+		          </tr>
+		        </table>
+		      </form>
+	      </div>
+	    </div>
+    </div>
+  </body>
+</html>

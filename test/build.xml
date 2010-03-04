@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<project name="test" basedir="." default="jar">
+
+	<!-- set the base directory -->
+	<property name="batch.base.dir" value="${basedir}/.." />
+	<property file="${batch.base.dir}/build.properties" />
+	<property name="module.dist.base" value="${batch.base.dir}/${dist.dir}/test" />
+	<property file="${batch.base.dir}/build.properties" />
+
+	<!-- macro to delete and recreate a directory -->
+	<macrodef name="replace-dir">
+		<attribute name="dir" />
+		<sequential>
+			<delete dir="@{dir}" />
+			<mkdir dir="@{dir}" />
+		</sequential>
+	</macrodef>
+
+	<target name="clean" description="Delete generated files.">
+		<echo message="cleaning all test jobs." />
+		<delete dir="${module.dist.base}" />
+	</target>
+
+	<target name="jar" description="Makes all the small jars.">
+		<echo message="Makes test jar." />
+		<subant target="jar">
+			<fileset dir="." includes="*/build.xml" />
+		</subant>
+	</target>
+
+	<target name="deploy" description="deploy all modules.">
+		<echo message="Deploying all modules." />
+		<subant target="deploy">
+			<fileset dir="." includes="*/build.xml" />
+		</subant>
+	</target>
+
+	<target name="undeploy" description="deploy all modules.">
+		<echo message="Undeploying all modules." />
+		<subant target="undeploy">
+			<fileset dir="." includes="*/build.xml" />
+		</subant>
+	</target>
+
+	<target name="redeploy" description="deploy all modules.">
+		<echo message="Redeploying all modules." />
+		<subant target="redeploy">
+			<fileset dir="." includes="*/build.xml" />
+		</subant>
+	</target>
+
+</project>
