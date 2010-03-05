@@ -32,6 +32,8 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
         EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
 
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.READY).once();
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.READY).once();
         EasyMock.replay(mockFlow1, mockFlow2);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);

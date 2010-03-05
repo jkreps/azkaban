@@ -42,9 +42,32 @@ public class GroupedExecutableFlow implements ExecutableFlow
         });
 
         jobState = Status.READY;
+        updateState();
         callbacksToCall = new ArrayList<FlowCallback>();
-        startTime = null;
-        endTime = null;
+
+        switch (jobState) {
+            case SUCCEEDED:
+            case COMPLETED:
+            case FAILED:
+                DateTime theStartTime = new DateTime();
+                DateTime theEndTime = null;
+                for (ExecutableFlow flow : flows) {
+                    final DateTime subFlowStartTime = flow.getStartTime();
+                    if (theStartTime.isAfter(subFlowStartTime)) {
+                        theStartTime = subFlowStartTime;
+                    }
+
+                    final DateTime subFlowEndTime = flow.getEndTime();
+                    if (subFlowEndTime != null && subFlowEndTime.isBefore(theEndTime)) {
+                        theEndTime = subFlowEndTime;
+                    }
+                }
+                startTime = theStartTime;
+                endTime = theEndTime;
+            default:
+                startTime = null;
+                endTime = null;
+        }
     }
 
     @Override
@@ -52,7 +75,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
     {
         return id;
     }
-    
+
     @Override
     public String getName()
     {

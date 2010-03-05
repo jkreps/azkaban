@@ -29,9 +29,25 @@ public class ComposedExecutableFlow implements ExecutableFlow
         this.depender = depender;
         this.dependee = dependee;
 
-        jobState = Status.READY;
-        startTime = null;
-        endTime = null;
+        final Status dependerState = depender.getStatus();
+        switch (dependerState) {
+            case READY:
+                jobState = Status.READY;
+                startTime = null;
+                endTime = null;
+                break;
+            case RUNNING:
+                jobState = Status.RUNNING;
+                startTime = depender.getStartTime();
+                endTime = null;
+                break;
+            case COMPLETED:
+            case SUCCEEDED:
+            case FAILED:
+                jobState = dependerState;
+                startTime = dependee.getStartTime() == null ? depender.getStartTime(): dependee.getStartTime();
+                endTime = depender.getEndTime();
+        }
     }
 
     @Override
@@ -153,7 +169,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 if (endTime == null) {
                     endTime = new DateTime();
                 }
-                
+
                 for (FlowCallback callback : callbackList) {
                     try {
                         callback.completed(status);

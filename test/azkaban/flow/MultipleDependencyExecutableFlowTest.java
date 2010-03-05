@@ -9,15 +9,16 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
  */
-public class ComposedExecutableFlowTest
+public class MultipleDependencyExecutableFlowTest
 {
     private volatile ExecutableFlow dependerFlow;
     private volatile ExecutableFlow dependeeFlow;
-    private ComposedExecutableFlow flow;
+    private MultipleDependencyExecutableFlow flow;
 
     @Before
     public void setUp() throws Exception
@@ -26,12 +27,13 @@ public class ComposedExecutableFlowTest
         dependeeFlow = EasyMock.createMock(ExecutableFlow.class);
 
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.READY).once();
-        EasyMock.replay(dependerFlow);
+        EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.READY).once();
+        EasyMock.replay(dependerFlow, dependeeFlow);
 
-        flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
+        flow = new MultipleDependencyExecutableFlow("blah", dependerFlow, dependeeFlow);
 
-        EasyMock.verify(dependerFlow);
-        EasyMock.reset(dependerFlow);
+        EasyMock.verify(dependerFlow, dependeeFlow);
+        EasyMock.reset(dependerFlow, dependeeFlow);
     }
 
     @After
@@ -61,6 +63,8 @@ public class ComposedExecutableFlowTest
                 return null;
             }
         }).once();
+
+        EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.SUCCEEDED).once();
 
         final Capture<FlowCallback> dependerCallback = new Capture<FlowCallback>();
         dependerFlow.execute(EasyMock.capture(dependerCallback));
@@ -129,6 +133,8 @@ public class ComposedExecutableFlowTest
             }
         }).once();
 
+        EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.FAILED).once();
+
         EasyMock.replay(dependerFlow, dependeeFlow);
 
         Assert.assertEquals(Status.READY, flow.getStatus());
@@ -179,6 +185,8 @@ public class ComposedExecutableFlowTest
                 return null;
             }
         }).once();
+
+        EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.SUCCEEDED).once();
 
         final Capture<FlowCallback> dependerCallback = new Capture<FlowCallback>();
         dependerFlow.execute(EasyMock.capture(dependerCallback));
@@ -257,6 +265,8 @@ public class ComposedExecutableFlowTest
                 return null;
             }
         }).once();
+
+        EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.SUCCEEDED).once();
 
         final Capture<FlowCallback> dependerCallback = new Capture<FlowCallback>();
         dependerFlow.execute(EasyMock.capture(dependerCallback));

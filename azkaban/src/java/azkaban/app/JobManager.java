@@ -370,7 +370,7 @@ public class JobManager {
                                               pathOverrides,
                                               _baseClassLoader);
 
-        if(pathOverrides != null && pathOverrides.size() == 0) {
+        if(pathOverrides != null) {
             Props dirProps = loadLocalNonJobProps(jobDir, _defaultProps);
             for(Map.Entry<File, File> override: pathOverrides.entrySet()) {
                 loadJobDescriptorsWithoutDependencies(m,
@@ -610,13 +610,9 @@ public class JobManager {
                 throw new RuntimeException(e);
             }
         }
-        
-        File parent = targetPath.getParentFile();
-        if (parent != null && !parent.exists()) {
-            if(parent.mkdirs()) {
-                throw new RuntimeException("Failed to create target directory " + parent);
-            }
-        }
+
+        if(!targetPath.mkdirs())
+            throw new RuntimeException("Failed to create target directory " + targetPath);
 
         File currPath = new File(localPath);
         if(currPath.renameTo(targetPath))
