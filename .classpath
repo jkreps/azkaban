@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="azkaban-common/src/java"/>
+	<classpathentry kind="src" path="azkaban/src/java"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="lib/commons-cli-2.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-5.1.4.jar"/>
+	<classpathentry kind="lib" path="lib/joda-time-1.6.jar"/>
+	<classpathentry kind="lib" path="lib/mail-1.4.1.jar"/>
+	<classpathentry kind="lib" path="lib/servlet-api.jar"/>
+	<classpathentry kind="lib" path="lib/catalina-ant.jar"/>
+	<classpathentry kind="lib" path="lib/commons-logging-1.0.4.jar"/>
+	<classpathentry kind="lib" path="lib/commons-logging-api-1.0.4.jar"/>
+	<classpathentry kind="lib" path="lib/google-collect-1.0-rc2.jar"/>
+	<classpathentry kind="lib" path="lib/commons-collections-3.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-fileupload-1.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-0.20.2-core.jar"/>
+	<classpathentry kind="lib" path="lib/jopt-simple-3.2.jar"/>
+	<classpathentry kind="lib" path="lib/commons-io-1.4.jar"/>
+	<classpathentry kind="lib" path="lib/voldemort-0.70.1.jar"/>
+	<classpathentry kind="lib" path="lib/voldemort-contrib-0.70.1.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/velocity-1.6.3.jar"/>
+	<classpathentry kind="lib" path="lib/commons-lang-2.4.jar"/>
+	<classpathentry kind="lib" path="lib/cglib-nodep-2.2.jar"/>
+	<classpathentry kind="lib" path="lib/easymock-2.5.2.jar"/>
+	<classpathentry kind="lib" path="lib/easymockclassextension-2.5.2.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-0.20.0-core.jar"/>
+	<classpathentry kind="lib" path="lib/junit-4.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/objenesis-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/org-json-2010-02-26.jar"/>
+	<classpathentry kind="output" path="classes"/>
+</classpath>
