@@ -3,9 +3,10 @@ package azkaban.app;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
 import azkaban.flow.ExecutableFlow;
-import azkaban.flow.FlowManager;
-import azkaban.flow.Flows;
+import azkaban.flow.manager.FlowManager;
 import azkaban.flow.JobManagerFlowDeserializer;
+import azkaban.flow.manager.ImmutableFlowManager;
+import azkaban.flow.manager.RefreshableFlowManager;
 import azkaban.jobs.AzkabanCommandLine;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
 import azkaban.serialization.ExecutableFlowSerializer;
@@ -42,11 +43,6 @@ import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Master application that runs everything
@@ -167,7 +163,7 @@ public class AzkabanApp {
                         )
                 )
         );
-        _allFlows = new FlowManager(flowSerializer, flowDeserializer, executionsStorageFile, lastId);
+        _allFlows = new RefreshableFlowManager(_jobManager, flowSerializer, flowDeserializer, executionsStorageFile, lastId);
         _jobManager.setFlowManager(_allFlows);
 
         this._scheduler = new Scheduler(_jobManager,

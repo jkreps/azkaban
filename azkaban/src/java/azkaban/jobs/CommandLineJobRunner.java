@@ -6,15 +6,26 @@ import azkaban.app.Scheduler;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
-import azkaban.flow.FlowManager;
+import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flows;
+import azkaban.flow.JobManagerFlowDeserializer;
+import azkaban.flow.manager.FlowManager;
+import azkaban.flow.manager.RefreshableFlowManager;
+import azkaban.serialization.DefaultExecutableFlowSerializer;
+import azkaban.serialization.ExecutableFlowSerializer;
+import azkaban.serialization.de.ExecutableFlowDeserializer;
+import azkaban.serialization.de.JobFlowDeserializer;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.joda.time.DateTime;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 
 import static java.util.Arrays.asList;
@@ -73,17 +84,38 @@ public class CommandLineJobRunner {
                                                cl.getClassloader(),
                                                cl.getNumWorkPermits());
 
-/*
-        FlowManager allFlows = new FlowManager();
-        FlowManager rootFlows = new FlowManager();
-        for (JobDescriptor rootDescriptor : jobManager.getRootJobDescriptors(jobManager.loadJobDescriptors())) {
-            rootFlows.registerFlow(Flows.buildLegacyFlow(jobManager, allFlows, rootDescriptor));
+        File executionsStorageFile = new File(".");
+        if (! executionsStorageFile.exists()) {
+            executionsStorageFile.mkdirs();
         }
-*/
+
+        long lastId = 0;
+        for (File file : executionsStorageFile.listFiles()) {
+            final String filename = file.getName();
+            if (filename.endsWith(".json")) {
+                try {
+                    lastId = Math.max(
+                            lastId,
+                            Long.parseLong(filename.substring(0, filename.length() - 5))
+                    );
+                }
+                catch (NumberFormatException e) {
+                }
+            }
+        }
+
+        final ExecutableFlowSerializer flowSerializer = new DefaultExecutableFlowSerializer();
+        final ExecutableFlowDeserializer flowDeserializer = new ExecutableFlowDeserializer(
+                new JobFlowDeserializer(
+                        ImmutableMap.<String, Function<Map<String, Object>, ExecutableFlow>>of(
+                                "jobManagerLoaded", new JobManagerFlowDeserializer(jobManager)
+                        )
+                )
+        );
+        FlowManager allFlows = new RefreshableFlowManager(jobManager, flowSerializer, flowDeserializer, executionsStorageFile, lastId);
 
         Scheduler scheduler = new Scheduler(jobManager,
-//                                            rootFlows,
-null,
+                                            allFlows,
                                             null,
                                             null,
                                             null,

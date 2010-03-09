@@ -16,13 +16,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import azkaban.flow.FlowManager;
+import azkaban.flow.manager.FlowManager;
 import azkaban.flow.Flows;
-import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -117,6 +115,9 @@ public class JobManager {
                             noDependencyDescriptorCache.set(
                                     loadJobDescriptors(new Props(), Collections.<File, File>emptyMap(), true)
                             );
+                            if (manager != null) {
+                                manager.reload();
+                            }
                         }
                         catch (Throwable t) {
                             logger.error("Got an exception while updating jobDescriptor cache.  Not good.", t);
@@ -590,13 +591,7 @@ public class JobManager {
 
     private void updateFlowManager()
     {
-        for (JobDescriptor rootDescriptor : getRootJobDescriptors(loadJobDescriptors())) {
-            if (rootDescriptor.getId() != null) {
-                // This call of magical wonderment ends up pushing all Flow objects in the dependency graph for the root into _allFlows
-                Flows.buildLegacyFlow(this, manager, rootDescriptor);
-                manager.addRootFlowName(rootDescriptor.getId());
-            }
-        }
+        manager.reload();
     }
 
     public void deployJobDir(String localPath, String destPath) {
