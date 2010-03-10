@@ -65,6 +65,7 @@ public class AzkabanApp {
 
     private final List<File> _jobDirs;
     private final File _logsDir;
+    private final File _tempDir;
     private final Scheduler _scheduler;
     private final VelocityEngine _velocityEngine;
     private final JobManager _jobManager;
@@ -73,13 +74,17 @@ public class AzkabanApp {
     private final String _hdfsUrl;
     private final FlowManager _allFlows;
 
-    public AzkabanApp(List<File> jobDirs, File logDir, boolean enableDevMode) throws IOException {
+    public AzkabanApp(List<File> jobDirs, File logDir, File tempDir, boolean enableDevMode) throws IOException {
         this._jobDirs = Utils.nonNull(jobDirs);
         this._logsDir = Utils.nonNull(logDir);
-
+        this._tempDir = Utils.nonNull(tempDir);
+        
         if(!this._logsDir.exists())
             this._logsDir.mkdirs();
 
+        if(!this._tempDir.exists())
+            this._tempDir.mkdirs();
+        
         for(File jobDir: _jobDirs) {
             if(!jobDir.exists()) {
                 logger.warn("Job directory " + jobDir + " does not exist. Creating.");
@@ -95,11 +100,11 @@ public class AzkabanApp {
         String hadoopHome = System.getenv("HADOOP_HOME");
         if(hadoopHome == null) {
             logger.info("HADOOP_HOME not set, using default hadoop config.");
-            _baseClassLoader = getClass().getClassLoader();
+            _baseClassLoader = ClassLoader.getSystemClassLoader();
         } else {
             logger.info("Using hadoop config found in " + hadoopHome);
             _baseClassLoader = new URLClassLoader(new URL[] { new File(hadoopHome, "conf").toURL() },
-                                                  getClass().getClassLoader());
+            		ClassLoader.getSystemClassLoader());
         }
 
         int workPermits = defaultProps.getInt("total.job.permits", Integer.MAX_VALUE);
@@ -216,6 +221,10 @@ public class AzkabanApp {
         return _logsDir.getAbsolutePath();
     }
 
+    public String getTempDirectory() {
+        return _tempDir.getAbsolutePath();
+    }
+    
     public List<File> getJobDirectories() {
         return _jobDirs;
     }
@@ -263,7 +272,7 @@ public class AzkabanApp {
         logger.info("Job log directory set to " + cl.getLogDir().getAbsolutePath());
         logger.info("Job directories set to " + cl.getJobDirs());
 
-        AzkabanApp app = new AzkabanApp(cl.getJobDirs(), cl.getLogDir(), options.has(devModeOpt));
+        AzkabanApp app = new AzkabanApp(cl.getJobDirs(), cl.getLogDir(), new File("temp"), options.has(devModeOpt));
 
         int portNumber = 8081;
         if(options.has(portOpt))
