@@ -1,7 +1,8 @@
-package azkaban.flow;
+package azkaban.flow.manager;
 
-import azkaban.app.JobDescriptor;
-import azkaban.app.JobManager;
+import azkaban.flow.ExecutableFlow;
+import azkaban.flow.Flow;
+import azkaban.flow.manager.FlowManager;
 import azkaban.serialization.ExecutableFlowSerializer;
 import azkaban.serialization.de.ExecutableFlowDeserializer;
 import azkaban.util.JSONToJava;
@@ -20,7 +21,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
@@ -29,64 +29,55 @@ import java.util.concurrent.atomic.AtomicLong;
  * An "append-only" set of Flows.  If you need to remove flows, this object should be thrown away and a
  * new one built to replace it.
  */
-public class FlowManager implements Iterable<Flow>
+public class ImmutableFlowManager implements FlowManager
 {
     private final JSONToJava jsonToJava;
     private final Map<String, Flow> flowsMap;
+    private final Set<String> rootFlowNames;
     private final AtomicLong lastId;
 
     private final File storageDirectory;
     private final ExecutableFlowSerializer serializer;
     private final ExecutableFlowDeserializer deserializer;
-    private final Set<String> rootFlowNames;
 
-    public FlowManager(
+    public ImmutableFlowManager(
+            Map<String, Flow> flowMap,
+            Set<String> rootFlows,
             ExecutableFlowSerializer serializer,
             ExecutableFlowDeserializer deserializer,
             File storageDirectory,
             long lastId
     )
     {
+        this.flowsMap = flowMap;
+        this.rootFlowNames = rootFlows;
         this.serializer = serializer;
         this.deserializer = deserializer;
         this.storageDirectory = storageDirectory;
 
         this.lastId = new AtomicLong(lastId);
-        this.flowsMap = new ConcurrentSkipListMap<String, Flow>();
         this.jsonToJava = new JSONToJava();
-
-        rootFlowNames = new ConcurrentSkipListSet<String>();
     }
 
-    public void registerFlow(Flow flow)
-    {
-        if (flow == null) {
-            throw new IllegalArgumentException("flow cannot be null");
-        }
-
-        flowsMap.put(flow.getName(), flow);
-    }
-
+    @Override
     public boolean hasFlow(String name)
     {
         return flowsMap.containsKey(name);
     }
     
+    @Override
     public Flow getFlow(String name)
     {
         return flowsMap.get(name);
     }
 
+    @Override
     public Collection<Flow> getFlows()
     {
         return flowsMap.values();
     }
 
-    public void addRootFlowName(String name)
-    {
-        rootFlowNames.add(name);
-    }
-
+    @Override
     public Set<String> getRootFlowNames()
     {
         return Collections.unmodifiableSet(rootFlowNames);
@@ -98,21 +89,25 @@ public class FlowManager implements Iterable<Flow>
         return getFlows().iterator();
     }
 
+    @Override
     public ExecutableFlow createNewExecutableFlow(String name)
     {
         return getFlow(name).createExecutableFlow(String.valueOf(getNextId()), new HashMap<String, ExecutableFlow>());
     }
 
+    @Override
     public long getNextId()
     {
         return lastId.incrementAndGet();
     }
 
+    @Override
     public long getCurrMaxId()
     {
         return lastId.get();
     }
 
+    @Override
     public ExecutableFlow saveExecutableFlow(ExecutableFlow flow)
     {
         File storageFile = new File(storageDirectory, String.format("%s.json", flow.getId()));
@@ -136,6 +131,7 @@ public class FlowManager implements Iterable<Flow>
         return flow;
     }
 
+    @Override
     public ExecutableFlow loadExecutableFlow(long id)
     {
         File storageFile = new File(storageDirectory, String.format("%s.json", id));
@@ -158,5 +154,11 @@ public class FlowManager implements Iterable<Flow>
         finally {
             IOUtils.closeQuietly(in);
         }
+    }
+
+    @Override
+    public void reload()
+    {
+        throw new UnsupportedOperationException();
     }
 }

@@ -1,10 +1,9 @@
 package azkaban.web.pages;
 
-import azkaban.app.JobExecution;
 import azkaban.common.web.Page;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowCallback;
-import azkaban.flow.FlowManager;
+import azkaban.flow.manager.FlowManager;
 import azkaban.flow.Flows;
 import azkaban.flow.Status;
 import azkaban.web.AbstractAzkabanServlet;
@@ -12,7 +11,6 @@ import azkaban.web.AbstractAzkabanServlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

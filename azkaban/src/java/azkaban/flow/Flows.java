@@ -2,12 +2,13 @@ package azkaban.flow;
 
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobManager;
+import azkaban.flow.manager.FlowManager;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -17,13 +18,13 @@ public class Flows
 {
     public static Flow buildLegacyFlow(
             final JobManager jobManager,
-            final FlowManager alreadyBuiltFlows,
+            final Map<String, Flow> alreadyBuiltFlows,
             final JobDescriptor rootDescriptor
     )
     {
         //TODO MED: The jobManager isn't really the best Job factory.  It should be revisited, but it works for now.
-        if (alreadyBuiltFlows.hasFlow(rootDescriptor.getId())) {
-            return alreadyBuiltFlows.getFlow(rootDescriptor.getId());
+        if (alreadyBuiltFlows.containsKey(rootDescriptor.getId())) {
+            return alreadyBuiltFlows.get(rootDescriptor.getId());
         }
 
         final Flow retVal;
@@ -53,7 +54,7 @@ public class Flows
             retVal = new IndividualJobFlow(jobManager.loadJob(rootDescriptor.getId(), true));
         }
 
-        alreadyBuiltFlows.registerFlow(retVal);
+        alreadyBuiltFlows.put(retVal.getName(), retVal);
 
         return retVal;
     }
