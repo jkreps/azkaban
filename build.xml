@@ -1,19 +1,12 @@
 <?xml version="1.0"?>
 <project name="azkaban" basedir="." default="all">
-	<property name="batch.base.dir" value="${basedir}" />
+	<property name="azkaban.base.dir" value="${basedir}" />
 	<property file="build.properties" />
 
 	<property name="name" value="azkaban" />
 	<property name="display.name" value="Azkaban" />
 	<property name="author" value="Richard Park" />
 	<property environment="env" />
-
-	<path id="main-classpath">
-		<fileset dir="${lib.dir}">
-			<include name="*.jar" />
-		</fileset>
-		<pathelement path="${classes.dir}" />
-	</path>
 
 	<!-- set the build number based on environment variable, otherwise blank -->
 	<property environment="env" description="System environment variables (including those set by Hudson)" />
@@ -26,11 +19,11 @@
 		</and>
 	</condition>
 
-	<target name="all" depends="clean, jars, testfiles" description="Builds all.." />
+	<target name="all" depends="clean, jars, testjobs" description="Builds all jars" />
 
 	<target name="clean" description="Delete generated files.">
-		<echo message="Deleting dist directory: ${batch.base.dir}/${dist.dir}" />
-		<delete dir="${batch.base.dir}/${dist.dir}" />
+		<echo message="Deleting dist directory: ${azkaban.base.dir}/${dist.dir}, ${azkaban.base.dir}/${build.dir}" />
+		<delete dir="${azkaban.base.dir}/${dist.dir}" />
 	</target>
 
 	<target name="jars" description="Compile main source tree java files">
@@ -44,12 +37,12 @@
 		</subant>
 	</target>
 
-	<target name="testfiles" depends="jars" description="Compile files for test">
+	<target name="testjobs" depends="jars" description="Compile files for test">
 		<echo message="building test jar" />
 		<subant target="jar">
 			<fileset dir="test" includes="build.xml" />
 		</subant>
-		<zip destfile="${batch.base.dir}/${dist.dir}/test/testjobfile.zip" basedir="${batch.base.dir}/${dist.dir}/test/jobs">
+		<zip destfile="${azkaban.base.dir}/${dist.dir}/test/testjobfile.zip" basedir="${azkaban.base.dir}/${dist.dir}/test/jobs">
 		</zip>
 	</target>
 
@@ -60,10 +53,47 @@
 		</subant>
 	</target>
 
-	<target name="deploy" depends="all" description="Deploys azkaban to tomcat..">
+	<target name="deploy" depends="all" description="Deploys azkaban to tomcat.">
 		<subant target="deploy">
 			<fileset dir="azkaban" includes="build.xml" />
 		</subant>
 	</target>
+
+	<target name="snapshot" description="Create a release snapshot artifacts">
+		<create-release-artifacts version="${curr.release.snapshot}" />
+	</target>
+
+	<target name="release" description="Create a release artifacts">
+		<create-release-artifacts version="${curr.release}" />
+	</target>
+
+	<macrodef name="create-release-artifacts">
+		<attribute name="version" />
+		<sequential>
+			<antcall target="jars" />
+			<zip destfile="${dist.dir}/${name}-@{version}.zip">
+				<zipfileset dir="." prefix="azkaban-@{version}" filemode="755" includes="bin/*" />
+				<zipfileset dir="." prefix="azkaban-@{version}" includes="**">
+					<exclude name="${dist.dir}/azkaban"/>
+					<exclude name="${dist.dir}/azkaban-common"/>
+					<exclude name="${dist.dir}/*.tar.gz"/>
+					<exclude name="${dist.dir}/*.zip"/>
+					<exclude name="bin/*" />
+					<exclude name=".git*/**" />
+				</zipfileset>
+			</zip>
+			<tar destfile="${dist.dir}/${name}-@{version}.tar.gz" compression="gzip" longfile="gnu">
+				<tarfileset dir="." prefix="azkaban-@{version}" filemode="755" includes="bin/*" />
+				<tarfileset dir="." prefix="azkaban-@{version}" includes="**">
+					<exclude name="${dist.dir}/azkaban"/>
+					<exclude name="${dist.dir}/azkaban-common"/>
+					<exclude name="${dist.dir}/*.tar.gz"/>
+					<exclude name="${dist.dir}/*.zip"/>
+					<exclude name="bin/*" />
+					<exclude name=".git*/**" />
+				</tarfileset>
+			</tar>
+		</sequential>
+	</macrodef>
 
 </project>
