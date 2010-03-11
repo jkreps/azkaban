@@ -42,8 +42,9 @@ public class AzkabanServletContextListener implements ServletContextListener {
         try {
             File logDir = new File(homeDir, "logs");
             File jobDir = new File(homeDir, "jobs");
+            File tempDir = new File(homeDir, "temp");
 
-            this.app = new AzkabanApp(Collections.singletonList(jobDir), logDir, false);
+            this.app = new AzkabanApp(Collections.singletonList(jobDir), logDir, tempDir, false);
         } catch(IOException e) {
             throw new IllegalArgumentException(e);
         }

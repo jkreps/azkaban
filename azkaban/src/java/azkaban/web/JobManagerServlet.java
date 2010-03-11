@@ -30,21 +30,18 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
 
     private static final long serialVersionUID = 1;
     private static final int DEFAULT_UPLOAD_DISK_SPOOL_SIZE = 20 * 1024 * 1024;
-    private static final String TEMP_DIRECTORY = "azkaban_temp";
     
     private JobManager _jobManager;
     private MultipartParser _multipartParser;
-
+    private String _tempDir;
+    
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         this._jobManager = this.getApplication().getJobManager();
         this._multipartParser = new MultipartParser(DEFAULT_UPLOAD_DISK_SPOOL_SIZE);
         
-        File file = new File(TEMP_DIRECTORY);
-        if (!file.exists()) {
-        	file.mkdirs();
-        }
+        _tempDir = this.getApplication().getTempDirectory();
     }
 
     @Override
@@ -89,7 +86,7 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
         IOUtils.copy(item.getInputStream(), out);
         out.close();
         ZipFile zipfile = new ZipFile(temp);
-        File unzipped = Utils.createTempDir(new File(TEMP_DIRECTORY));
+        File unzipped = Utils.createTempDir(new File(_tempDir));
         Utils.unzip(zipfile, unzipped);
         temp.delete();
         return unzipped;
