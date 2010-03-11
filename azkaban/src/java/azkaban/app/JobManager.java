@@ -408,7 +408,8 @@ public class JobManager {
         ClassLoader loader = createClassLoaderForDir(parentClassLoader, currDir);
 
         // now load any files defined in this directory
-        for(File f: currDir.listFiles()) {
+        File[] status = currDir.listFiles();
+        for(File f: status) {
             if(EXCLUDE_PATHS.contains(f.getName()) || f.getName().startsWith(".")) {
                 // ignore common files
                 continue;

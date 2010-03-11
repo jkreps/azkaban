@@ -96,13 +96,14 @@ public class AzkabanApp {
         String hadoopHome = System.getenv("HADOOP_HOME");
         if(hadoopHome == null) {
             logger.info("HADOOP_HOME not set, using default hadoop config.");
-            _baseClassLoader = ClassLoader.getSystemClassLoader();
+            _baseClassLoader = getClass().getClassLoader();
         } else {
             logger.info("Using hadoop config found in " + hadoopHome);
             _baseClassLoader = new URLClassLoader(new URL[] { new File(hadoopHome, "conf").toURL() },
-            		ClassLoader.getSystemClassLoader());
+            		getClass().getClassLoader());
         }
 
+        System.out.println(Utils.getClassLoaderDescriptions(_baseClassLoader));
         int workPermits = defaultProps.getInt("total.job.permits", Integer.MAX_VALUE);
         this._hdfsUrl = defaultProps.getString("hdfs.instance.url", null);
         _jobManager = new JobManager(_logsDir.getAbsolutePath(),
