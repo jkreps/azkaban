@@ -15,13 +15,9 @@
 		<pathelement path="${classes.dir}" />
 	</path>
 
-	<!--
-		set the build number based on environment variable, otherwise blank
-	-->
-	<property environment="env"
-		description="System environment variables (including those set by Hudson)" />
-	<condition property="curr.release.snapshot"
-		value="${curr.release}-snapshot-${env.BUILD_NUMBER}" else="${curr.release}">
+	<!-- set the build number based on environment variable, otherwise blank -->
+	<property environment="env" description="System environment variables (including those set by Hudson)" />
+	<condition property="curr.release.snapshot" value="${curr.release}-snapshot-${env.BUILD_NUMBER}" else="${curr.release}">
 		<and>
 			<isset property="env.BUILD_NUMBER" />
 			<not>
@@ -29,7 +25,6 @@
 			</not>
 		</and>
 	</condition>
-
 
 	<target name="all" depends="clean, jars, testfiles" description="Builds all.." />
 
@@ -54,8 +49,7 @@
 		<subant target="jar">
 			<fileset dir="test" includes="build.xml" />
 		</subant>
-		<zip destfile="${batch.base.dir}/${dist.dir}/test/testjobfile.zip"
-			basedir="${batch.base.dir}/${dist.dir}/test/jobs">
+		<zip destfile="${batch.base.dir}/${dist.dir}/test/testjobfile.zip" basedir="${batch.base.dir}/${dist.dir}/test/jobs">
 		</zip>
 	</target>
 
