@@ -1,5 +1,6 @@
 package azkaban.flow;
 
+import azkaban.app.JobFactory;
 import azkaban.app.JobManager;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.IndividualJobExecutableFlow;
@@ -15,10 +16,15 @@ import java.util.Map;
 public class JobManagerFlowDeserializer implements Function<Map<String, Object>, ExecutableFlow>
 {
     private final JobManager jobManager;
+    private final JobFactory jobFactory;
 
-    public JobManagerFlowDeserializer(JobManager jobManager)
+    public JobManagerFlowDeserializer(
+            JobManager jobManager,
+            JobFactory jobFactory
+    )
     {
         this.jobManager = jobManager;
+        this.jobFactory = jobFactory;
     }
 
     @Override
@@ -30,7 +36,7 @@ public class JobManagerFlowDeserializer implements Function<Map<String, Object>,
         DateTime startTime = Verifier.getOptionalDateTime(descriptor, "startTime");
         DateTime endTime = Verifier.getOptionalDateTime(descriptor, "endTime");
 
-        final IndividualJobExecutableFlow retVal = new IndividualJobExecutableFlow(id, jobManager.loadJob(jobName, true));
+        final IndividualJobExecutableFlow retVal = new IndividualJobExecutableFlow(id, jobFactory, jobManager.getJobDescriptor(jobName));
         retVal.setStatus(jobStatus);
 
         if (startTime != null) {

@@ -40,5 +40,4 @@ public interface Job {
      * @throws Exception If getting progress fails
      */
     public double getProgress() throws Exception;
-
 }
