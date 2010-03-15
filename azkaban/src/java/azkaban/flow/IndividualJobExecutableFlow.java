@@ -1,10 +1,10 @@
 package azkaban.flow;
 
+import azkaban.app.JobFactory;
 import azkaban.app.JavaJob;
-import azkaban.app.LoggingJob;
+import azkaban.app.JobDescriptor;
 import azkaban.common.jobs.DelegatingJob;
 import azkaban.common.jobs.Job;
-import azkaban.jobcontrol.impl.jobs.RetryingJob;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
@@ -22,17 +22,20 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
 
     private final Object sync = new Object();
     private final String id;
-    private final Job job;
+    private final JobFactory jobFactory;
+    private final JobDescriptor jobDescriptor;
 
     private volatile Status jobState;
     private volatile List<FlowCallback> callbacksToCall;
     private volatile DateTime startTime;
     private volatile DateTime endTime;
+    private volatile Job job;
 
-    public IndividualJobExecutableFlow(String id, Job job)
+    public IndividualJobExecutableFlow(String id, JobFactory jobFactory, JobDescriptor jobDescriptor)
     {
         this.id = id;
-        this.job = job;
+        this.jobFactory = jobFactory;
+        this.jobDescriptor = jobDescriptor;
 
         jobState = Status.READY;
         callbacksToCall = new ArrayList<FlowCallback>();
@@ -49,7 +52,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     @Override
     public String getName()
     {
-        return job.getId();
+        return jobDescriptor.getId();
     }
 
     @Override
@@ -61,6 +64,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                     jobState = Status.RUNNING;
                     startTime = new DateTime();
                     callbacksToCall.add(callback);
+                    job = jobFactory.apply(jobDescriptor);
                     break;
                 case RUNNING:
                     callbacksToCall.add(callback);
@@ -76,6 +80,10 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         }
 
         final ClassLoader storeMyClassLoader = Thread.currentThread().getContextClassLoader();
+
+        if (job == null) {
+            throw new RuntimeException("Cannot run a null job.  Probably an issue with the JobFactory?");
+        }
 
         Thread theThread = new Thread(
                 new Runnable()
@@ -177,7 +185,9 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         }
 
         try {
-            job.cancel();
+            if (job != null) {
+                job.cancel();
+            }
 
             return true;
         }

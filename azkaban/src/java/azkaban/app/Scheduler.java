@@ -225,7 +225,7 @@ public class Scheduler
     private ScheduledFuture<?> schedule(final ScheduledJob schedJob, boolean saveResults)
     {
         // fail fast if there is a problem with this job
-        _jobManager.validateJob(schedJob.getId(), schedJob.isDependencyIgnored());
+        _jobManager.validateJob(schedJob.getId());
 
         ScheduledJob oldScheduledJob = _scheduled.get(schedJob.getId());
         // Invalidate any old scheduled job of the same name.
