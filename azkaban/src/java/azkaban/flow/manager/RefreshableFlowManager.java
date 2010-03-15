@@ -1,7 +1,7 @@
 package azkaban.flow.manager;
 
-import azkaban.app.JobFactory;
 import azkaban.app.JobDescriptor;
+import azkaban.app.JobFactory;
 import azkaban.app.JobManager;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flow;
@@ -12,10 +12,11 @@ import azkaban.serialization.de.ExecutableFlowDeserializer;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -123,7 +124,7 @@ public class RefreshableFlowManager implements FlowManager
     private final void reloadInternal(Long lastId)
     {
         Map<String, Flow> flowMap = new HashMap<String, Flow>();
-        Set<String> rootFlows = new HashSet<String>();
+        Set<String> rootFlows = new TreeSet<String>();
         for (JobDescriptor rootDescriptor : jobManager.getRootJobDescriptors(jobManager.loadJobDescriptors())) {
             if (rootDescriptor.getId() != null) {
                 // This call of magical wonderment ends up pushing all Flow objects in the dependency graph for the root into flowMap
