@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The JobManager is responsible for managing the Jobs (duh) and the
@@ -59,6 +60,8 @@ public class JobManager {
     private static Logger logger = Logger.getLogger(JobManager.class);
 
     private volatile FlowManager manager;
+    private final AtomicReference<Map<String, JobDescriptor>> jobDescriptorCache =
+            new AtomicReference<Map<String, JobDescriptor>>(Collections.<String, JobDescriptor>emptyMap());
 
     public JobManager(
             final JobFactory factory,
@@ -204,7 +207,7 @@ public class JobManager {
 
     public JobDescriptor getJobDescriptor(String name)
     {
-        return loadJobDescriptors().get(name);
+        return jobDescriptorCache.get().get(name);
     }
 
     public Map<String, JobDescriptor> loadJobDescriptors() {
@@ -462,6 +465,7 @@ public class JobManager {
 
     private void updateFlowManager()
     {
+        jobDescriptorCache.set(loadJobDescriptors());
         manager.reload();
     }
 
