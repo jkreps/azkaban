@@ -486,6 +486,8 @@ public class JobManager {
         else
             throw new RuntimeException("Deploy failed because " + currPath
                                        + " could not be moved to " + destPath);
+
+        updateFlowManager();
     }
 
     public void deployJob(String jobName, String path, Props props) {
@@ -508,5 +510,7 @@ public class JobManager {
             throw new RuntimeException("Error deploying job " + jobName);
         }
         logger.info("Deployed job " + jobName + " to path " + path);
+
+        updateFlowManager();
     }
 }
