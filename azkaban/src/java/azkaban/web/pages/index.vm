@@ -18,7 +18,7 @@
 
 #macro(execing_job $desc)
   <li>
-    <a class="job-name" href="${context}/job?id=${desc.id}" title="${desc.jobClass.name}">
+    <a class="job-name" href="${context}/job?id=${desc.name}" title="${desc.name}">
       $desc.name
     </a>
     #if($desc.hasChildren())
@@ -110,9 +110,9 @@
                 </ul>
             </td>
             <td>
-              $utils.formatDateTime($exec.scheduledJob.started)
+              $utils.formatDateTime($exec.executableFlow.startTime)
               <br/>
-              ($utils.formatPeriod($utils.period($exec.scheduledJob.started, $util.now)) ago)
+              ($utils.formatPeriod($utils.period($exec.executableFlow.startTime, $util.now)) ago)
             </td>
             <td>
               #if($exec.scheduledJob.period)

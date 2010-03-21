@@ -36,22 +36,7 @@ public class ExecutionHistoryServlet extends AbstractAzkabanServlet {
                     }
                     else {
                         Flows.resetFailedFlows(flow);
-                        flow.execute(
-                                new FlowCallback()
-                                {
-                                    @Override
-                                    public void progressMade()
-                                    {
-                                        allFlows.saveExecutableFlow(flow);
-                                    }
-
-                                    @Override
-                                    public void completed(Status status)
-                                    {
-                                        allFlows.saveExecutableFlow(flow);
-                                    }
-                                }
-                        );
+                        this.getApplication().getScheduler().scheduleNow(flow);
 
                         addMessage(req, String.format("Flow[%s] restarted.", id));
                     }

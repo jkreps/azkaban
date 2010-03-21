@@ -1,30 +1,31 @@
 package azkaban.flow;
 
-import azkaban.app.JavaJob;
-import azkaban.common.jobs.Job;
+import azkaban.app.JobDescriptor;
+import azkaban.app.JobFactory;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+
 
 /**
  *
  */
 public class IndividualJobFlow implements Flow
 {
-    private final Job job;
+    private final JobFactory jobFactory;
+    private final JobDescriptor jobDescriptor;
 
-    public IndividualJobFlow(Job job)
+    public IndividualJobFlow(JobFactory jobFactory, JobDescriptor jobDescriptor)
     {
-        this.job = job;
+        this.jobFactory = jobFactory;
+        this.jobDescriptor = jobDescriptor;
     }
 
     @Override
     public String getName()
     {
-        return job.getId();
+        return jobDescriptor.getId();
     }
 
     @Override
@@ -44,7 +45,7 @@ public class IndividualJobFlow implements Flow
     {
         final ExecutableFlow retVal = overrides.containsKey(getName()) ?
                                       overrides.get(getName()) :
-                                      new IndividualJobExecutableFlow(id, job);
+                                      new IndividualJobExecutableFlow(id, jobFactory, jobDescriptor);
 
         if (overrides.containsKey(retVal.getName())) {
             throw new RuntimeException(String.format("overrides already has an entry with my key[%s], wtf?", retVal.getName()));
@@ -58,7 +59,7 @@ public class IndividualJobFlow implements Flow
     public String toString()
     {
         return "IndividualJobExecutableFlow{" +
-               "job=" + job +
+               "job=" + jobDescriptor +
                '}';
     }
 }

@@ -1,4 +1,4 @@
-#macro(execing_job $flow)
+#macro(history_execing_job $flow)
   <li>
     <a class="job-name-${flow.status}" href="${context}/job?id=${flow.name}" title="${flow.name}" name="sched-tree-link">
       $flow.name
@@ -6,7 +6,7 @@
     #if($flow.hasChildren())
       <ul>
         #foreach($subjob in $flow.children)
-          #execing_job($subjob)
+          #history_execing_job($subjob)
         #end
       </ul>
     #end
@@ -48,7 +48,7 @@
           #foreach($flow in $executions)
             <tr>
               <td>$flow.id</td>
-              <td><ul id="sched-tree">#execing_job($flow)</ul></td>
+              <td><ul id="sched-tree">#history_execing_job($flow)</ul></td>
               <td>
                 #if($utils.isNull($flow.started))
                   &ndash;

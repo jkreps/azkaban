@@ -13,6 +13,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import azkaban.app.AzkabanApp;
+import azkaban.flow.manager.FlowManager;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
@@ -31,46 +33,56 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
     private static final long serialVersionUID = 1;
     private static final int DEFAULT_UPLOAD_DISK_SPOOL_SIZE = 20 * 1024 * 1024;
     
-    private JobManager _jobManager;
     private MultipartParser _multipartParser;
     private String _tempDir;
     
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this._jobManager = this.getApplication().getJobManager();
         this._multipartParser = new MultipartParser(DEFAULT_UPLOAD_DISK_SPOOL_SIZE);
         
         _tempDir = this.getApplication().getTempDirectory();
     }
 
     @Override
-    protected void service(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String method = request.getMethod().toLowerCase();
-        if(method.equals("get")) {
-            response.getWriter().write("Hello!");
-        } else if(method.equals("put") || method.equals("post")) {
-            if(!ServletFileUpload.isMultipartContent(request))
-                throw new ServletException("No job file found!");
-            Map<String, Object> params = this._multipartParser.parseMultipart(request);
-            try {
-                FileItem item = (FileItem) params.get("file");
-                String deployPath = (String) params.get("path");
-                File jobDir = unzipFile(item);
-                this._jobManager.deployJobDir(jobDir.getAbsolutePath(), deployPath);
-            } catch (Exception e) {
-                String redirectError = (String)params.get("redirect_error");
-                setMessagedUrl(response, redirectError, "Installation Failed: " + e.getLocalizedMessage());
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+        response.getWriter().write("Hello!");
+    }
 
-                return;
-            }
-            
-            String redirectSuccess = (String)params.get("redirect_success");
-            setMessagedUrl(response, redirectSuccess, "Installation Succeeded");
-        } else if(method.equals("delete")) {}
-        
-       
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+        doPut(request, response);
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
+        if(!ServletFileUpload.isMultipartContent(request))
+            throw new ServletException("No job file found!");
+
+        Map<String, Object> params = this._multipartParser.parseMultipart(request);
+
+        try {
+            final AzkabanApp app = getApplication();
+            final JobManager jobManager = app.getJobManager();
+            final FlowManager allFlows = app.getAllFlows();
+
+            FileItem item = (FileItem) params.get("file");
+            String deployPath = (String) params.get("path");
+            File jobDir = unzipFile(item);
+
+            jobManager.deployJobDir(jobDir.getAbsolutePath(), deployPath);
+        } catch (Exception e) {
+            String redirectError = (String)params.get("redirect_error");
+            setMessagedUrl(response, redirectError, "Installation Failed: " + e.getLocalizedMessage());
+
+            return;
+        }
+
+        String redirectSuccess = (String)params.get("redirect_success");
+        setMessagedUrl(response, redirectSuccess, "Installation Succeeded");
     }
 
     private void setMessagedUrl(HttpServletResponse response, String redirectUrl, String message) throws IOException {

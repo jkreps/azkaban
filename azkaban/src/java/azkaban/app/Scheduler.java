@@ -175,6 +175,29 @@ public class Scheduler
     }
 
     /**
+     * Schedule this flow to run one time at the specified date
+     *
+     * @param flow The ExecutableFlow to run
+     */
+    public ScheduledFuture<?> scheduleNow(ExecutableFlow flow)
+    {
+        logger.info("Scheduling job '" + flow.getName() + "' for now");
+
+        ScheduledJob oldScheduledJob = _scheduled.get(flow.getName());
+        // Invalidate any old scheduled job of the same name.
+        if (oldScheduledJob != null) {
+            throw new RuntimeException("Schedule for flow already exists " + flow.getName());
+        }
+
+        final ScheduledJob schedJob = new ScheduledJob(flow.getName(), _jobManager, new DateTime(), true);
+
+        // mark the job as scheduled
+        _scheduled.put(flow.getName(), schedJob);
+
+        return _executor.schedule(new ScheduledFlow(flow, schedJob), 1, TimeUnit.MILLISECONDS);
+    }
+
+    /**
      * Schedule this job to run on a recurring basis beginning at the given dateTime and
      * repeating every period units of time forever
      *
@@ -225,7 +248,7 @@ public class Scheduler
     private ScheduledFuture<?> schedule(final ScheduledJob schedJob, boolean saveResults)
     {
         // fail fast if there is a problem with this job
-        _jobManager.validateJob(schedJob.getId(), schedJob.isDependencyIgnored());
+        _jobManager.validateJob(schedJob.getId());
 
         ScheduledJob oldScheduledJob = _scheduled.get(schedJob.getId());
         // Invalidate any old scheduled job of the same name.
@@ -596,6 +619,83 @@ public class Scheduler
                                 logger.warn("Error trying to update schedule.");
                             }
                         }
+                    }
+                });
+            }
+            catch (Throwable t) {
+                if (emailList != null) {
+                    sendErrorEmail(_scheduledJob, t, emailList);
+                }
+                _scheduled.remove(_scheduledJob.getId());
+                logger.warn(String.format("An exception almost made it back to the ScheduledThreadPool from job[%s]", _scheduledJob), t);
+            }
+        }
+    }
+
+        /**
+     * A runnable adapter for a Job
+     */
+    private class ScheduledFlow implements Runnable
+    {
+        private final ExecutableFlow _flow;
+        private final ScheduledJob _scheduledJob;
+
+
+        private ScheduledFlow(
+                ExecutableFlow flow,
+                ScheduledJob scheduledJob
+        )
+        {
+            this._flow = flow;
+            this._scheduledJob = scheduledJob;
+        }
+
+        public void run()
+        {
+            logger.info("Starting run of " + _flow.getName());
+
+            List<String> emailList = null;
+            try {
+                emailList = _jobManager.getJobDescriptor(_flow.getName()).getEmailNotificationList();
+                final List<String> finalEmailList = emailList;
+
+                final ExecutableFlow flowToRun = _flow;
+
+                allKnownFlows.saveExecutableFlow(flowToRun);
+
+                // mark the job as executing
+                _scheduled.remove(_scheduledJob.getId());
+                _scheduledJob.setStarted(new DateTime());
+                _executing.put(flowToRun.getName(), new ScheduledJobAndInstance(flowToRun, _scheduledJob));
+                Thread.sleep(30000);
+                flowToRun.execute(new FlowCallback()
+                {
+                    @Override
+                    public void progressMade()
+                    {
+                        allKnownFlows.saveExecutableFlow(flowToRun);
+                    }
+
+                    @Override
+                    public void completed(Status status)
+                    {
+                        _scheduledJob.setEnded(new DateTime());
+
+                        allKnownFlows.saveExecutableFlow(flowToRun);
+                        switch (status) {
+                            case SUCCEEDED:
+                                sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), finalEmailList);
+                                break;
+                            case FAILED:
+                                sendErrorEmail(_scheduledJob, new RuntimeException("This is a dummy exception"), finalEmailList);
+                                break;
+                            default:
+                                sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), finalEmailList);
+                        }
+
+                        // mark the job as completed
+                        _executing.remove(_scheduledJob.getId());
+                        _completed.put(_scheduledJob.getId(), _scheduledJob);
                     }
                 });
             }

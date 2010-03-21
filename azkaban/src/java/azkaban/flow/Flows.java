@@ -1,8 +1,7 @@
 package azkaban.flow;
 
 import azkaban.app.JobDescriptor;
-import azkaban.app.JobManager;
-import azkaban.flow.manager.FlowManager;
+import azkaban.app.JobFactory;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -17,7 +16,7 @@ import java.util.Set;
 public class Flows
 {
     public static Flow buildLegacyFlow(
-            final JobManager jobManager,
+            final JobFactory jobFactory,
             final Map<String, Flow> alreadyBuiltFlows,
             final JobDescriptor rootDescriptor
     )
@@ -39,19 +38,19 @@ public class Flows
                                         @Override
                                         public Flow apply(JobDescriptor jobDescriptor)
                                         {
-                                            return buildLegacyFlow(jobManager, alreadyBuiltFlows, jobDescriptor);
+                                            return buildLegacyFlow(jobFactory, alreadyBuiltFlows, jobDescriptor);
                                         }
                                     }
                             )
                     );
 
             retVal = new MultipleDependencyFlow(
-                    new IndividualJobFlow(jobManager.loadJob(rootDescriptor.getId(), true)),
+                    new IndividualJobFlow(jobFactory, rootDescriptor),
                     dependencyFlows.toArray(new Flow[dependencyFlows.size()])
             );
         }
         else {
-            retVal = new IndividualJobFlow(jobManager.loadJob(rootDescriptor.getId(), true));
+            retVal = new IndividualJobFlow(jobFactory, rootDescriptor);
         }
 
         alreadyBuiltFlows.put(retVal.getName(), retVal);

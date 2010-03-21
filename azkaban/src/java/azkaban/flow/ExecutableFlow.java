@@ -5,7 +5,10 @@ import org.joda.time.DateTime;
 import java.util.List;
 
 /**
- *
+ * An ExecutableFlow is a Flow object that has both the graph structure data as well as state required to execute the
+ * Flow.  While both an ExecutableFlow and a Flow are immutable from the API's perspective, an instance of an
+ * ExecutableFlow represents a single execution of a Flow while an instance of a Flow simply represents the job
+ * execution graph.
  */
 public interface ExecutableFlow
 {

@@ -43,6 +43,7 @@ public class JavaJob extends AbstractJob {
                                    .getString(CANCEL_METHOD_PARAM, DEFAULT_CANCEL_METHOD);
         _progressMethod = _descriptor.getProps().getString(PROGRESS_METHOD_PARAM,
                                                            DEFAULT_PROGRESS_METHOD);
+        
     }
 
     @Override
@@ -84,6 +85,8 @@ public class JavaJob extends AbstractJob {
 
     @Override
     public void run() {
+        ClassLoader loader = getClass().getClassLoader();
+    	
         if(Utils.constructorExist(_descriptor.getJobClass(), getId(), _descriptor.getProps())) {
             _javaObject = Utils.callConstructor(_descriptor.getJobClass(),
                                                 getId(),

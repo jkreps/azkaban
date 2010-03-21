@@ -1,5 +1,7 @@
 package azkaban.flow;
 
+import azkaban.app.JobFactory;
+import azkaban.app.JobDescriptor;
 import azkaban.common.jobs.Job;
 import org.easymock.IAnswer;
 import org.easymock.classextension.EasyMock;
@@ -17,12 +19,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class IndividualJobExecutableFlowTest
 {
+    private volatile JobFactory jobFactory;
+    private volatile JobDescriptor jobDescriptor;
+
     private volatile AtomicBoolean assertionViolated;
     private volatile String reason;
 
     @Before
     public void setUp()
     {
+        jobFactory = EasyMock.createMock(JobFactory.class);
+        jobDescriptor = EasyMock.createMock(JobDescriptor.class);
+
         assertionViolated = new AtomicBoolean(false);
         reason = "Default Reason";
     }
@@ -31,6 +39,7 @@ public class IndividualJobExecutableFlowTest
     public void tearDown()
     {
         Assert.assertFalse(reason, assertionViolated.get());
+        EasyMock.verify(jobFactory, jobDescriptor);
     }
 
     @Test
@@ -39,9 +48,9 @@ public class IndividualJobExecutableFlowTest
         final CountDownLatch completionLatch = new CountDownLatch(1);
 
         final Job mockJob = EasyMock.createMock(Job.class);
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", mockJob);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", jobFactory, jobDescriptor);
 
-
+        EasyMock.expect(jobFactory.apply(jobDescriptor)).andReturn(mockJob).once();
         EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
 
         mockJob.run();
@@ -56,7 +65,7 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
-        EasyMock.replay(mockJob);
+        EasyMock.replay(mockJob, jobFactory, jobDescriptor);
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 
@@ -96,8 +105,9 @@ public class IndividualJobExecutableFlowTest
         final CountDownLatch completionLatch = new CountDownLatch(1);
 
         final Job mockJob = EasyMock.createMock(Job.class);
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", mockJob);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", jobFactory, jobDescriptor);
 
+        EasyMock.expect(jobFactory.apply(jobDescriptor)).andReturn(mockJob).once();
         EasyMock.expect(mockJob.getId()).andReturn("failure Job").once();
 
         mockJob.run();
@@ -112,7 +122,7 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
-        EasyMock.replay(mockJob);
+        EasyMock.replay(mockJob, jobFactory, jobDescriptor);
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 
@@ -148,7 +158,8 @@ public class IndividualJobExecutableFlowTest
     @Test
     public void testNoChildren() throws Exception
     {
-        IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", EasyMock.createNiceMock(Job.class));
+        EasyMock.replay(jobFactory, jobDescriptor);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", jobFactory, jobDescriptor);
 
         Assert.assertFalse("IndividualJobExecutableFlow objects should not have any children.", executableFlow.hasChildren());
         Assert.assertTrue("IndividualJobExecutableFlow objects should not return any children.", executableFlow.getChildren().isEmpty());
@@ -161,9 +172,9 @@ public class IndividualJobExecutableFlowTest
         final CountDownLatch secondCallbackLatch = new CountDownLatch(1);
 
         final Job mockJob = EasyMock.createMock(Job.class);
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", mockJob);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", jobFactory, jobDescriptor);
 
-
+        EasyMock.expect(jobFactory.apply(jobDescriptor)).andReturn(mockJob).once();
         EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
 
         mockJob.run();
@@ -178,7 +189,7 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
-        EasyMock.replay(mockJob);
+        EasyMock.replay(mockJob, jobFactory, jobDescriptor);
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 
@@ -230,15 +241,15 @@ public class IndividualJobExecutableFlowTest
         final CountDownLatch secondCallbackLatch = new CountDownLatch(1);
 
         final Job mockJob = EasyMock.createMock(Job.class);
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", mockJob);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", jobFactory, jobDescriptor);
 
-
+        EasyMock.expect(jobFactory.apply(jobDescriptor)).andReturn(mockJob).once();
         EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
 
         mockJob.run();
         EasyMock.expectLastCall().andThrow(new RuntimeException()).once();
 
-        EasyMock.replay(mockJob);
+        EasyMock.replay(mockJob, jobFactory, jobDescriptor);
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 

@@ -1,5 +1,18 @@
 package azkaban.app;
 
+import azkaban.common.jobs.Job;
+import azkaban.common.utils.Props;
+import azkaban.common.utils.UndefinedPropertyException;
+import azkaban.common.utils.Utils;
+import azkaban.flow.manager.FlowManager;
+import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
+import com.google.common.collect.ImmutableSet;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -13,35 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
-import azkaban.flow.manager.FlowManager;
-import azkaban.flow.Flows;
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-
-import com.google.common.collect.ImmutableSet;
-
-import azkaban.jobcontrol.impl.jobs.JobGraph;
-import azkaban.jobcontrol.impl.jobs.ResourceThrottledJob;
-import azkaban.jobcontrol.impl.jobs.RetryingJob;
-import azkaban.jobcontrol.impl.jobs.locks.GroupLock;
-import azkaban.jobcontrol.impl.jobs.locks.JobLock;
-import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
-import azkaban.jobcontrol.impl.jobs.locks.PermitLock;
-import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
-
-import azkaban.common.jobs.Job;
-import azkaban.common.utils.Props;
-import azkaban.common.utils.UndefinedPropertyException;
-import azkaban.common.utils.Utils;
 
 /**
  * The JobManager is responsible for managing the Jobs (duh) and the
@@ -66,77 +51,39 @@ public class JobManager {
         }
     };
 
+    private final JobFactory _factory;
     private final String _logDir;
     private final Props _defaultProps;
     private final List<File> _jobDirs;
     private final ClassLoader _baseClassLoader;
 
-    private final NamedPermitManager _permitManager;
-    private final ReadWriteLockManager _readWriteLockManager;
-
     private static Logger logger = Logger.getLogger(JobManager.class);
-    private JobWrapperFactory _factory;
 
     private volatile FlowManager manager;
-    private final ScheduledExecutorService cacheReloader = Executors.newSingleThreadScheduledExecutor();
-    private final AtomicReference<Map<String, JobDescriptor>> noDependencyDescriptorCache;
+    private final AtomicReference<Map<String, JobDescriptor>> jobDescriptorCache =
+            new AtomicReference<Map<String, JobDescriptor>>(Collections.<String, JobDescriptor>emptyMap());
 
-    public JobManager(String logDir, Props defaultProps, List<File> jobDirs, ClassLoader classLoader) {
-        this(logDir, defaultProps, jobDirs, classLoader, Integer.MAX_VALUE);
-    }
-
-    public JobManager(String logDir,
-                      Props defaultProps,
-                      List<File> jobDirs,
-                      ClassLoader classLoader,
-                      int totalPermits) {
+    public JobManager(
+            final JobFactory factory,
+            final String logDir,
+            final Props defaultProps,
+            final List<File> jobDirs,
+            final ClassLoader classLoader
+    ) {
+        this._factory = factory;
         this._logDir = logDir;
         this._defaultProps = defaultProps;
         this._jobDirs = jobDirs;
         this._baseClassLoader = classLoader;
-        this._permitManager = new NamedPermitManager();
-        this._permitManager.createNamedPermit("default", totalPermits);
-        this._readWriteLockManager = new ReadWriteLockManager();
-
-        _factory = new JobWrapperFactory();
-        _factory.registerJobExecutorType("java", JavaJob.class);
-        _factory.registerJobExecutorType("command", ProcessJob.class);
-
-        noDependencyDescriptorCache = new AtomicReference<Map<String, JobDescriptor>>();
-        noDependencyDescriptorCache.set(loadJobDescriptors(new Props(), Collections.<File, File>emptyMap(), true));
-
-        cacheReloader.scheduleAtFixedRate(
-                new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        try {
-                            noDependencyDescriptorCache.set(
-                                    loadJobDescriptors(new Props(), Collections.<File, File>emptyMap(), true)
-                            );
-                            if (manager != null) {
-                                manager.reload();
-                            }
-                        }
-                        catch (Throwable t) {
-                            logger.error("Got an exception while updating jobDescriptor cache.  Not good.", t);
-                        }
-                    }
-                },
-                5,
-                5,
-                TimeUnit.MINUTES
-        );
     }
 
     public Job loadJob(String jobName, boolean ignoreDep) {
         return loadJob(jobName, new Props(), ignoreDep);
     }
 
-    public void validateJob(String jobName, boolean ignoreDep) {
+    public void validateJob(String jobName) {
         // for now just load the job and see if it blows up
-        loadJob(jobName, ignoreDep);
+        loadJob(jobName, true);
     }
 
     /**
@@ -153,93 +100,29 @@ public class JobManager {
         if(desc == null)
             throw new JobLoadException("No job descriptor found for job '" + jobName + "'.");
         return loadJob(desc,
-                       descriptors,
                        new HashMap<String, Job>(),
-                       ignoreDependencies,
-                       new ConcurrentHashMap<Job, JobGraph.JobSTATUS>());
+                       ignoreDependencies);
     }
 
     /*
      * Recursive inner method for loading a Job and its dependencies
      */
     private Job loadJob(JobDescriptor desc,
-                        Map<String, JobDescriptor> descriptors,
                         Map<String, Job> loadedJobs,
-                        boolean ignoreDependencies,
-                        ConcurrentHashMap<Job, JobGraph.JobSTATUS> jobStatusMap) {
+                        boolean ignoreDependencies) {
         String jobName = desc.getId();
 
         // Check if we have already loaded this job
         if(loadedJobs.containsKey(jobName))
             return loadedJobs.get(jobName);
 
-        Job job = createBasicJob(desc);
+        Job job = _factory.apply(desc);
 
-        // wrap up job in retrying proxy if necessary
-        if(desc.getRetries() > 0)
-            job = new RetryingJob(job, desc.getRetries(), desc.getRetryBackoffMs());
-
-        // Group Lock List
-        ArrayList<JobLock> jobLocks = new ArrayList<JobLock>();
-
-        // If this job requires work permits wrap it in a resource throttler
-        if(desc.getNumRequiredPermits() > 0) {
-            PermitLock permits = _permitManager.getNamedPermit("default",
-                                                               desc.getNumRequiredPermits());
-            if(permits == null) {
-                throw new JobLoadException("Job " + desc.getId() + " requires non-existant default");
-            } else if(permits.getDesiredNumPermits() > permits.getTotalNumberOfPermits()) {
-                throw new JobLoadException("Job " + desc.getId() + " requires "
-                                           + permits.getTotalNumberOfPermits()
-                                           + " but azkaban only has a total of "
-                                           + permits.getDesiredNumPermits()
-                                           + " permits, so this job cannot ever run.");
-            } else {
-                jobLocks.add(permits);
-            }
-        }
-
-        if(desc.getReadResourceLocks() != null) {
-            List<String> readLocks = desc.getReadResourceLocks();
-            for(String resource: readLocks) {
-                jobLocks.add(_readWriteLockManager.getReadLock(resource));
-            }
-        }
-        if(desc.getWriteResourceLocks() != null) {
-            List<String> writeLocks = desc.getWriteResourceLocks();
-            for(String resource: writeLocks) {
-                jobLocks.add(_readWriteLockManager.getWriteLock(resource));
-            }
-        }
-
-        if(jobLocks.size() > 0) {
-            // Group lock
-            GroupLock groupLock = new GroupLock(jobLocks);
-            job = new ResourceThrottledJob(job, groupLock);
-        }
-
-        // wrap up job in logging proxy
-        job = new LoggingJob(_logDir, job, job.getId());
-
-        // wrap up job in JobGraph if necessary
         if(ignoreDependencies || !desc.hasDependencies()) {
             loadedJobs.put(jobName, job);
             return job;
         } else {
-            JobGraph graphJob = new JobGraph(desc.getId(),
-                                             desc.getProps(),
-                                             jobStatusMap,
-                                             descriptors);
-            loadedJobs.put(jobName, graphJob);
-            List<Job> dependencies = new ArrayList<Job>();
-            for(JobDescriptor dep: desc.getDependencies())
-                dependencies.add(loadJob(dep,
-                                         descriptors,
-                                         loadedJobs,
-                                         ignoreDependencies,
-                                         jobStatusMap));
-            graphJob.addJob(job, dependencies);
-            return graphJob;
+            throw new RuntimeException("No longer support the loading of jobs with dependencies.  Use FlowManager instead.");
         }
     }
 
@@ -322,6 +205,11 @@ public class JobManager {
         return execs;
     }
 
+    public JobDescriptor getJobDescriptor(String name)
+    {
+        return jobDescriptorCache.get().get(name);
+    }
+
     public Map<String, JobDescriptor> loadJobDescriptors() {
         return loadJobDescriptors(null, new HashMap<File, File>(), false);
     }
@@ -329,11 +217,6 @@ public class JobManager {
     public Map<String, JobDescriptor> loadJobDescriptors(Props overrides,
                                                          Map<File, File> pathOverrides,
                                                          boolean ignoreDeps) {
-        Map<String, JobDescriptor> cachedRetVal = noDependencyDescriptorCache.get();
-        if ((pathOverrides == null || pathOverrides.isEmpty()) && ignoreDeps && cachedRetVal != null) { // can give cached response
-            return cachedRetVal;           
-        }
-
         Map<String, JobDescriptor> descriptors = new HashMap<String, JobDescriptor>();
         for(File file: _jobDirs) {
             Map<String, JobDescriptor> d = loadJobDescriptors(file,
@@ -408,7 +291,8 @@ public class JobManager {
         ClassLoader loader = createClassLoaderForDir(parentClassLoader, currDir);
 
         // now load any files defined in this directory
-        for(File f: currDir.listFiles()) {
+        File[] status = currDir.listFiles();
+        for(File f: status) {
             if(EXCLUDE_PATHS.contains(f.getName()) || f.getName().startsWith(".")) {
                 // ignore common files
                 continue;
@@ -522,16 +406,6 @@ public class JobManager {
     }
 
     /**
-     * Instantiate the given job
-     * 
-     * @param dep The job descriptor
-     * @return The instantiated job
-     */
-    private Job createBasicJob(JobDescriptor dep) {
-        return _factory.getJobExecutor(dep);
-    }
-
-    /**
      * Load all files that are not jobs from the given directory as Props with
      * the given parent
      * 
@@ -591,6 +465,7 @@ public class JobManager {
 
     private void updateFlowManager()
     {
+        jobDescriptorCache.set(loadJobDescriptors());
         manager.reload();
     }
 

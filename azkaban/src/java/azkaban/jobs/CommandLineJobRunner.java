@@ -1,16 +1,19 @@
 package azkaban.jobs;
 
-import azkaban.app.JobDescriptor;
+import azkaban.app.JobFactory;
+import azkaban.app.JavaJob;
 import azkaban.app.JobManager;
+import azkaban.app.ProcessJob;
 import azkaban.app.Scheduler;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
 import azkaban.flow.ExecutableFlow;
-import azkaban.flow.Flows;
 import azkaban.flow.JobManagerFlowDeserializer;
 import azkaban.flow.manager.FlowManager;
 import azkaban.flow.manager.RefreshableFlowManager;
+import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
+import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
 import azkaban.serialization.ExecutableFlowSerializer;
 import azkaban.serialization.de.ExecutableFlowDeserializer;
@@ -24,6 +27,7 @@ import org.joda.time.DateTime;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
@@ -78,11 +82,23 @@ public class CommandLineJobRunner {
             overrides.put(pieces[0], pieces[1]);
         }
 
-        JobManager jobManager = new JobManager(cl.getLogDir().getAbsolutePath(),
+        NamedPermitManager permitManager = new NamedPermitManager();
+        permitManager.createNamedPermit("default", cl.getNumWorkPermits());
+        
+        JobFactory factory = new JobFactory(
+                permitManager,
+                new ReadWriteLockManager(),
+                cl.getLogDir().getAbsolutePath(),
+                "java",
+                ImmutableMap.<String, Class<? extends Job>>of("java", JavaJob.class,
+                                                              "command", ProcessJob.class)
+        );
+
+        JobManager jobManager = new JobManager(factory,
+                                               cl.getLogDir().getAbsolutePath(),
                                                cl.getDefaultProps(),
                                                cl.getJobDirs(),
-                                               cl.getClassloader(),
-                                               cl.getNumWorkPermits());
+                                               cl.getClassloader());
 
         File executionsStorageFile = new File(".");
         if (! executionsStorageFile.exists()) {
@@ -108,11 +124,11 @@ public class CommandLineJobRunner {
         final ExecutableFlowDeserializer flowDeserializer = new ExecutableFlowDeserializer(
                 new JobFlowDeserializer(
                         ImmutableMap.<String, Function<Map<String, Object>, ExecutableFlow>>of(
-                                "jobManagerLoaded", new JobManagerFlowDeserializer(jobManager)
+                                "jobManagerLoaded", new JobManagerFlowDeserializer(jobManager, factory)
                         )
                 )
         );
-        FlowManager allFlows = new RefreshableFlowManager(jobManager, flowSerializer, flowDeserializer, executionsStorageFile, lastId);
+        FlowManager allFlows = new RefreshableFlowManager(jobManager, factory, flowSerializer, flowDeserializer, executionsStorageFile, lastId);
 
         Scheduler scheduler = new Scheduler(jobManager,
                                             allFlows,

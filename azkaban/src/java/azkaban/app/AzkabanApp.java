@@ -1,12 +1,14 @@
 package azkaban.app;
 
+import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.manager.FlowManager;
 import azkaban.flow.JobManagerFlowDeserializer;
-import azkaban.flow.manager.ImmutableFlowManager;
 import azkaban.flow.manager.RefreshableFlowManager;
+import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
+import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
 import azkaban.jobs.AzkabanCommandLine;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
 import azkaban.serialization.ExecutableFlowSerializer;
@@ -16,7 +18,6 @@ import azkaban.web.AzkabanServletContextListener;
 import azkaban.web.JobManagerServlet;
 import azkaban.web.LogServlet;
 import azkaban.web.pages.ExecutionHistoryServlet;
-import azkaban.web.pages.FlowServlet;
 import azkaban.web.pages.HdfsBrowserServlet;
 import azkaban.web.pages.IndexServlet;
 import azkaban.web.pages.JobDetailServlet;
@@ -38,6 +39,7 @@ import org.mortbay.jetty.servlet.ServletHandler;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
@@ -46,12 +48,12 @@ import java.util.Map;
 
 /**
  * Master application that runs everything
- * 
+ *
  * This class will be loaded up either by running from the command line or via a
  * servlet context listener.
- * 
+ *
  * @author jkreps
- * 
+ *
  */
 public class AzkabanApp {
 
@@ -74,13 +76,13 @@ public class AzkabanApp {
         this._jobDirs = Utils.nonNull(jobDirs);
         this._logsDir = Utils.nonNull(logDir);
         this._tempDir = Utils.nonNull(tempDir);
-        
+
         if(!this._logsDir.exists())
             this._logsDir.mkdirs();
 
         if(!this._tempDir.exists())
             this._tempDir.mkdirs();
-        
+
         for(File jobDir: _jobDirs) {
             if(!jobDir.exists()) {
                 logger.warn("Job directory " + jobDir + " does not exist. Creating.");
@@ -93,23 +95,24 @@ public class AzkabanApp {
 
         Props defaultProps = PropsUtils.loadPropsInDirs(_jobDirs, ".properties", ".schema");
 
-        String hadoopHome = System.getenv("HADOOP_HOME");
-        if(hadoopHome == null) {
-            logger.info("HADOOP_HOME not set, using default hadoop config.");
-            _baseClassLoader = ClassLoader.getSystemClassLoader();
-        } else {
-            logger.info("Using hadoop config found in " + hadoopHome);
-            _baseClassLoader = new URLClassLoader(new URL[] { new File(hadoopHome, "conf").toURL() },
-            		ClassLoader.getSystemClassLoader());
-        }
+        _baseClassLoader = getBaseClassloader();
 
-        int workPermits = defaultProps.getInt("total.job.permits", Integer.MAX_VALUE);
-        this._hdfsUrl = defaultProps.getString("hdfs.instance.url", null);
-        _jobManager = new JobManager(_logsDir.getAbsolutePath(),
+        NamedPermitManager permitManager = getNamedPermitManager(defaultProps);
+        JobFactory factory = new JobFactory(
+                permitManager,
+                new ReadWriteLockManager(),
+                _logsDir.getAbsolutePath(),
+                "java",
+                ImmutableMap.<String, Class<? extends Job>>of("java", JavaJob.class,
+                                                              "command", ProcessJob.class)
+        );
+
+        _hdfsUrl = defaultProps.getString("hdfs.instance.url", null);
+        _jobManager = new JobManager(factory,
+                                     _logsDir.getAbsolutePath(),
                                      defaultProps,
                                      _jobDirs,
-                                     _baseClassLoader,
-                                     workPermits);
+                                     _baseClassLoader);
 
         _mailer = new Mailman(defaultProps.getString("mail.host", "localhost"),
                               defaultProps.getString("mail.user", ""),
@@ -119,56 +122,26 @@ public class AzkabanApp {
         String successEmail = defaultProps.getString("job.success.email", null);
         int schedulerThreads = defaultProps.getInt("scheduler.threads", 50);
 
-        File schedule = new File(_jobDirs.get(0).getAbsoluteFile(), "jobs.schedule");
-        File backup = new File(_jobDirs.get(0).getAbsoluteFile(), "jobs.schedule.backup");
-
-        String scheduleFile = defaultProps.getString("schedule.file", null);
-        if(scheduleFile != null)
-            schedule = new File(scheduleFile);
-        else
-            logger.info("Schedule file param not set. Defaulting to " + schedule.getAbsolutePath());
-
-        String backupFile = defaultProps.getString("schedule.backup.file", null);
-        if(backupFile != null)
-            backup = new File(backupFile);
-        else
-            logger.info("Schedule backup file param not set. Defaulting to "
-                        + backup.getAbsolutePath());
-
-        File executionsStorageFile = new File(
-                defaultProps.getString("azkaban.executions.storage.dir", _jobDirs.get(0).getAbsolutePath() + "/executions")
+        final File initialJobDir = _jobDirs.get(0);
+        File schedule = getScheduleFile(defaultProps, initialJobDir);
+        File backup = getBackupFile(defaultProps, initialJobDir);
+        File executionsStorageDir = new File(
+                defaultProps.getString("azkaban.executions.storage.dir", initialJobDir.getAbsolutePath() + "/executions")
         );
-        if (! executionsStorageFile.exists()) {
-            executionsStorageFile.mkdirs();
-        }
-
-        long lastId = 0;
-        for (File file : executionsStorageFile.listFiles()) {
-            final String filename = file.getName();
-            if (filename.endsWith(".json")) {
-                try {
-                    lastId = Math.max(
-                            lastId,
-                            Long.parseLong(filename.substring(0, filename.length() - 5))
-                    );
-                }
-                catch (NumberFormatException e) {
-                }
-            }
-        }
-
-        logger.info(String.format("Using path[%s] for storing executions.", executionsStorageFile));
-        logger.info(String.format("Last known execution id was [%s]", lastId));
+        if (! executionsStorageDir.exists()) executionsStorageDir.mkdirs();
+        long lastExecutionId = getLastExecutionId(executionsStorageDir);
+        logger.info(String.format("Using path[%s] for storing executions.", executionsStorageDir));
+        logger.info(String.format("Last known execution id was [%s]", lastExecutionId));
 
         final ExecutableFlowSerializer flowSerializer = new DefaultExecutableFlowSerializer();
         final ExecutableFlowDeserializer flowDeserializer = new ExecutableFlowDeserializer(
                 new JobFlowDeserializer(
                         ImmutableMap.<String, Function<Map<String, Object>, ExecutableFlow>>of(
-                                "jobManagerLoaded", new JobManagerFlowDeserializer(_jobManager)
+                                "jobManagerLoaded", new JobManagerFlowDeserializer(_jobManager, factory)
                         )
                 )
         );
-        _allFlows = new RefreshableFlowManager(_jobManager, flowSerializer, flowDeserializer, executionsStorageFile, lastId);
+        _allFlows = new RefreshableFlowManager(_jobManager, factory, flowSerializer, flowDeserializer, executionsStorageDir, lastExecutionId);
         _jobManager.setFlowManager(_allFlows);
 
         this._scheduler = new Scheduler(_jobManager,
@@ -220,7 +193,7 @@ public class AzkabanApp {
     public String getTempDirectory() {
         return _tempDir.getAbsolutePath();
     }
-    
+
     public List<File> getJobDirectories() {
         return _jobDirs;
     }
@@ -241,20 +214,20 @@ public class AzkabanApp {
         OptionParser parser = new OptionParser();
         OptionSpec<Integer> portOpt = parser.acceptsAll(Arrays.asList("p", "port"),
                                                         "The port on which to run the http server.")
-                                            .withRequiredArg()
-                                            .describedAs("port")
-                                            .ofType(Integer.class);
+                .withRequiredArg()
+                .describedAs("port")
+                .ofType(Integer.class);
         OptionSpec<Integer> httpThreadsOpt = parser.acceptsAll(Arrays.asList("http-threads"),
                                                                "The number of threads  http server.")
-                                                   .withRequiredArg()
-                                                   .describedAs("num_threads")
-                                                   .ofType(Integer.class);
+                .withRequiredArg()
+                .describedAs("num_threads")
+                .ofType(Integer.class);
         String devModeOpt = "dev-mode";
         parser.accepts(devModeOpt, "Enable developer friendly options.");
         OptionSpec<String> staticContentOpt = parser.accepts("static-dir",
                                                              "The static content directory for the web server.")
-                                                    .withRequiredArg()
-                                                    .describedAs("dir");
+                .withRequiredArg()
+                .describedAs("dir");
 
         AzkabanCommandLine cl = new AzkabanCommandLine(parser, arguments);
         OptionSet options = cl.getOptions();
@@ -264,7 +237,7 @@ public class AzkabanApp {
 
         if(cl.getJobDirs().size() == 0)
             cl.printHelpAndExit("No job directory given.", System.out);
-        
+
         logger.info("Job log directory set to " + cl.getLogDir().getAbsolutePath());
         logger.info("Job directories set to " + cl.getJobDirs());
 
@@ -289,7 +262,7 @@ public class AzkabanApp {
         server.addContext(context);
 
         String staticDir = options.has(staticContentOpt) ? options.valueOf(staticContentOpt)
-                                                        : DEFAULT_STATIC_DIR;
+                                                         : DEFAULT_STATIC_DIR;
 
         ServletHandler servlets = new ServletHandler();
         context.addHandler(servlets);
@@ -304,7 +277,6 @@ public class AzkabanApp {
         servlets.addServlet("Job Manager", "/api/jobs", JobManagerServlet.class.getName());
         servlets.addServlet("Job Upload", "/job-upload/*", JobUploadServlet.class.getName());
         servlets.addServlet("HDFS Browser", "/fs/*", HdfsBrowserServlet.class.getName());
-        servlets.addServlet("Flows", "/flow", FlowServlet.class.getName());
 
         try {
             server.start();
@@ -344,5 +316,80 @@ public class AzkabanApp {
     public FlowManager getAllFlows()
     {
         return _allFlows;
+    }
+
+    private ClassLoader getBaseClassloader() throws MalformedURLException
+    {
+        final ClassLoader retVal;
+
+        String hadoopHome = System.getenv("HADOOP_HOME");
+        if(hadoopHome == null) {
+            logger.info("HADOOP_HOME not set, using default hadoop config.");
+            retVal = getClass().getClassLoader();
+        } else {
+            logger.info("Using hadoop config found in " + hadoopHome);
+            retVal = new URLClassLoader(new URL[] { new File(hadoopHome, "conf").toURL() },
+                                        getClass().getClassLoader());
+        }
+
+        System.out.println(Utils.getClassLoaderDescriptions(retVal));
+
+        return retVal;
+    }
+
+    private NamedPermitManager getNamedPermitManager(Props props) throws MalformedURLException
+    {
+        int workPermits = props.getInt("total.job.permits", Integer.MAX_VALUE);
+        NamedPermitManager permitManager = new NamedPermitManager();
+        permitManager.createNamedPermit("default", workPermits);
+
+        return permitManager;
+    }
+
+    private File getBackupFile(Props defaultProps, File initialJobDir)
+    {
+        File retVal = new File(initialJobDir.getAbsoluteFile(), "jobs.schedule.backup");
+
+        String backupFile = defaultProps.getString("schedule.backup.file", null);
+        if(backupFile != null)
+            retVal = new File(backupFile);
+        else
+            logger.info("Schedule backup file param not set. Defaulting to " + retVal.getAbsolutePath());
+
+        return retVal;
+    }
+
+    private File getScheduleFile(Props defaultProps, File initialJobDir)
+    {
+        File retVal = new File(initialJobDir.getAbsoluteFile(), "jobs.schedule");
+
+        String scheduleFile = defaultProps.getString("schedule.file", null);
+        if(scheduleFile != null)
+            retVal = new File(scheduleFile);
+        else
+            logger.info("Schedule file param not set. Defaulting to " + retVal.getAbsolutePath());
+
+        return retVal;
+    }
+
+    private long getLastExecutionId(File executionsStorageDir)
+    {
+        long lastId = 0;
+
+        for (File file : executionsStorageDir.listFiles()) {
+            final String filename = file.getName();
+            if (filename.endsWith(".json")) {
+                try {
+                    lastId = Math.max(
+                            lastId,
+                            Long.parseLong(filename.substring(0, filename.length() - 5))
+                    );
+                }
+                catch (NumberFormatException e) {
+                }
+            }
+        }
+
+        return lastId;
     }
 }

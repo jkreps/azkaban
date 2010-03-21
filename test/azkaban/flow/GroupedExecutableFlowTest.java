@@ -1,5 +1,7 @@
 package azkaban.flow;
 
+import azkaban.app.JobFactory;
+import azkaban.app.JobDescriptor;
 import azkaban.common.jobs.Job;
 import org.easymock.Capture;
 import org.easymock.IAnswer;
@@ -385,8 +387,14 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(strictJob.getId()).andReturn("a").anyTimes();
         EasyMock.replay(strictJob);
 
-        final IndividualJobExecutableFlow completedJob1 = new IndividualJobExecutableFlow("blah", strictJob);
-        final IndividualJobExecutableFlow completedJob2 = new IndividualJobExecutableFlow("blah", strictJob);
+        final JobFactory factory = EasyMock.createStrictMock(JobFactory.class);
+        final JobDescriptor descriptor = EasyMock.createStrictMock(JobDescriptor.class);
+
+        EasyMock.expect(descriptor.getId()).andReturn("blah").times(2);
+        EasyMock.replay(descriptor, factory);
+
+        final IndividualJobExecutableFlow completedJob1 = new IndividualJobExecutableFlow("blah", factory, descriptor);
+        final IndividualJobExecutableFlow completedJob2 = new IndividualJobExecutableFlow("blah", factory, descriptor);
 
         flow = new GroupedExecutableFlow(
                 "blah",
@@ -394,9 +402,9 @@ public class GroupedExecutableFlowTest
                 completedJob2
         );
 
-        EasyMock.verify(strictJob);
-        EasyMock.reset(strictJob);
-        EasyMock.replay(strictJob);
+        EasyMock.verify(strictJob, descriptor, factory);
+        EasyMock.reset(strictJob, descriptor, factory);
+        EasyMock.replay(strictJob, descriptor, factory);
 
         completedJob1.markCompleted();
         completedJob2.markCompleted();
@@ -412,6 +420,6 @@ public class GroupedExecutableFlowTest
         });
 
         Assert.assertTrue("Callback wasn't called!?", callbackWasCalled.get());
-        EasyMock.verify(strictJob);
+        EasyMock.verify(strictJob, descriptor, factory);
     }
 }
