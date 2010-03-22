@@ -64,6 +64,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 }
                 startTime = theStartTime;
                 endTime = theEndTime;
+                break;
             default:
                 startTime = null;
                 endTime = null;

@@ -1,8 +1,9 @@
 package azkaban.flow;
 
-import azkaban.app.JobFactory;
 import azkaban.app.JavaJob;
 import azkaban.app.JobDescriptor;
+import azkaban.app.JobFactory;
+import azkaban.app.JobWrappingFactory;
 import azkaban.common.jobs.DelegatingJob;
 import azkaban.common.jobs.Job;
 import org.joda.time.DateTime;
@@ -22,8 +23,8 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
 
     private final Object sync = new Object();
     private final String id;
+    private final String name;
     private final JobFactory jobFactory;
-    private final JobDescriptor jobDescriptor;
 
     private volatile Status jobState;
     private volatile List<FlowCallback> callbacksToCall;
@@ -31,11 +32,11 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private volatile DateTime endTime;
     private volatile Job job;
 
-    public IndividualJobExecutableFlow(String id, JobFactory jobFactory, JobDescriptor jobDescriptor)
+    public IndividualJobExecutableFlow(String id, String name, JobFactory jobFactory)
     {
         this.id = id;
+        this.name = name;
         this.jobFactory = jobFactory;
-        this.jobDescriptor = jobDescriptor;
 
         jobState = Status.READY;
         callbacksToCall = new ArrayList<FlowCallback>();
@@ -52,7 +53,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     @Override
     public String getName()
     {
-        return jobDescriptor.getId();
+        return name;
     }
 
     @Override
@@ -64,7 +65,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                     jobState = Status.RUNNING;
                     startTime = new DateTime();
                     callbacksToCall.add(callback);
-                    job = jobFactory.apply(jobDescriptor);
+                    job = jobFactory.factorizeJob();
                     break;
                 case RUNNING:
                     callbacksToCall.add(callback);
@@ -265,11 +266,6 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     public DateTime getEndTime()
     {
         return endTime;
-    }
-
-    Job getJob()
-    {
-        return job;
     }
 
     IndividualJobExecutableFlow setStatus(Status newStatus)

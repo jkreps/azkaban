@@ -5,7 +5,6 @@ import azkaban.common.utils.Props;
 import azkaban.common.utils.UndefinedPropertyException;
 import azkaban.common.utils.Utils;
 import azkaban.flow.manager.FlowManager;
-import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -51,7 +50,7 @@ public class JobManager {
         }
     };
 
-    private final JobFactory _factory;
+    private final JobWrappingFactory _factory;
     private final String _logDir;
     private final Props _defaultProps;
     private final List<File> _jobDirs;
@@ -64,7 +63,7 @@ public class JobManager {
             new AtomicReference<Map<String, JobDescriptor>>(Collections.<String, JobDescriptor>emptyMap());
 
     public JobManager(
-            final JobFactory factory,
+            final JobWrappingFactory factory,
             final String logDir,
             final Props defaultProps,
             final List<File> jobDirs,

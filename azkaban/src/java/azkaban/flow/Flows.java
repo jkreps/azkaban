@@ -1,7 +1,9 @@
 package azkaban.flow;
 
 import azkaban.app.JobDescriptor;
-import azkaban.app.JobFactory;
+import azkaban.app.JobManager;
+import azkaban.app.JobWrappingFactory;
+import azkaban.app.LazyJobFactory;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -16,7 +18,8 @@ import java.util.Set;
 public class Flows
 {
     public static Flow buildLegacyFlow(
-            final JobFactory jobFactory,
+            final JobWrappingFactory jobFactory,
+            final JobManager jobManager,
             final Map<String, Flow> alreadyBuiltFlows,
             final JobDescriptor rootDescriptor
     )
@@ -38,19 +41,25 @@ public class Flows
                                         @Override
                                         public Flow apply(JobDescriptor jobDescriptor)
                                         {
-                                            return buildLegacyFlow(jobFactory, alreadyBuiltFlows, jobDescriptor);
+                                            return buildLegacyFlow(jobFactory, jobManager, alreadyBuiltFlows, jobDescriptor);
                                         }
                                     }
                             )
                     );
 
             retVal = new MultipleDependencyFlow(
-                    new IndividualJobFlow(jobFactory, rootDescriptor),
+                    new IndividualJobFlow(
+                            rootDescriptor.getId(),
+                            new LazyJobFactory(jobFactory, jobManager, rootDescriptor.getId())
+                            ),
                     dependencyFlows.toArray(new Flow[dependencyFlows.size()])
             );
         }
         else {
-            retVal = new IndividualJobFlow(jobFactory, rootDescriptor);
+            retVal = new IndividualJobFlow(
+                    rootDescriptor.getId(),
+                    new LazyJobFactory(jobFactory, jobManager, rootDescriptor.getId())
+            );
         }
 
         alreadyBuiltFlows.put(retVal.getName(), retVal);
@@ -74,4 +83,5 @@ public class Flows
 
         return theFlow;
     }
+
 }

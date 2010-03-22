@@ -1,8 +1,8 @@
 package azkaban.flow.manager;
 
 import azkaban.app.JobDescriptor;
-import azkaban.app.JobFactory;
 import azkaban.app.JobManager;
+import azkaban.app.JobWrappingFactory;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flow;
 import azkaban.flow.Flows;
@@ -26,7 +26,7 @@ public class RefreshableFlowManager implements FlowManager
     private final Object idSync = new Object();
     
     private final JobManager jobManager;
-    private final JobFactory jobFactory;
+    private final JobWrappingFactory jobFactory;
     private final ExecutableFlowSerializer serializer;
     private final ExecutableFlowDeserializer deserializer;
     private final File storageDirectory;
@@ -35,7 +35,7 @@ public class RefreshableFlowManager implements FlowManager
 
     public RefreshableFlowManager(
             JobManager jobManager,
-            JobFactory jobFactory,
+            JobWrappingFactory jobFactory,
             ExecutableFlowSerializer serializer,
             ExecutableFlowDeserializer deserializer,
             File storageDirectory,
@@ -127,7 +127,7 @@ public class RefreshableFlowManager implements FlowManager
         for (JobDescriptor rootDescriptor : jobManager.getRootJobDescriptors(jobManager.loadJobDescriptors())) {
             if (rootDescriptor.getId() != null) {
                 // This call of magical wonderment ends up pushing all Flow objects in the dependency graph for the root into flowMap
-                Flows.buildLegacyFlow(jobFactory, flowMap, rootDescriptor);
+                Flows.buildLegacyFlow(jobFactory, jobManager, flowMap, rootDescriptor);
                 rootFlows.add(rootDescriptor.getId());
             }
         }

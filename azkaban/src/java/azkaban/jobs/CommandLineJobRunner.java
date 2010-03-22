@@ -1,8 +1,8 @@
 package azkaban.jobs;
 
-import azkaban.app.JobFactory;
 import azkaban.app.JavaJob;
 import azkaban.app.JobManager;
+import azkaban.app.JobWrappingFactory;
 import azkaban.app.ProcessJob;
 import azkaban.app.Scheduler;
 import azkaban.common.jobs.Job;
@@ -27,7 +27,6 @@ import org.joda.time.DateTime;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
@@ -85,7 +84,7 @@ public class CommandLineJobRunner {
         NamedPermitManager permitManager = new NamedPermitManager();
         permitManager.createNamedPermit("default", cl.getNumWorkPermits());
         
-        JobFactory factory = new JobFactory(
+        JobWrappingFactory factory = new JobWrappingFactory(
                 permitManager,
                 new ReadWriteLockManager(),
                 cl.getLogDir().getAbsolutePath(),
