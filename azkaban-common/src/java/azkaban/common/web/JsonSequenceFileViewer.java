@@ -42,14 +42,21 @@ public class JsonSequenceFileViewer extends HdfsSequenceFileViewer {
                 boolean readSomething = reader.next(keyWritable, valueWritable);
                 if(!readSomething)
                     break;
-                output.write(keySerializer.toObject(keyWritable.get()).toString());
+                output.write(safeToString(keySerializer.toObject(keyWritable.get())));
                 output.write("\t=>\t");
-                output.write(valueSerializer.toObject(valueWritable.get()).toString());
+                output.write(safeToString(valueSerializer.toObject(valueWritable.get())));
                 output.write("\n");
                 output.flush();
             }
         } finally {
             reader.close();
         }
+    }
+    
+    private String safeToString(Object value) {
+    	if(value == null)
+    		return "null";
+    	else
+    		return value.toString();
     }
 }

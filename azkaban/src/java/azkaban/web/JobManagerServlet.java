@@ -74,7 +74,6 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
             File jobDir = unzipFile(item);
 
             jobManager.deployJobDir(jobDir.getAbsolutePath(), deployPath);
-            allFlows.reload();
         } catch (Exception e) {
             String redirectError = (String)params.get("redirect_error");
             setMessagedUrl(response, redirectError, "Installation Failed: " + e.getLocalizedMessage());

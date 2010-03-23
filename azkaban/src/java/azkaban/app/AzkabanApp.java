@@ -98,7 +98,7 @@ public class AzkabanApp {
         _baseClassLoader = getBaseClassloader();
 
         NamedPermitManager permitManager = getNamedPermitManager(defaultProps);
-        JobFactory factory = new JobFactory(
+        JobWrappingFactory factory = new JobWrappingFactory(
                 permitManager,
                 new ReadWriteLockManager(),
                 _logsDir.getAbsolutePath(),

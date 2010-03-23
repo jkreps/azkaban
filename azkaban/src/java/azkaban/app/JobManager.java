@@ -5,7 +5,6 @@ import azkaban.common.utils.Props;
 import azkaban.common.utils.UndefinedPropertyException;
 import azkaban.common.utils.Utils;
 import azkaban.flow.manager.FlowManager;
-import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -26,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The JobManager is responsible for managing the Jobs (duh) and the
@@ -50,7 +50,7 @@ public class JobManager {
         }
     };
 
-    private final JobFactory _factory;
+    private final JobWrappingFactory _factory;
     private final String _logDir;
     private final Props _defaultProps;
     private final List<File> _jobDirs;
@@ -59,9 +59,11 @@ public class JobManager {
     private static Logger logger = Logger.getLogger(JobManager.class);
 
     private volatile FlowManager manager;
+    private final AtomicReference<Map<String, JobDescriptor>> jobDescriptorCache =
+            new AtomicReference<Map<String, JobDescriptor>>(Collections.<String, JobDescriptor>emptyMap());
 
     public JobManager(
-            final JobFactory factory,
+            final JobWrappingFactory factory,
             final String logDir,
             final Props defaultProps,
             final List<File> jobDirs,
@@ -204,7 +206,7 @@ public class JobManager {
 
     public JobDescriptor getJobDescriptor(String name)
     {
-        return loadJobDescriptors().get(name);
+        return jobDescriptorCache.get().get(name);
     }
 
     public Map<String, JobDescriptor> loadJobDescriptors() {
@@ -462,6 +464,7 @@ public class JobManager {
 
     private void updateFlowManager()
     {
+        jobDescriptorCache.set(loadJobDescriptors());
         manager.reload();
     }
 
@@ -486,6 +489,8 @@ public class JobManager {
         else
             throw new RuntimeException("Deploy failed because " + currPath
                                        + " could not be moved to " + destPath);
+
+        updateFlowManager();
     }
 
     public void deployJob(String jobName, String path, Props props) {
@@ -508,5 +513,7 @@ public class JobManager {
             throw new RuntimeException("Error deploying job " + jobName);
         }
         logger.info("Deployed job " + jobName + " to path " + path);
+
+        updateFlowManager();
     }
 }
