@@ -519,6 +519,11 @@ public class Props {
      */
     public Map<String, String> getMapByPrefix(String prefix) {
         Map<String, String> values = new HashMap<String, String>();
+
+        for (Map.Entry<String, String> entry : _parent.getMapByPrefix(prefix).entrySet()) {
+            values.put(entry.getKey(), entry.getValue());
+        }
+
         for(String key: this.localKeySet()) {
             if(key.startsWith(prefix))
                 values.put(key.substring(prefix.length()), get(key));
