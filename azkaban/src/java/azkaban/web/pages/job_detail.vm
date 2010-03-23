@@ -1,7 +1,7 @@
 <html>
   <head>
     <title>#appname()</title>
-    <link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"></link>
+    =<link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"/>
     <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"></link>
     <script type="text/javascript">
       function showAllProps()
