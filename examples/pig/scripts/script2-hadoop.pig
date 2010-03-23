@@ -21,7 +21,7 @@
 -- This script processes a search query log file from the Excite search engine and compares the occurrence of frequency of search phrases across two time periods separated by twelve hours. 
 
 -- Register the tutorial JAR file so that the included UDFs can be called in the script.
--- No need to add the following as it will be added in the classpath
+-- @TODO fix register commands. Working directory not set correctly right now.
 -- REGISTER tutorial.jar;
 
 -- Use the PigStorage function to load the excite log file into the raw bag as an array of records.

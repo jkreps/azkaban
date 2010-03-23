@@ -71,6 +71,7 @@ public class PigRunnerJob extends AbstractJob {
 
 			PigContext pigContext = new PigContext(ExecType.MAPREDUCE,
 					properties);
+			
 
 			// register jar files -- pig only accepts local jar files so we will
 			// yank them out of hdfs
@@ -92,7 +93,7 @@ public class PigRunnerJob extends AbstractJob {
 			pigContext.getPackageImportList().add("com.linkedin.pig.");
 
 			PigServer pigServer = new PigServer(pigContext);
-
+			
 			pigServer.setJobName(new Path(props.get("pig.script")).getName());
 			pigServer.registerScript(pigScriptPath);
 

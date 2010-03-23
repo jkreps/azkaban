@@ -22,8 +22,8 @@
 
 
 -- Register the tutorial JAR file so that the included UDFs can be called in the script.
--- No need to add the following as it will be added in the classpath
--- REGISTER tutorial.jar; 
+-- @TODO fix register commands. Working directory not set correctly right now.
+-- REGISTER ./pig-example/tutorial.jar; 
 
 -- Use the  PigStorage function to load the excite log file into the “raw” bag as an array of records.
 -- Input: (user,time,query) 

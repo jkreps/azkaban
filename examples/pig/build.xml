@@ -4,6 +4,7 @@
 	<property file="${base.dir}/build.properties" />
 	<property name="example.java.dir" value = "./java"/>
 	<property name="example.conf.dir" value = "./conf"/>
+	<property name="example.lib.dir" value = "./lib"/>
 	<property name="example.resource.dir" value = "./resources"/>
 	<property name="example.script.dir" value = "./scripts"/>
 	<property name="example.dist.dir" value = "./dist"/>
@@ -12,7 +13,7 @@
 	<property name="package.name" value = "pig-example"/>
 
 	<path id="main-classpath">
-		<fileset dir="${example.resource.dir}">
+		<fileset dir="${example.lib.dir}">
 			<include name="*.jar" />
 		</fileset>
 		<pathelement path="${example.class.dir}" />
@@ -49,7 +50,7 @@
 	<target name="zip" depends="jar" description="build install zip">
 		<mkdir dir="${example.dist.dir}" />
 		<zip destfile="${example.dist.dir}/${package.name}.zip">
-			<fileset dir="${example.resource.dir}">
+			<fileset dir="${example.lib.dir}">
 				<include name="**/*.jar" />
 			</fileset>
 			<fileset dir="${example.package.dir}">
