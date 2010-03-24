@@ -1,6 +1,5 @@
 package azkaban.jobs;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Properties;
 
@@ -53,10 +52,10 @@ public class JavaJob extends AbstractJob {
 		if (_javaObject != null) {
 
 			Method method = Utils.getMethod(_javaObject.getClass(),
-					_cancelMethod, null);
+					_cancelMethod, (Class<?>)null);
 
 			if (method != null)
-				method.invoke(_javaObject, null);
+				method.invoke(_javaObject, (Object)null);
 			else {
 				throw new RuntimeException("Job " + getId()
 						+ " does not support cancellation!");
@@ -74,10 +73,10 @@ public class JavaJob extends AbstractJob {
 		if (_javaObject != null) {
 
 			Method method = Utils.getMethod(_javaObject.getClass(),
-					_progressMethod, null);
+					_progressMethod, (Class<?>)null);
 
 			if (method != null) {
-				Object progress = method.invoke(_javaObject, null);
+				Object progress = method.invoke(_javaObject, (Object)null);
 
 				if (progress instanceof Double) {
 					return (Double) progress;
@@ -89,6 +88,7 @@ public class JavaJob extends AbstractJob {
 
 	@Override
 	public void run() {
+		@SuppressWarnings("unused")
 		ClassLoader loader = getClass().getClassLoader();
 
 		if (Utils.constructorExist(_descriptor.getJobClass(), getId(),
@@ -112,8 +112,8 @@ public class JavaJob extends AbstractJob {
 		}
 
 		try {
-			Utils.getMethod(_javaObject.getClass(), _runMethod, null).invoke(
-					_javaObject, null);
+			Utils.getMethod(_javaObject.getClass(), _runMethod, (Class<?>)null).invoke(
+					_javaObject, (Object)null);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

@@ -239,7 +239,8 @@ public class Utils {
     public static boolean constructorExist(Class<?> c, Object... args) {
         Class<?>[] argTypes = getTypes(args);
         try {
-            Constructor<?> cons = c.getConstructor(argTypes);
+            @SuppressWarnings("unused")
+			Constructor<?> cons = c.getConstructor(argTypes);
         } catch(NoSuchMethodException e) {
             return false;
         }

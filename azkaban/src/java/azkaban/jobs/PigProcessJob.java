@@ -9,7 +9,7 @@ import azkaban.app.JobDescriptor;
 
 public class PigProcessJob extends JavaProcessJob {
 	public static final String PIG_SCRIPT = "pig.script";
-	public static final String UDF_IMPORT = "Dudf.import.list";
+	public static final String UDF_IMPORT = "udf.import.list";
 	public static final String PIG_PARAM_PREFIX = "param.";
 	public static final String PIG_PARAM_FILES = "paramfile";
 	public static final String HADOOP_UGI = "hadoop.job.ugi";

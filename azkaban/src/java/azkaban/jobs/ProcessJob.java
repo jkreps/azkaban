@@ -34,8 +34,6 @@ public class ProcessJob extends AbstractJob {
 	private volatile Process _process;
 	private volatile boolean _isComplete;
 
-	private ArrayList<String> _commands = new ArrayList<String>();
-
 	public ProcessJob(JobDescriptor descriptor) {
 		super(descriptor.getId());
 		this._props = descriptor.getProps();
