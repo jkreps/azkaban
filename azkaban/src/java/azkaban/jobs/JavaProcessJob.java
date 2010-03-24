@@ -14,8 +14,8 @@ public class JavaProcessJob extends ProcessJob {
 	public static final String MAIN_ARGS = "main.args";
 	public static final String JVM_PARAMS = "jvm.args";
 
-	public static final String DEFAULT_INITIAL_MEMORY_SIZE = "64mb";
-	public static final String DEFAULT_MAX_MEMORY_SIZE = "256mb";
+	public static final String DEFAULT_INITIAL_MEMORY_SIZE = "64M";
+	public static final String DEFAULT_MAX_MEMORY_SIZE = "256M";
 
 	public static String JAVA_COMMAND = "java";
 
