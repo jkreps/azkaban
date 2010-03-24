@@ -30,6 +30,7 @@ public class ProcessJob extends AbstractJob {
 
 	private final Props _props;
 	private final String _jobPath;
+	private final String _name;
 	private volatile Process _process;
 	private volatile boolean _isComplete;
 
@@ -40,6 +41,7 @@ public class ProcessJob extends AbstractJob {
 		this._props = descriptor.getProps();
 		this._isComplete = false;
 		this._jobPath = descriptor.getFullPath();
+		this._name = descriptor.getId();
 	}
 
 	public void run() {
@@ -167,5 +169,9 @@ public class ProcessJob extends AbstractJob {
 
 	public String getPath() {
 		return _jobPath;
+	}
+	
+	public String getJobName() {
+		return _name;
 	}
 }

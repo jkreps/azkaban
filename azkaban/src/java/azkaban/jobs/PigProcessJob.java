@@ -12,6 +12,7 @@ public class PigProcessJob extends JavaProcessJob {
 	public static final String UDF_IMPORT = "Dudf.import.list";
 	public static final String PIG_PARAM_PREFIX = "param.";
 	public static final String PIG_PARAM_FILES = "paramfile";
+	public static final String HADOOP_UGI = "hadoop.job.ugi";
 	public static final String DEBUG = "debug";
 
 	public static final String PIG_JAVA_CLASS = "org.apache.pig.Main";
@@ -31,12 +32,15 @@ public class PigProcessJob extends JavaProcessJob {
 		String args = super.getJVMArguments();
 
 		List<String> udfImport = getUDFImportList();
-		if (udfImport == null) {
-			return args;
+		if (udfImport != null) {
+			args += " -Dudf.import.list=" + super.createArguments(udfImport, ":");
 		}
 
-		args += " -Dudf.import.list=" + super.createArguments(udfImport, ":");
-
+		String hadoopUGI = getHadoopUGI();
+		if (hadoopUGI != null) {
+			args += " -Dhadoop.job.ugi=" + hadoopUGI;
+		}
+		
 		return args;
 	}
 
@@ -56,7 +60,7 @@ public class PigProcessJob extends JavaProcessJob {
 				list.add("-param_file " + paramFile);
 			}
 		}
-
+		
 		if (getDebug()) {
 			list.add("-debug");
 		}
@@ -87,13 +91,17 @@ public class PigProcessJob extends JavaProcessJob {
 	}
 
 	protected String getScript() {
-		return getProps().getString(PIG_SCRIPT);
+		return getProps().getString(PIG_SCRIPT, getJobName() + ".pig");
 	}
 
 	protected List<String> getUDFImportList() {
 		return getProps().getStringList(UDF_IMPORT, null, ",");
 	}
 
+	protected String getHadoopUGI() {
+		return getProps().getString(HADOOP_UGI, null);
+	}
+	
 	protected Map<String, String> getPigParams() {
 		return super.getMapFromPrefixProperties(PIG_PARAM_PREFIX);
 	}
