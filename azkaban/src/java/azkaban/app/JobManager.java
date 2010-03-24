@@ -311,7 +311,7 @@ public class JobManager {
                 logger.debug("Loading job '" + name + "' with path " + jobPath);
                 try {
                     Props jobProps = new Props(dirProps, f.getAbsolutePath());
-                    jobs.put(name, new JobDescriptor(name, jobPath, jobProps, loader));
+                    jobs.put(name, new JobDescriptor(name, jobPath, f.getPath(), jobProps, loader));
                 } catch(Exception e) {
                     throw new JobLoadException("Failed to create Job '" + name + "': "
                                                + e.getLocalizedMessage(), e);

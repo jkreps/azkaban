@@ -1,6 +1,6 @@
 package azkaban.flow;
 
-import azkaban.app.JavaJob;
+import azkaban.jobs.JavaJob;
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobFactory;
 import azkaban.app.JobWrappingFactory;

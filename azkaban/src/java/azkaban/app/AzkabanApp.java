@@ -10,6 +10,10 @@ import azkaban.flow.manager.RefreshableFlowManager;
 import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
 import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
 import azkaban.jobs.AzkabanCommandLine;
+import azkaban.jobs.JavaJob;
+import azkaban.jobs.JavaProcessJob;
+import azkaban.jobs.PigProcessJob;
+import azkaban.jobs.ProcessJob;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
 import azkaban.serialization.ExecutableFlowSerializer;
 import azkaban.serialization.de.ExecutableFlowDeserializer;
@@ -104,7 +108,9 @@ public class AzkabanApp {
                 _logsDir.getAbsolutePath(),
                 "java",
                 ImmutableMap.<String, Class<? extends Job>>of("java", JavaJob.class,
-                                                              "command", ProcessJob.class)
+                                                              "command", ProcessJob.class,
+                                                              "javaprocess", JavaProcessJob.class,
+                                                              "pig", PigProcessJob.class)
         );
 
         _hdfsUrl = defaultProps.getString("hdfs.instance.url", null);

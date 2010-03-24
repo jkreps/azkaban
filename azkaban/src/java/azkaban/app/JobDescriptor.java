@@ -41,6 +41,7 @@ public class JobDescriptor {
 
     private final String _id;
     private final String _path;
+    private final String _fullpath;
     private Class<?> _class;
     private final int _retries;
     private final long _retryBackoffMs;
@@ -53,9 +54,10 @@ public class JobDescriptor {
     private final List<String> _emailList;
     private final String _jobType;
 
-    public JobDescriptor(String id, String path, Props props, ClassLoader classLoader) {
+    public JobDescriptor(String id, String conicalPath, String fullpath, Props props, ClassLoader classLoader) {
         this._id = id;
-        this._path = path;
+        this._path = conicalPath;
+        this._fullpath = fullpath;
         this._props = props;
 
         this._jobType = props.getString(JOB_TYPE, "");
@@ -126,6 +128,10 @@ public class JobDescriptor {
         return this._path;
     }
 
+    public String getFullPath() {
+        return this._fullpath;
+    }
+    
     @Override
     public String toString() {
         return String.format(

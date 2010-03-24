@@ -1,0 +1,11 @@
+Notes:
+-Register of job does not work due to an issue with the working directory not being a set-able in PigServer.
+-Due to the same problem as above, the pig scripts should be embedded in the jar file.
+-All the jars in the job directory will be added to the classpath automatically (for good and for bad), so if your pig job
+	doesn't require the jars to be included on the nodes, it should work.
+-If you need to register jars for serializing/deserializing of data, to work around the issue, you can add the jars in
+	hdfs in a common directory and use the property 'include.jars' with a comma-delimited list of jar paths on hdfs.
+
+	
+We are moving towards a processed base grunt solution, which should fix a lot of our issues and make running pig jobs a lot
+simpler.

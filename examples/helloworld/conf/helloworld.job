@@ -1,0 +1,6 @@
+type=javaprocess
+classpath=helloworld.jar,google-collect-1.0-rc2.jar
+java.class=azkaban.examples.test.HelloWorld
+env.INPUT_ENV=This is my message!
+jvm.args=-Dtest=testprop
+main.args=hello world again and again

@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<project name="azkaban-pig-example" basedir="." default="all">
+	<property name="base.dir" value="${basedir}/../.." />
+	<property file="${base.dir}/build.properties" />
+	<property name="example.java.dir" value = "./java"/>
+	<property name="example.conf.dir" value = "./conf"/>
+	<property name="example.lib.dir" value = "./lib"/>
+	<property name="example.dist.dir" value = "./dist"/>
+	<property name="example.package.dir" value = "${example.dist.dir}/package"/>
+	<property name="example.class.dir" value = "${example.dist.dir}/classes"/>
+	<property name="package.name" value = "helloworld"/>
+
+	<path id="main-classpath">
+		<fileset dir="${example.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<pathelement path="${example.class.dir}" />
+	</path>
+	
+	<target name="all" depends="clean, zip" description="Builds and packages the job" />
+	
+	<target name="clean" description="Clean all created files" >
+	    <echo message="cleaning all jobs."/>
+		<delete dir="${example.class.dir}"/>
+		<delete dir="${example.package.dir}"/>
+	</target>
+	
+	<target name="build" description="build class files">
+		<mkdir dir="${example.class.dir}"/>
+	    <javac fork="true" executable="${java6.home}/bin/javac" destdir="${example.class.dir}" target="1.6" debug="true" deprecation="true" failonerror="true">
+	      <src path="${example.java.dir}"/>
+	      <classpath refid="main-classpath" />
+	    </javac>
+	</target>
+	
+	<target name="jar" depends="build" description="build jars and include script files">
+		<mkdir dir="${example.package.dir}" />
+		<jar destfile="${example.package.dir}/${package.name}.jar">
+			<fileset dir="${example.class.dir}">
+				<include name="**/*.*" />
+			</fileset>
+		</jar>
+	</target>
+	
+	<target name="zip" depends="jar" description="build install zip">
+		<mkdir dir="${example.dist.dir}" />
+		<zip destfile="${example.dist.dir}/${package.name}.zip">
+			<fileset dir="${example.lib.dir}">
+				<include name="**/*.jar" />
+			</fileset>
+			<fileset dir="${example.package.dir}">
+				<include name="**/*.jar" />
+			</fileset>
+			<fileset dir="${example.conf.dir}">
+				<include name="**/*.*" />
+			</fileset>
+		</zip>
+	</target>
+</project>

@@ -24,131 +24,132 @@ import azkaban.common.utils.Props;
 
 public class AzkabanCommandLine {
 
-    private static Logger logger = Logger.getLogger(AzkabanCommandLine.class);
+	private static Logger logger = Logger.getLogger(AzkabanCommandLine.class);
 
-    /* option specs */
-    private OptionSet options;
-    private final OptionParser parser;
-    private final String helpOpt = "help";
-    private final OptionSpec<String> logDirOpt;
-    private final OptionSpec<String> jobDirOpt;
-    private final OptionSpec<String> configDirOpt;
-    
-    /* option values */
-    private final File logDir;
-    private final List<File> jobDirs;
-    private final Props defaultProps;
-    private final ClassLoader classloader;
-    private final int numWorkPermits;
+	/* option specs */
+	private OptionSet options;
+	private final OptionParser parser;
+	private final String helpOpt = "help";
+	private final OptionSpec<String> logDirOpt;
+	private final OptionSpec<String> jobDirOpt;
+	private final OptionSpec<String> configDirOpt;
 
+	/* option values */
+	private final File logDir;
+	private final List<File> jobDirs;
+	private final Props defaultProps;
+	private final ClassLoader classloader;
+	private final int numWorkPermits;
 
-    public AzkabanCommandLine(String[] args) {
-        this(new OptionParser(), args);
-    }
-    
-    public AzkabanCommandLine(OptionParser parser, String[] args) {
-        this.parser = parser;
-        parser.acceptsAll(asList("h", helpOpt), "Print usage information");
-        logDirOpt = parser.accepts("log-dir", "The directory to store log files.")
-                          .withRequiredArg()
-                          .describedAs("dir");
-        jobDirOpt = parser.acceptsAll(asList("j", "job-dir"),
-                                      "A directory in which to find job definitions.")
-                          .withRequiredArg()
-                          .describedAs("dir");
-        configDirOpt = parser.acceptsAll(asList("c", "config-dir"),
-                                         "A configuration directory for jobs, if seperate from the job directory.")
-                             .withRequiredArg()
-                             .describedAs("dir");
-        
-        /* now parse options */
-        try {
-            this.options = parser.parse(args);
-        } catch(OptionException e) {
-            printHelpAndExit("Error parsing options: " + e.getMessage(), System.out);
-        }
+	public AzkabanCommandLine(String[] args) {
+		this(new OptionParser(), args);
+	}
 
-        if(options.has(logDirOpt))
-            logDir = new File((String) options.valueOf(logDirOpt));
-        else
-            logDir = new File(System.getProperty("java.io.tmpdir"));
+	public AzkabanCommandLine(OptionParser parser, String[] args) {
+		this.parser = parser;
+		parser.acceptsAll(asList("h", helpOpt), "Print usage information");
+		logDirOpt = parser.accepts("log-dir",
+				"The directory to store log files.").withRequiredArg()
+				.describedAs("dir");
+		jobDirOpt = parser.acceptsAll(asList("j", "job-dir"),
+				"A directory in which to find job definitions.")
+				.withRequiredArg().describedAs("dir");
+		configDirOpt = parser
+				.acceptsAll(asList("c", "config-dir"),
+						"A configuration directory for jobs, if seperate from the job directory.")
+				.withRequiredArg().describedAs("dir");
 
-        jobDirs = new ArrayList<File>();
-        for(String jobDir: options.valuesOf(jobDirOpt))
-            jobDirs.add(new File(jobDir));
+		/* now parse options */
+		try {
+			this.options = parser.parse(args);
+		} catch (OptionException e) {
+			printHelpAndExit("Error parsing options: " + e.getMessage(),
+					System.out);
+		}
 
-        if(options.has(configDirOpt)) {
-            String confDir = options.valueOf(configDirOpt);
-            logger.debug("Loading default properties from " + confDir);
-            defaultProps = PropsUtils.loadPropsInDir(new File(confDir.trim()),
-                                                     ".properties",
-                                                     ".schema");
-        } else {
-            logger.debug("No configuration options given (missing -c option).");
-            defaultProps = new Props();
-        }
+		if (options.has(logDirOpt))
+			logDir = new File((String) options.valueOf(logDirOpt));
+		else
+			logDir = new File(System.getProperty("java.io.tmpdir"));
 
-        numWorkPermits = defaultProps.getInt("total.work.permits", Integer.MAX_VALUE);
-        classloader = getHadoopClassLoader();
-    }
+		jobDirs = new ArrayList<File>();
+		for (String jobDir : options.valuesOf(jobDirOpt))
+			jobDirs.add(new File(jobDir));
 
-    private ClassLoader getHadoopClassLoader() {
-        String hadoopHome = System.getenv("HADOOP_HOME");
-        if(hadoopHome != null) {
-            try {
-                logger.debug("Adding config to classloader from HADOOP_HOME (" + hadoopHome + ").");
-                return new URLClassLoader(new URL[] { new File(hadoopHome, "conf").toURL() },
-                                          CommandLineJobRunner.class.getClassLoader());
-            } catch(MalformedURLException e) {
-                throw new IllegalStateException("Invalid HADOOP_HOME: " + hadoopHome
-                                                + " is not a valid URL.");
-            }
-        } else {
-            logger.debug("No HADOOP_HOME set, using default classloader.");
-            return CommandLineJobRunner.class.getClassLoader();
-        }
-    }
-    
-    public boolean hasHelp() {
-        return options.has(helpOpt);
-    }
+		if (options.has(configDirOpt)) {
+			String confDir = options.valueOf(configDirOpt);
+			logger.debug("Loading default properties from " + confDir);
+			defaultProps = PropsUtils.loadPropsInDir(new File(confDir.trim()),
+					".properties", ".schema");
+		} else {
+			logger.debug("No configuration options given (missing -c option).");
+			defaultProps = new Props();
+		}
 
-    public File getLogDir() {
-        return logDir;
-    }
+		numWorkPermits = defaultProps.getInt("total.work.permits",
+				Integer.MAX_VALUE);
+		classloader = getHadoopClassLoader();
+	}
 
-    public List<File> getJobDirs() {
-        return jobDirs;
-    }
+	private ClassLoader getHadoopClassLoader() {
+		String hadoopHome = System.getenv("HADOOP_HOME");
+		if (hadoopHome != null) {
+			try {
+				logger.debug("Adding config to classloader from HADOOP_HOME ("
+						+ hadoopHome + ").");
+				return new URLClassLoader(new URL[] { new File(hadoopHome,
+						"conf").toURL() }, CommandLineJobRunner.class
+						.getClassLoader());
+			} catch (MalformedURLException e) {
+				throw new IllegalStateException("Invalid HADOOP_HOME: "
+						+ hadoopHome + " is not a valid URL.");
+			}
+		} else {
+			logger.debug("No HADOOP_HOME set, using default classloader.");
+			return CommandLineJobRunner.class.getClassLoader();
+		}
+	}
 
-    public Props getDefaultProps() {
-        return defaultProps;
-    }
+	public boolean hasHelp() {
+		return options.has(helpOpt);
+	}
 
-    public ClassLoader getClassloader() {
-        return classloader;
-    }
+	public File getLogDir() {
+		return logDir;
+	}
 
-    public int getNumWorkPermits() {
-        return numWorkPermits;
-    }
+	public List<File> getJobDirs() {
+		return jobDirs;
+	}
 
-    public OptionSet getOptions() {
-        return this.options;
-    }
-    
-    public OptionParser getParser() {
-        return this.parser;
-    }
+	public Props getDefaultProps() {
+		return defaultProps;
+	}
 
-    public void printHelpAndExit(String message, PrintStream out) {
-        out.println(message);
-        try {
-            parser.printHelpOn(out);
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-        System.exit(1);
-    }
+	public ClassLoader getClassloader() {
+		return classloader;
+	}
+
+	public int getNumWorkPermits() {
+		return numWorkPermits;
+	}
+
+	public OptionSet getOptions() {
+		return this.options;
+	}
+
+	public OptionParser getParser() {
+		return this.parser;
+	}
+
+	public void printHelpAndExit(String message, PrintStream out) {
+		out.println(message);
+		try {
+			parser.printHelpOn(out);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.exit(1);
+	}
 
 }

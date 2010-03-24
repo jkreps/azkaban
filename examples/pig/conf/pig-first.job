@@ -1,4 +1,3 @@
-type=java
-job.class=azkaban.examples.pig.PigRunnerJob
+type=pig
 pig.script=script1-hadoop.pig
 hadoop.job.ugi=user,group

@@ -1,5 +1,7 @@
-type=java
-job.class=azkaban.examples.pig.PigRunnerJob
+type=pig
 dependencies=pig-first
+Dudf.import.list=oink.
 pig.script=script2-hadoop.pig
+param.key1=value1
+param.key2=value2
 hadoop.job.ugi=user,group
