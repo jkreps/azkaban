@@ -17,8 +17,8 @@ import azkaban.app.AzkabanApp;
  */
 public class AzkabanServletContextListener implements ServletContextListener {
 
-    public static final String BATCH_SERVLET_CONTEXT_KEY = "azkaban_app";
-    private static final String BATCH_HOME_VAR_NAME = "AZKABAN_HOME";
+    public static final String AZKABAN_SERVLET_CONTEXT_KEY = "azkaban_app";
+    private static final String AZKABAN_HOME_VAR_NAME = "AZKABAN_HOME";
 
     private AzkabanApp app;
 
@@ -33,9 +33,9 @@ public class AzkabanServletContextListener implements ServletContextListener {
      * Load the app
      */
     public void contextInitialized(ServletContextEvent event) {
-        String homeDir = System.getenv(BATCH_HOME_VAR_NAME);
+        String homeDir = System.getenv(AZKABAN_HOME_VAR_NAME);
         if(homeDir == null)
-            throw new IllegalStateException("The environment variable " + BATCH_HOME_VAR_NAME
+            throw new IllegalStateException("The environment variable " + AZKABAN_HOME_VAR_NAME
                                             + " has not been set.");
         if(!new File(homeDir).isDirectory() || !new File(homeDir).canRead())
             throw new IllegalStateException(homeDir + " is not a readable directory.");
@@ -49,7 +49,7 @@ public class AzkabanServletContextListener implements ServletContextListener {
             throw new IllegalArgumentException(e);
         }
 
-        event.getServletContext().setAttribute(BATCH_SERVLET_CONTEXT_KEY, this.app);
+        event.getServletContext().setAttribute(AZKABAN_SERVLET_CONTEXT_KEY, this.app);
     }
 
 }

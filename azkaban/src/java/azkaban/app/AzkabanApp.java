@@ -264,7 +264,7 @@ public class AzkabanApp {
 
         HttpContext context = new HttpContext();
         context.setContextPath("/");
-        context.setAttribute(AzkabanServletContextListener.BATCH_SERVLET_CONTEXT_KEY, app);
+        context.setAttribute(AzkabanServletContextListener.AZKABAN_SERVLET_CONTEXT_KEY, app);
         server.addContext(context);
 
         String staticDir = options.has(staticContentOpt) ? options.valueOf(staticContentOpt)

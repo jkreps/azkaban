@@ -37,7 +37,7 @@ public class WebUtils {
      */
     public static AzkabanApp getApp(ServletConfig config) {
         AzkabanApp app = (AzkabanApp) config.getServletContext()
-                                            .getAttribute(AzkabanServletContextListener.BATCH_SERVLET_CONTEXT_KEY);
+                                            .getAttribute(AzkabanServletContextListener.AZKABAN_SERVLET_CONTEXT_KEY);
         if(app == null)
             throw new IllegalStateException("No batch application is defined in the servlet context!");
         else
