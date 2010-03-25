@@ -338,8 +338,6 @@ public class AzkabanApp {
                                         getClass().getClassLoader());
         }
 
-        System.out.println(Utils.getClassLoaderDescriptions(retVal));
-
         return retVal;
     }
 
