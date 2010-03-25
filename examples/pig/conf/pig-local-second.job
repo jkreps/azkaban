@@ -1,0 +1,7 @@
+type=pig
+dependencies=pig-local-first
+udf.import.list=oink.
+pig.script=script2-local.pig
+param.key1=value1
+param.key2=value2
+hadoop.job.ugi=test,group

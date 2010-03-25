@@ -19,7 +19,7 @@
 		</and>
 	</condition>
 
-	<target name="all" depends="clean, jars, testjobs" description="Builds all jars" />
+	<target name="all" depends="clean, jars, war" description="Builds all jars" />
 
 	<target name="clean" description="Delete generated files.">
 		<echo message="Deleting dist directory: ${azkaban.base.dir}/${dist.dir}, ${azkaban.base.dir}/${build.dir}" />

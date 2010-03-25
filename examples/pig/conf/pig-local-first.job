@@ -1,0 +1,3 @@
+type=pig
+pig.script=script1-local.pig
+hadoop.job.ugi=test,group

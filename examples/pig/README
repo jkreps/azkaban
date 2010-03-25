@@ -1,0 +1,5 @@
+The examples for pig come from the pig site http://hadoop.apache.org/pig/
+
+To run this example on a hadoop cluster, the resource files must be copied to hdfs.
+The test log files can be obtained from apache pig's examples.
+

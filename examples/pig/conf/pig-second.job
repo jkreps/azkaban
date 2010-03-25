@@ -4,4 +4,4 @@ udf.import.list=oink.
 pig.script=script2-hadoop.pig
 param.key1=value1
 param.key2=value2
-hadoop.job.ugi=user,group
+hadoop.job.ugi=test,group
