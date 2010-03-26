@@ -68,7 +68,7 @@ public class JavaJob extends AbstractJob {
 		if (_javaObject != null) {
 
 			Method method = Utils.getMethod(_javaObject.getClass(),
-					_cancelMethod, (Class<?>)null);
+					_cancelMethod, new Class<?>[]{});
 
 			if (method != null)
 				method.invoke(_javaObject, (Object)null);
@@ -89,10 +89,10 @@ public class JavaJob extends AbstractJob {
 		if (_javaObject != null) {
 
 			Method method = Utils.getMethod(_javaObject.getClass(),
-					_progressMethod, (Class<?>)null);
+					_progressMethod, new Class<?>[]{});
 
 			if (method != null) {
-				Object progress = method.invoke(_javaObject, (Object)null);
+				Object progress = method.invoke(_javaObject, new Object[]{});
 
 				if (progress instanceof Double) {
 					return (Double) progress;
