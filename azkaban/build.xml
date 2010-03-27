@@ -73,7 +73,7 @@
 				<exclude name="**/web.xml" />
 			</fileset>
 		</copy>
-		<javac fork="true" executable="${java6.home}/bin/javac" destdir="${module.classes.dir}"
+		<javac fork="true" destdir="${module.classes.dir}"
 			target="1.6" debug="true" deprecation="false" failonerror="true">
 			<src path="${module.java.dir}" />
 			<classpath refid="main-classpath" />
