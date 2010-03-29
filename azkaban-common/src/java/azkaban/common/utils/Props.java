@@ -107,7 +107,9 @@ public class Props {
 
     public Props(Props parent, Props props) {
         this(parent);
-        putAll(props);
+        if (props != null) {
+            putAll(props);
+        }
     }
 
     public static Props of(String... args) {

@@ -65,96 +65,108 @@ import static java.util.Arrays.asList;
  */
 public class CommandLineJobRunner {
 
-	public static void main(String[] args) throws Exception {
-		OptionParser parser = new OptionParser();
-		OptionSpec<String> overrideOpt = parser
-				.acceptsAll(asList("o", "override"),
-						"An override property to be used instead of what is in the job")
-				.withRequiredArg().describedAs("key=val");
-		String ignoreDepsOpt = "ignore-deps";
-		parser.accepts(ignoreDepsOpt,
-				"Run only the specified job, ignoring dependencies");
-		AzkabanCommandLine cl = new AzkabanCommandLine(parser, args);
+    public static void main(String[] args) throws Exception {
+        OptionParser parser = new OptionParser();
+        OptionSpec<String> overrideOpt = parser.acceptsAll(asList("o", "override"),
+                                                           "An override property to be used instead of what is in the job")
+                                               .withRequiredArg()
+                                               .describedAs("key=val");
+        String ignoreDepsOpt = "ignore-deps";
+        parser.accepts(ignoreDepsOpt, "Run only the specified job, ignoring dependencies");
+        AzkabanCommandLine cl = new AzkabanCommandLine(parser, args);
 
-		String helpMessage = "USAGE: bin/run-job.sh [options] job_name...";
-		OptionSet options = cl.getOptions();
-		if (cl.hasHelp())
-			cl.printHelpAndExit(helpMessage, System.out);
+        String helpMessage = "USAGE: bin/run-job.sh [options] job_name...";
+        OptionSet options = cl.getOptions();
+        if(cl.hasHelp())
+            cl.printHelpAndExit(helpMessage, System.out);
 
-		List<String> jobNames = options.nonOptionArguments();
-		if (jobNames.size() < 1)
-			cl.printHelpAndExit(helpMessage, System.err);
+        List<String> jobNames = options.nonOptionArguments();
+        if(jobNames.size() < 1)
+            cl.printHelpAndExit(helpMessage, System.err);
 
-		// parse override properties
-		boolean ignoreDeps = options.has(ignoreDepsOpt);
-		Props overrides = new Props(null);
-		for (String override : options.valuesOf(overrideOpt)) {
-			String[] pieces = override.split("=");
-			if (pieces.length != 2)
-				Utils.croak("Invalid property override: '" + override
-						+ "', properties must be in the form key=value", 1);
-			overrides.put(pieces[0], pieces[1]);
-		}
+        // parse override properties
+        boolean ignoreDeps = options.has(ignoreDepsOpt);
+        Props overrides = new Props(null);
+        for(String override: options.valuesOf(overrideOpt)) {
+            String[] pieces = override.split("=");
+            if(pieces.length != 2)
+                Utils.croak("Invalid property override: '" + override
+                            + "', properties must be in the form key=value", 1);
+            overrides.put(pieces[0], pieces[1]);
+        }
 
-		NamedPermitManager permitManager = new NamedPermitManager();
-		permitManager.createNamedPermit("default", cl.getNumWorkPermits());
+        NamedPermitManager permitManager = new NamedPermitManager();
+        permitManager.createNamedPermit("default", cl.getNumWorkPermits());
 
-		JobWrappingFactory factory = new JobWrappingFactory(permitManager,
-				new ReadWriteLockManager(), cl.getLogDir().getAbsolutePath(),
-				"java", ImmutableMap.<String, Class<? extends Job>> of("java",
-						JavaJob.class, "command", ProcessJob.class));
+        JobWrappingFactory factory = new JobWrappingFactory(permitManager,
+                                                            new ReadWriteLockManager(),
+                                                            cl.getLogDir().getAbsolutePath(),
+                                                            "java",
+                                                            ImmutableMap.<String, Class<? extends Job>>of("java", JavaJob.class,
+                                                                                                          "command", ProcessJob.class,
+                                                                                                          "javaprocess", JavaProcessJob.class,
+                                                                                                          "pig", PigProcessJob.class));
 
-		JobManager jobManager = new JobManager(factory, cl.getLogDir()
-				.getAbsolutePath(), cl.getDefaultProps(), cl.getJobDirs(), cl
-				.getClassloader());
+        JobManager jobManager = new JobManager(factory,
+                                               cl.getLogDir().getAbsolutePath(),
+                                               cl.getDefaultProps(),
+                                               cl.getJobDirs(),
+                                               cl.getClassloader());
 
-		File executionsStorageFile = new File(".");
-		if (!executionsStorageFile.exists()) {
-			executionsStorageFile.mkdirs();
-		}
+        File executionsStorageFile = new File(".");
+        if(!executionsStorageFile.exists()) {
+            executionsStorageFile.mkdirs();
+        }
 
-		long lastId = 0;
-		for (File file : executionsStorageFile.listFiles()) {
-			final String filename = file.getName();
-			if (filename.endsWith(".json")) {
-				try {
-					lastId = Math.max(lastId, Long.parseLong(filename
-							.substring(0, filename.length() - 5)));
-				} catch (NumberFormatException e) {
-				}
-			}
-		}
+        long lastId = 0;
+        for(File file: executionsStorageFile.listFiles()) {
+            final String filename = file.getName();
+            if(filename.endsWith(".json")) {
+                try {
+                    lastId = Math.max(lastId,
+                                      Long.parseLong(filename.substring(0, filename.length() - 5)));
+                } catch(NumberFormatException e) {}
+            }
+        }
 
-		final ExecutableFlowSerializer flowSerializer = new DefaultExecutableFlowSerializer();
-		final ExecutableFlowDeserializer flowDeserializer = new ExecutableFlowDeserializer(
-				new JobFlowDeserializer(
-						ImmutableMap
-								.<String, Function<Map<String, Object>, ExecutableFlow>> of(
-										"jobManagerLoaded",
-										new JobManagerFlowDeserializer(
-												jobManager, factory))));
-		FlowManager allFlows = new RefreshableFlowManager(jobManager, factory,
-				flowSerializer, flowDeserializer, executionsStorageFile, lastId);
+        final ExecutableFlowSerializer flowSerializer = new DefaultExecutableFlowSerializer();
+        final ExecutableFlowDeserializer flowDeserializer = new ExecutableFlowDeserializer(new JobFlowDeserializer(ImmutableMap.<String, Function<Map<String, Object>, ExecutableFlow>> of("jobManagerLoaded",
+                                                                                                                                                                                           new JobManagerFlowDeserializer(jobManager,
+                                                                                                                                                                                                                          factory))));
+        FlowManager allFlows = new RefreshableFlowManager(jobManager,
+                                                          factory,
+                                                          flowSerializer,
+                                                          flowDeserializer,
+                                                          executionsStorageFile,
+                                                          lastId);
 
-		Scheduler scheduler = new Scheduler(jobManager, allFlows, null, null,
-				null, cl.getClassloader(), null, null, 3);
+        Scheduler scheduler = new Scheduler(jobManager,
+                                            allFlows,
+                                            null,
+                                            null,
+                                            null,
+                                            cl.getClassloader(),
+                                            null,
+                                            null,
+                                            3);
 
-		List<ScheduledFuture<?>> jobCompletionFutures = new ArrayList<ScheduledFuture<?>>();
-		for (String jobName : jobNames) {
-			try {
-				System.out.println("Running " + jobName);
-				Job theJob = jobManager.loadJob(jobName, overrides, ignoreDeps);
-				jobCompletionFutures.add(scheduler.schedule(theJob.getId(),
-						new DateTime(), ignoreDeps));
-			} catch (Exception e) {
-				System.out.println("Failed to run job '" + jobName + "':");
-				e.printStackTrace();
-			}
-		}
+        List<ScheduledFuture<?>> jobCompletionFutures = new ArrayList<ScheduledFuture<?>>();
+        for(String jobName: jobNames) {
+            try {
+                System.out.println("Running " + jobName);
+                Job theJob = jobManager.loadJob(jobName, overrides, ignoreDeps);
+                jobCompletionFutures.add(scheduler.schedule(theJob.getId(),
+                                                            new DateTime(),
+                                                            ignoreDeps));
+            } catch(Exception e) {
+                System.out.println("Failed to run job '" + jobName + "':");
+                e.printStackTrace();
+            }
+        }
 
-		// wait for jobs to finish
-		for (ScheduledFuture<?> future : jobCompletionFutures)
-			future.get();
-	}
+        // wait for jobs to finish
+        for(ScheduledFuture<?> future: jobCompletionFutures)
+            future.get();
+    }
 
 }
