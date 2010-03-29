@@ -29,7 +29,7 @@
 	
 	<target name="build" description="build class files">
 		<mkdir dir="${example.class.dir}"/>
-	    <javac fork="true" executable="${java6.home}/bin/javac" destdir="${example.class.dir}" target="1.6" debug="true" deprecation="true" failonerror="true">
+	    <javac fork="true" destdir="${example.class.dir}" target="1.6" debug="true" deprecation="true" failonerror="true">
 	      <src path="${example.java.dir}"/>
 	      <classpath refid="main-classpath" />
 	    </javac>
