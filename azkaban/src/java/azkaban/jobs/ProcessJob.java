@@ -30,6 +30,7 @@ import org.apache.log4j.Level;
 
 import azkaban.app.JobDescriptor;
 import azkaban.common.jobs.AbstractJob;
+import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 
 /**
@@ -38,7 +39,7 @@ import azkaban.common.utils.Props;
  * @author jkreps
  * 
  */
-public class ProcessJob extends AbstractJob {
+public class ProcessJob extends AbstractJob implements Job {
 
 	public static final String ENV_PREFIX = "env.";
 	public static final String COMMAND = "command";

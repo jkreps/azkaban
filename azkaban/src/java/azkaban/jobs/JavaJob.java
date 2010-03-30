@@ -21,9 +21,10 @@ import java.util.Properties;
 
 import azkaban.app.JobDescriptor;
 import azkaban.common.jobs.AbstractJob;
+import azkaban.common.jobs.Job;
 import azkaban.common.utils.Utils;
 
-public class JavaJob extends AbstractJob {
+public class JavaJob extends AbstractJob implements Job {
 
 	public static final String RUN_METHOD_PARAM = "method.run";
 	public static final String CANCEL_METHOD_PARAM = "method.cancel";

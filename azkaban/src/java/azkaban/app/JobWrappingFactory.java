@@ -16,7 +16,6 @@
 
 package azkaban.app;
 
-import azkaban.common.jobs.AbstractJob;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Utils;
 import azkaban.jobcontrol.impl.jobs.ResourceThrottledJob;
@@ -38,7 +37,7 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
     private final ReadWriteLockManager _readWriteLockManager;
     private final String _logDir;
     private final String _defaultType;
-    private final Map<String, Class<? extends AbstractJob>> _jobToClass;
+    private final Map<String, Class<? extends Job>> _jobToClass;
 
     private final NamedPermitManager _permitManager;
 
@@ -47,7 +46,7 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
             final ReadWriteLockManager readWriteLockManager,
             final String logDir,
             final String defaultType,
-            final Map<String, Class<? extends AbstractJob>> jobTypeToClassMap
+            final Map<String, Class<? extends Job>> jobTypeToClassMap
     )
     {
         this._permitManager = permitManager;

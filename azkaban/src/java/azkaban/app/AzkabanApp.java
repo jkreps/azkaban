@@ -16,7 +16,6 @@
 
 package azkaban.app;
 
-import azkaban.common.jobs.AbstractJob;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
@@ -124,7 +123,7 @@ public class AzkabanApp {
                 new ReadWriteLockManager(),
                 _logsDir.getAbsolutePath(),
                 "java",
-                ImmutableMap.<String, Class<? extends AbstractJob>>of("java", JavaJob.class,
+                ImmutableMap.<String, Class<? extends Job>>of("java", JavaJob.class,
                                                               "command", ProcessJob.class,
                                                               "javaprocess", JavaProcessJob.class,
                                                               "pig", PigProcessJob.class)

@@ -103,7 +103,7 @@ public class CommandLineJobRunner {
                                                             new ReadWriteLockManager(),
                                                             cl.getLogDir().getAbsolutePath(),
                                                             "java",
-                                                            ImmutableMap.<String, Class<? extends AbstractJob>>of("java", JavaJob.class,
+                                                            ImmutableMap.<String, Class<? extends Job>>of("java", JavaJob.class,
                                                                                                           "command", ProcessJob.class,
                                                                                                           "javaprocess", JavaProcessJob.class,
                                                                                                           "pig", PigProcessJob.class));
