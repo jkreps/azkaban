@@ -37,7 +37,7 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
     private final ReadWriteLockManager _readWriteLockManager;
     private final String _logDir;
     private final String _defaultType;
-    private final Map<String, Class<? extends Job>> _jobToClass;
+    private final Map<String, Class<? extends Object>> _jobToClass;
 
     private final NamedPermitManager _permitManager;
 
@@ -46,7 +46,7 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
             final ReadWriteLockManager readWriteLockManager,
             final String logDir,
             final String defaultType,
-            final Map<String, Class<? extends Job>> jobTypeToClassMap
+            final Map<String, Class<? extends Object>> jobTypeToClassMap
     )
     {
         this._permitManager = permitManager;
@@ -63,7 +63,7 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
         if (jobType == null || jobType.length() == 0) {
             jobType = _defaultType;
         }
-        Class<? extends Job> executorClass = _jobToClass.get(jobType);
+        Class<? extends Object> executorClass = _jobToClass.get(jobType);
 
         if (executorClass == null) {
             throw new JobExecutionException(

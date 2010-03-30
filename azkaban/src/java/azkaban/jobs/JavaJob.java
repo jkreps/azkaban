@@ -102,7 +102,7 @@ public class JavaJob extends AbstractJob {
 		return super.getProgress();
 	}
 
-	@Override
+
 	public void run() {
 		@SuppressWarnings("unused")
 		ClassLoader loader = getClass().getClassLoader();
