@@ -81,5 +81,7 @@ public abstract class AbstractJob {
     public void error(String message, Throwable t) {
         this._log.error(message, t);
     }
+    
+    public abstract void run() throws Exception;
 
 }

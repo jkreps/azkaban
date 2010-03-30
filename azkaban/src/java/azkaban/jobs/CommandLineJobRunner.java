@@ -19,6 +19,7 @@ package azkaban.jobs;
 import azkaban.app.JobManager;
 import azkaban.app.JobWrappingFactory;
 import azkaban.app.Scheduler;
+import azkaban.common.jobs.AbstractJob;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
@@ -102,7 +103,7 @@ public class CommandLineJobRunner {
                                                             new ReadWriteLockManager(),
                                                             cl.getLogDir().getAbsolutePath(),
                                                             "java",
-                                                            ImmutableMap.<String, Class<? extends Object>>of("java", JavaJob.class,
+                                                            ImmutableMap.<String, Class<? extends AbstractJob>>of("java", JavaJob.class,
                                                                                                           "command", ProcessJob.class,
                                                                                                           "javaprocess", JavaProcessJob.class,
                                                                                                           "pig", PigProcessJob.class));
