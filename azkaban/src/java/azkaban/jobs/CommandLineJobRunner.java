@@ -140,7 +140,7 @@ public class CommandLineJobRunner {
                                                           flowDeserializer,
                                                           executionsStorageFile,
                                                           lastId);
-
+        jobManager.setFlowManager(allFlows);
         Scheduler scheduler = new Scheduler(jobManager,
                                             allFlows,
                                             null,
