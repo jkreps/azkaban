@@ -131,9 +131,12 @@ public class CommandLineJobRunner {
         }
 
         final ExecutableFlowSerializer flowSerializer = new DefaultExecutableFlowSerializer();
-        final ExecutableFlowDeserializer flowDeserializer = new ExecutableFlowDeserializer(new JobFlowDeserializer(ImmutableMap.<String, Function<Map<String, Object>, ExecutableFlow>> of("jobManagerLoaded",
-                                                                                                                                                                                           new JobManagerFlowDeserializer(jobManager,
-                                                                                                                                                                                                                          factory))));
+        final ExecutableFlowDeserializer flowDeserializer = new ExecutableFlowDeserializer(
+                new JobFlowDeserializer(
+                        ImmutableMap.<String, Function<Map<String, Object>, ExecutableFlow>>of(
+                                "jobManagerLoaded", new JobManagerFlowDeserializer(jobManager, factory))
+                )
+        );
         FlowManager allFlows = new RefreshableFlowManager(jobManager,
                                                           factory,
                                                           flowSerializer,
@@ -155,8 +158,7 @@ public class CommandLineJobRunner {
         for(String jobName: jobNames) {
             try {
                 System.out.println("Running " + jobName);
-                Job theJob = jobManager.loadJob(jobName, overrides, ignoreDeps);
-                jobCompletionFutures.add(scheduler.schedule(theJob.getId(),
+                jobCompletionFutures.add(scheduler.schedule(jobName,
                                                             new DateTime(),
                                                             ignoreDeps));
             } catch(Exception e) {
