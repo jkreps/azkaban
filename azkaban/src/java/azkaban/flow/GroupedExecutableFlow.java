@@ -17,7 +17,6 @@
 package azkaban.flow;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
@@ -42,6 +41,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
     private volatile List<FlowCallback> callbacksToCall;
     private volatile DateTime startTime;
     private volatile DateTime endTime;
+    private final GroupedExecutableFlow.GroupedFlowCallback theGroupCallback;
 
     public GroupedExecutableFlow(String id, ExecutableFlow... flows)
     {
@@ -61,12 +61,14 @@ public class GroupedExecutableFlow implements ExecutableFlow
         updateState();
         callbacksToCall = new ArrayList<FlowCallback>();
 
+        theGroupCallback = new GroupedFlowCallback();
+
         switch (jobState) {
             case SUCCEEDED:
             case COMPLETED:
             case FAILED:
                 DateTime theStartTime = new DateTime();
-                DateTime theEndTime = null;
+                DateTime theEndTime = new DateTime(0);
                 for (ExecutableFlow flow : flows) {
                     final DateTime subFlowStartTime = flow.getStartTime();
                     if (theStartTime.isAfter(subFlowStartTime)) {
@@ -74,7 +76,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                     }
 
                     final DateTime subFlowEndTime = flow.getEndTime();
-                    if (subFlowEndTime != null && subFlowEndTime.isBefore(theEndTime)) {
+                    if (subFlowEndTime != null && subFlowEndTime.isAfter(theEndTime)) {
                         theEndTime = subFlowEndTime;
                     }
                 }
@@ -82,8 +84,43 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 endTime = theEndTime;
                 break;
             default:
-                startTime = null;
+                // Check for Flows that are "RUNNING"
+                boolean allRunning = true;
+                List<ExecutableFlow> runningFlows = new ArrayList<ExecutableFlow>();
+                DateTime thisStartTime = null;
+
+                for (ExecutableFlow flow : flows) {
+                    if (flow.getStatus() != Status.RUNNING) {
+                        allRunning = false;
+
+                        final DateTime subFlowStartTime = flow.getStartTime();
+                        if (subFlowStartTime != null && subFlowStartTime.isBefore(thisStartTime)) {
+                            thisStartTime = subFlowStartTime;
+                        }
+                    }
+                    else {
+                        runningFlows.add(flow);
+                    }
+                }
+
+                if (allRunning) {
+                    jobState = Status.RUNNING;
+                }
+
+                for (ExecutableFlow runningFlow : runningFlows) {
+                    final DateTime subFlowStartTime = runningFlow.getStartTime();
+                    if (subFlowStartTime != null && subFlowStartTime.isBefore(thisStartTime)) {
+                        thisStartTime = subFlowStartTime;
+                    }
+                }
+
+                startTime = thisStartTime;
                 endTime = null;
+
+                // Make sure everything is initialized before leaking the pointer to "this".
+                for (ExecutableFlow runningFlow : runningFlows) {
+                    runningFlow.execute(theGroupCallback);
+                }
         }
     }
 
@@ -138,62 +175,9 @@ public class GroupedExecutableFlow implements ExecutableFlow
             throw new RuntimeException("Somehow managed to have execute() called with startTime != null");
         }
 
-        final AtomicBoolean notifiedCallbackAlready = new AtomicBoolean(false);
         for (ExecutableFlow flow : flows) {
             if (jobState != Status.FAILED) {
-                flow.execute(new FlowCallback()
-                {
-                    @Override
-                    public void progressMade()
-                    {
-                        final List<FlowCallback> callbackList;
-                        synchronized (sync) {
-                            callbackList = callbacksToCall;
-                        }
-
-                        for (FlowCallback flowCallback : callbackList) {
-                            flowCallback.progressMade();
-                        }
-                    }
-
-                    @Override
-                    public void completed(final Status status)
-                    {
-                        final List<FlowCallback> callbackList;
-                        synchronized (sync) {
-                            updateState();
-                            callbackList = callbacksToCall; // Get the reference before leaving the synchronized
-                        }
-
-                        if (jobState == Status.SUCCEEDED && notifiedCallbackAlready.compareAndSet(false, true)) {
-                            callCallbacks(callbackList, Status.SUCCEEDED);
-                        }
-                        else if (jobState == Status.FAILED && notifiedCallbackAlready.compareAndSet(false, true)) {
-                            callCallbacks(callbackList, Status.FAILED);
-                        }
-                        else {
-                            for (FlowCallback flowCallback : callbackList) {
-                                flowCallback.progressMade();
-                            }
-                        }
-                    }
-
-                    private void callCallbacks(final List<FlowCallback> callbacksList, final Status status)
-                    {
-                        if (endTime == null) {
-                            endTime = new DateTime();
-                        }
-
-                        for (FlowCallback callback : callbacksList) {
-                            try {
-                                callback.completed(status);
-                            }
-                            catch (RuntimeException t) {
-                                // TODO: Figure out how to use the logger to log that a callback threw an exception.
-                            }
-                        }
-                    }
-                });
+                flow.execute(theGroupCallback);
             }
         }
     }
@@ -302,5 +286,66 @@ public class GroupedExecutableFlow implements ExecutableFlow
     public DateTime getEndTime()
     {
         return endTime;
+    }
+
+    private class GroupedFlowCallback implements FlowCallback
+    {
+        private final AtomicBoolean notifiedCallbackAlready;
+
+        public GroupedFlowCallback()
+        {
+            this.notifiedCallbackAlready = new AtomicBoolean(false);
+        }
+
+        @Override
+        public void progressMade()
+        {
+            final List<FlowCallback> callbackList;
+            synchronized (sync) {
+                callbackList = callbacksToCall;
+            }
+
+            for (FlowCallback flowCallback : callbackList) {
+                flowCallback.progressMade();
+            }
+        }
+
+        @Override
+        public void completed(final Status status)
+        {
+            final List<FlowCallback> callbackList;
+            synchronized (sync) {
+                updateState();
+                callbackList = callbacksToCall; // Get the reference before leaving the synchronized
+            }
+
+            if (jobState == Status.SUCCEEDED && notifiedCallbackAlready.compareAndSet(false, true)) {
+                callCallbacks(callbackList, Status.SUCCEEDED);
+            }
+            else if (jobState == Status.FAILED && notifiedCallbackAlready.compareAndSet(false, true)) {
+                callCallbacks(callbackList, Status.FAILED);
+            }
+            else {
+                for (FlowCallback flowCallback : callbackList) {
+                    flowCallback.progressMade();
+                }
+            }
+        }
+
+        private void callCallbacks(final List<FlowCallback> callbacksList, final Status status)
+        {
+            if (endTime == null) {
+                endTime = new DateTime();
+            }
+
+            for (FlowCallback callback : callbacksList) {
+                try {
+                    callback.completed(status);
+                }
+                catch (RuntimeException t) {
+                    // TODO: Figure out how to use the logger to log that a callback threw an exception.
+                }
+            }
+        }
     }
 }

@@ -20,7 +20,7 @@ import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.UndefinedPropertyException;
 import azkaban.common.utils.Utils;
-import azkaban.flow.manager.FlowManager;
+import azkaban.flow.FlowManager;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;

@@ -48,20 +48,44 @@ public class ComposedExecutableFlow implements ExecutableFlow
         final Status dependerState = depender.getStatus();
         switch (dependerState) {
             case READY:
-                jobState = Status.READY;
-                startTime = null;
-                endTime = null;
+                final Status dependeeState = dependee.getStatus();
+                switch (dependeeState) {
+                    case READY:
+                        jobState = Status.READY;
+                        startTime = null;
+                        endTime = null;
+                        break;
+                    case RUNNING:
+                        jobState = Status.RUNNING;
+                        startTime = dependee.getStartTime();
+                        endTime = null;
+                        dependee.execute(new DependeeCallback());
+                        break;
+                    case COMPLETED:
+                    case SUCCEEDED:
+                        jobState = Status.READY;
+                        startTime = dependee.getStartTime();
+                        endTime = null;
+                        break;
+                    case FAILED:
+                        jobState = Status.FAILED;                        
+                        startTime = dependee.getStartTime();
+                        endTime = dependee.getEndTime();
+                }
                 break;
             case RUNNING:
                 jobState = Status.RUNNING;
-                startTime = depender.getStartTime();
+                startTime = dependee.getStartTime() == null ? depender.getStartTime() : dependee.getStartTime();
                 endTime = null;
+
+                depender.execute(new DependerCallback());
+
                 break;
             case COMPLETED:
             case SUCCEEDED:
             case FAILED:
                 jobState = dependerState;
-                startTime = dependee.getStartTime() == null ? depender.getStartTime(): dependee.getStartTime();
+                startTime = dependee.getStartTime() == null ? depender.getStartTime() : dependee.getStartTime();
                 endTime = depender.getEndTime();
         }
     }
@@ -108,100 +132,16 @@ public class ComposedExecutableFlow implements ExecutableFlow
             throw new RuntimeException("Somehow managed to have execute() called with startTime != null");
         }
 
-        dependee.execute(new FlowCallback()
-        {
-            @Override
-            public void progressMade()
-            {
-                final List<FlowCallback> callbackList;
-                synchronized (sync) {
-                    callbackList = callbacksToCall;
-                }
-
-                for (FlowCallback flowCallback : callbackList) {
-                    flowCallback.progressMade();
-                }
-            }
-
-            @Override
-            public void completed(Status status)
-            {
-                final List<FlowCallback> callbackList;
-
-
-                switch (status) {
-                    case SUCCEEDED:
-                        synchronized(sync) {
-                            callbackList = callbacksToCall;
-                        }
-                        for (FlowCallback flowCallback : callbackList) {
-                            flowCallback.progressMade();
-                        }
-
-                        depender.execute(new FlowCallback()
-                        {
-                            @Override
-                            public void progressMade()
-                            {
-                                final List<FlowCallback> callbackList;
-                                synchronized (sync) {
-                                    callbackList = callbacksToCall;
-                                }
-
-                                for (FlowCallback flowCallback : callbackList) {
-                                    flowCallback.progressMade();
-                                }
-                            }
-
-                            @Override
-                            public void completed(Status status)
-                            {
-                                final List<FlowCallback> callbackList;
-
-                                synchronized (sync) {
-                                    jobState = status;
-                                    callbackList = callbacksToCall;
-                                }
-
-                                callCallbacks(callbackList, jobState);
-                            }
-                        });
-                        break;
-                    case FAILED:
-                        synchronized (sync) {
-                            jobState = status;
-                            callbackList = callbacksToCall;
-                        }
-
-                        callCallbacks(callbackList, jobState);
-                        break;
-                    default:
-                        throw new IllegalStateException(String.format("Got unexpected status[%s] back in a callback.", status));
-                }
-            }
-
-            private void callCallbacks(final List<FlowCallback> callbackList, final Status status)
-            {
-                if (endTime == null) {
-                    endTime = new DateTime();
-                }
-
-                for (FlowCallback callback : callbackList) {
-                    try {
-                        callback.completed(status);
-                    }
-                    catch (RuntimeException t) {
-                        // TODO: Figure out how to use the logger to log that a callback threw an exception.
-                    }
-                }
-            }
-        });
+        dependee.execute(new DependeeCallback());
     }
 
     @Override
     public boolean cancel()
     {
-        return depender.cancel() && dependee.cancel();
+        final boolean dependerCanceled = depender.cancel();
+        final boolean dependeeCanceled = dependee.cancel();
+
+        return dependerCanceled && dependeeCanceled;
     }
 
     @Override
@@ -219,6 +159,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                     return false;
                 default:
                     jobState = Status.READY;
+                    depender.reset();
                     callbacksToCall = new ArrayList<FlowCallback>();
                     startTime = null;
                     endTime = null;
@@ -285,5 +226,96 @@ public class ComposedExecutableFlow implements ExecutableFlow
     public ExecutableFlow getDependee()
     {
         return dependee;
+    }
+
+    private void callCallbacks(final List<FlowCallback> callbackList, final Status status)
+    {
+        if (endTime == null) {
+            endTime = new DateTime();
+        }
+
+        for (FlowCallback callback : callbackList) {
+            try {
+                callback.completed(status);
+            }
+            catch (RuntimeException t) {
+                // TODO: Figure out how to use the logger to log that a callback threw an exception.
+            }
+        }
+    }
+
+    private class DependerCallback implements FlowCallback
+    {
+        @Override
+        public void progressMade()
+        {
+            final List<FlowCallback> callbackList;
+            synchronized (sync) {
+                callbackList = callbacksToCall;
+            }
+
+            for (FlowCallback flowCallback : callbackList) {
+                flowCallback.progressMade();
+            }
+        }
+
+        @Override
+        public void completed(Status status)
+        {
+            final List<FlowCallback> callbackList;
+
+            synchronized (sync) {
+                jobState = status;
+                callbackList = callbacksToCall;
+            }
+
+            callCallbacks(callbackList, jobState);
+        }
+    }
+
+    private class DependeeCallback implements FlowCallback
+    {
+        @Override
+        public void progressMade()
+        {
+            final List<FlowCallback> callbackList;
+            synchronized (sync) {
+                callbackList = callbacksToCall;
+            }
+
+            for (FlowCallback flowCallback : callbackList) {
+                flowCallback.progressMade();
+            }
+        }
+
+        @Override
+        public void completed(Status status)
+        {
+            final List<FlowCallback> callbackList;
+
+
+            switch (status) {
+                case SUCCEEDED:
+                    synchronized(sync) {
+                        callbackList = callbacksToCall;
+                    }
+                    for (FlowCallback flowCallback : callbackList) {
+                        flowCallback.progressMade();
+                    }
+
+                    depender.execute(new DependerCallback());
+                    break;
+                case FAILED:
+                    synchronized (sync) {
+                        jobState = status;
+                        callbackList = callbacksToCall;
+                    }
+
+                    callCallbacks(callbackList, jobState);
+                    break;
+                default:
+                    throw new IllegalStateException(String.format("Got unexpected status[%s] back in a callback.", status));
+            }
+        }
     }
 }

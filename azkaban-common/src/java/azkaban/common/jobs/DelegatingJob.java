@@ -40,7 +40,7 @@ public abstract class DelegatingJob implements Job {
         return _innerJob.getProgress();
     }
 
-    public abstract void run();
+    public abstract void run() throws Exception;
 
     @Override
     public String toString()

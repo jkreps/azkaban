@@ -19,10 +19,11 @@ package azkaban.app;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
+import azkaban.flow.CachingFlowManager;
 import azkaban.flow.ExecutableFlow;
-import azkaban.flow.manager.FlowManager;
+import azkaban.flow.FlowManager;
+import azkaban.flow.RefreshableFlowManager;
 import azkaban.flow.JobManagerFlowDeserializer;
-import azkaban.flow.manager.RefreshableFlowManager;
 import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
 import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
 import azkaban.jobs.AzkabanCommandLine;
@@ -163,7 +164,11 @@ public class AzkabanApp {
                         )
                 )
         );
-        _allFlows = new RefreshableFlowManager(_jobManager, factory, flowSerializer, flowDeserializer, executionsStorageDir, lastExecutionId);
+
+        _allFlows = new CachingFlowManager(
+                new RefreshableFlowManager(_jobManager, factory, flowSerializer, flowDeserializer, executionsStorageDir, lastExecutionId),
+                defaultProps.getInt("azkaban.flow.cache.size", 1000)
+        );
         _jobManager.setFlowManager(_allFlows);
 
         this._scheduler = new Scheduler(_jobManager,

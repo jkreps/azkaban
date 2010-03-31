@@ -20,8 +20,8 @@ import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowCallback;
+import azkaban.flow.FlowManager;
 import azkaban.flow.Status;
-import azkaban.flow.manager.FlowManager;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -583,8 +583,6 @@ public class Scheduler
                     }
                 }
 
-                allKnownFlows.saveExecutableFlow(flowToRun);
-
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
                 _scheduledJob.setStarted(new DateTime());
@@ -637,12 +635,15 @@ public class Scheduler
                         }
                     }
                 });
+
+                allKnownFlows.saveExecutableFlow(flowToRun);
             }
             catch (Throwable t) {
                 if (emailList != null) {
                     sendErrorEmail(_scheduledJob, t, emailList);
                 }
                 _scheduled.remove(_scheduledJob.getId());
+                _executing.remove(_scheduledJob.getId());
                 logger.warn(String.format("An exception almost made it back to the ScheduledThreadPool from job[%s]", _scheduledJob), t);
             }
         }
@@ -677,13 +678,10 @@ public class Scheduler
 
                 final ExecutableFlow flowToRun = _flow;
 
-                allKnownFlows.saveExecutableFlow(flowToRun);
-
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
                 _scheduledJob.setStarted(new DateTime());
                 _executing.put(flowToRun.getName(), new ScheduledJobAndInstance(flowToRun, _scheduledJob));
-                Thread.sleep(30000);
                 flowToRun.execute(new FlowCallback()
                 {
                     @Override
@@ -714,12 +712,15 @@ public class Scheduler
                         _completed.put(_scheduledJob.getId(), _scheduledJob);
                     }
                 });
+
+                allKnownFlows.saveExecutableFlow(flowToRun);
             }
             catch (Throwable t) {
                 if (emailList != null) {
                     sendErrorEmail(_scheduledJob, t, emailList);
                 }
                 _scheduled.remove(_scheduledJob.getId());
+                _executing.remove(_scheduledJob.getId());
                 logger.warn(String.format("An exception almost made it back to the ScheduledThreadPool from job[%s]", _scheduledJob), t);
             }
         }

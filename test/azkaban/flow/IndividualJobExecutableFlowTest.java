@@ -16,7 +16,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- *
+ * These tests could probably be simplified by adding a "ThreadFactory" dependency on IndividualJobExecutableFlow
+ * 
+ * TODO: Maybe do that?
  */
 public class IndividualJobExecutableFlowTest
 {
@@ -95,7 +97,6 @@ public class IndividualJobExecutableFlowTest
 
         Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
-
     }
 
     @Test
@@ -291,5 +292,238 @@ public class IndividualJobExecutableFlowTest
         Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 
+    }
+
+    @Test
+    public void testReset() throws Exception
+    {
+        final CountDownLatch completionLatch = new CountDownLatch(1);
+
+        final Job mockJob = EasyMock.createMock(Job.class);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobFactory);
+
+        EasyMock.expect(jobFactory.factorizeJob()).andReturn(mockJob).once();
+        EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+
+        mockJob.run();
+        EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
+        {
+            @Override
+            public Void answer() throws Throwable
+            {
+                Assert.assertEquals(Status.RUNNING, executableFlow.getStatus());
+
+                return null;
+            }
+        }).once();
+
+        EasyMock.replay(mockJob, jobFactory);
+
+        Assert.assertEquals(Status.READY, executableFlow.getStatus());
+
+        executableFlow.execute(new FlowCallback()
+        {
+            @Override
+            public void progressMade()
+            {
+                assertionViolated.set(true);
+                reason = String.format("progressMade() shouldn't actually be called.");
+            }
+
+            @Override
+            public void completed(Status status)
+            {
+                completionLatch.countDown();
+                if (Status.SUCCEEDED != status) {
+                    assertionViolated.set(true);
+                    reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
+                }
+            }
+        });
+
+        completionLatch.await(1000, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
+
+        EasyMock.verify(mockJob, jobFactory);
+        EasyMock.reset(mockJob, jobFactory);
+
+        final CountDownLatch completionLatch2 = new CountDownLatch(1);
+
+        Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
+        Assert.assertEquals(Status.READY, executableFlow.getStatus());
+
+        EasyMock.expect(jobFactory.factorizeJob()).andReturn(mockJob).once();
+        EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+
+        mockJob.run();
+        EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
+        {
+            @Override
+            public Void answer() throws Throwable
+            {
+                Assert.assertEquals(Status.RUNNING, executableFlow.getStatus());
+
+                return null;
+            }
+        }).once();
+
+        EasyMock.replay(mockJob, jobFactory);
+
+        Assert.assertEquals(Status.READY, executableFlow.getStatus());
+
+        executableFlow.execute(new FlowCallback()
+        {
+            @Override
+            public void progressMade()
+            {
+                assertionViolated.set(true);
+                reason = String.format("progressMade() shouldn't actually be called.");
+            }
+
+            @Override
+            public void completed(Status status)
+            {
+                completionLatch2.countDown();
+                if (Status.SUCCEEDED != status) {
+                    assertionViolated.set(true);
+                    reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
+                }
+            }
+        });
+
+        completionLatch2.await(1000, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
+
+        EasyMock.verify(mockJob);
+    }
+
+    @Test
+    public void testResetWithFailedJob() throws Exception
+    {
+        final CountDownLatch completionLatch = new CountDownLatch(1);
+
+        final Job mockJob = EasyMock.createMock(Job.class);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobFactory);
+        executableFlow.setStatus(Status.FAILED);
+
+        Assert.assertTrue("Should be able to reset the flow.", executableFlow.reset());
+
+        EasyMock.expect(jobFactory.factorizeJob()).andReturn(mockJob).once();
+        EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+
+        mockJob.run();
+        EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
+        {
+            @Override
+            public Void answer() throws Throwable
+            {
+                Assert.assertEquals(Status.RUNNING, executableFlow.getStatus());
+
+                return null;
+            }
+        }).once();
+
+        EasyMock.replay(mockJob, jobFactory);
+
+        Assert.assertEquals(Status.READY, executableFlow.getStatus());
+
+        executableFlow.execute(new FlowCallback()
+        {
+            @Override
+            public void progressMade()
+            {
+                assertionViolated.set(true);
+                reason = String.format("progressMade() shouldn't actually be called.");
+            }
+
+            @Override
+            public void completed(Status status)
+            {
+                completionLatch.countDown();
+                if (Status.SUCCEEDED != status) {
+                    assertionViolated.set(true);
+                    reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
+                }
+            }
+        });
+
+        completionLatch.await(1000, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
+
+        EasyMock.verify(mockJob);
+    }
+
+    @Test
+    public void testCancel() throws Exception
+    {
+        final CountDownLatch cancelLatch = new CountDownLatch(1);
+        final CountDownLatch runLatch = new CountDownLatch(1);
+
+        final Job mockJob = EasyMock.createMock(Job.class);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobFactory);
+
+        Assert.assertTrue("Should be able to reset the flow.", executableFlow.reset());
+
+        EasyMock.expect(mockJob.getId()).andReturn("blah").once();
+        mockJob.run();
+        EasyMock.expect(jobFactory.factorizeJob()).andAnswer(new IAnswer<Job>()
+        {
+            @Override
+            public Job answer() throws Throwable
+            {
+                cancelLatch.countDown();
+                runLatch.await();
+
+                return mockJob;
+            }
+        }).once();
+
+        EasyMock.replay(mockJob, jobFactory);
+
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try {
+                    cancelLatch.await();
+                }
+                catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+
+                if(! executableFlow.cancel()) {
+                    assertionViolated.set(true);
+                    reason = "In cancel thread: call to cancel returned false.";
+                }
+
+                runLatch.countDown();
+            }
+        }).start();
+
+        AtomicBoolean runOnce = new AtomicBoolean(false);
+        executableFlow.execute(new OneCallFlowCallback(runOnce)
+        {
+            @Override
+            protected void theCallback(Status status)
+            {
+                if (status != Status.FAILED) {
+                    assertionViolated.set(true);
+                    reason = String.format("In executableFlow callback: status[%s] != Status.FAILED", status);
+                    return;
+                }
+
+                if (! (runLatch.getCount() == 1 && cancelLatch.getCount() == 0)) {
+                    assertionViolated.set(true);
+                    reason = String.format(
+                            "In executableFlow callback: ! (runLatch.count[%s] == 1 && cancelLatch.count[%s] == 0)",
+                            runLatch.getCount(),
+                            cancelLatch.getCount()
+                    );
+                }
+            }
+        });
+
+        Assert.assertTrue("Expected callback to be called once.", runOnce.get());
     }
 }

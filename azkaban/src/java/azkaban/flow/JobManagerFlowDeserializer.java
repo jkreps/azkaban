@@ -60,7 +60,9 @@ public class JobManagerFlowDeserializer implements Function<Map<String, Object>,
                 jobName,
                 new LazyJobFactory(jobFactory, jobManager, jobName)
         );
-        retVal.setStatus(jobStatus);
+        if (jobStatus != Status.RUNNING) {
+            retVal.setStatus(jobStatus);
+        }
 
         if (startTime != null) {
             retVal.setStartTime(startTime);

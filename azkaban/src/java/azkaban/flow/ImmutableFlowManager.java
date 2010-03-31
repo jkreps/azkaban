@@ -14,11 +14,11 @@
  * the License.
  */
 
-package azkaban.flow.manager;
+package azkaban.flow;
 
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flow;
-import azkaban.flow.manager.FlowManager;
+import azkaban.flow.FlowManager;
 import azkaban.serialization.ExecutableFlowSerializer;
 import azkaban.serialization.de.ExecutableFlowDeserializer;
 import azkaban.util.JSONToJava;
@@ -37,8 +37,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**

@@ -7,11 +7,13 @@ import azkaban.common.jobs.Job;
 import org.easymock.Capture;
 import org.easymock.IAnswer;
 import org.easymock.classextension.EasyMock;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -35,8 +37,11 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
         EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
 
-        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.READY).once();
-        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.READY).once();
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.READY).times(2);
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.READY).times(2);
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(null).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(null).once();
         EasyMock.replay(mockFlow1, mockFlow2);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
@@ -411,5 +416,420 @@ public class GroupedExecutableFlowTest
 
         Assert.assertTrue("Callback wasn't called!?", callbackWasCalled.get());
         EasyMock.verify(factory);
+    }
+
+    @Test
+    public void testInitializationFirstSucceeded() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).times(2);
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.READY).times(2);
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(expectedStartTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(null).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(null, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationSecondSucceeded() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.READY).times(2);
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.SUCCEEDED).times(2);
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(null).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(expectedStartTime).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(null, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationBothSucceeded1() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+        DateTime falseStartTime = new DateTime(1);
+        DateTime expectedEndTime = new DateTime(100);
+        DateTime falseEndTime = new DateTime(99);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).once();
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.SUCCEEDED).once();
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(expectedStartTime).once();
+        EasyMock.expect(mockFlow1.getEndTime()).andReturn(falseEndTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(falseStartTime).once();
+        EasyMock.expect(mockFlow2.getEndTime()).andReturn(expectedEndTime).once();
+                
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(expectedEndTime, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationBothSucceeded2() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+        DateTime falseStartTime = new DateTime(1);
+        DateTime expectedEndTime = new DateTime(100);
+        DateTime falseEndTime = new DateTime(99);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).once();
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.SUCCEEDED).once();
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(expectedStartTime).once();
+        EasyMock.expect(mockFlow1.getEndTime()).andReturn(expectedEndTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(falseStartTime).once();
+        EasyMock.expect(mockFlow2.getEndTime()).andReturn(falseEndTime).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(expectedEndTime, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationBothSucceeded3() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+        DateTime falseStartTime = new DateTime(1);
+        DateTime expectedEndTime = new DateTime(100);
+        DateTime falseEndTime = new DateTime(99);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).once();
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.SUCCEEDED).once();
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(falseStartTime).once();
+        EasyMock.expect(mockFlow1.getEndTime()).andReturn(falseEndTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(expectedStartTime).once();
+        EasyMock.expect(mockFlow2.getEndTime()).andReturn(expectedEndTime).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(expectedEndTime, flow.getEndTime());
+    }
+
+
+    @Test
+    public void testInitializationBothSucceeded4() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+        DateTime falseStartTime = new DateTime(1);
+        DateTime expectedEndTime = new DateTime(100);
+        DateTime falseEndTime = new DateTime(99);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).once();
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.SUCCEEDED).once();
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(falseStartTime).once();
+        EasyMock.expect(mockFlow1.getEndTime()).andReturn(expectedEndTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(expectedStartTime).once();
+        EasyMock.expect(mockFlow2.getEndTime()).andReturn(falseEndTime).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(expectedEndTime, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationFirstFailed() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+        DateTime falseStartTime = new DateTime(1);
+        DateTime expectedEndTime = new DateTime(100);
+        DateTime falseEndTime = new DateTime(99);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.FAILED).once();
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(expectedStartTime).once();
+        EasyMock.expect(mockFlow1.getEndTime()).andReturn(falseEndTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(falseStartTime).once();
+        EasyMock.expect(mockFlow2.getEndTime()).andReturn(expectedEndTime).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(expectedEndTime, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationFirstFailedSecondReady() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+        DateTime falseStartTime = new DateTime(1);
+        DateTime expectedEndTime = new DateTime(100);
+        DateTime falseEndTime = new DateTime(99);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.FAILED).once();
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(expectedStartTime).once();
+        EasyMock.expect(mockFlow1.getEndTime()).andReturn(expectedEndTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(null).once();
+        EasyMock.expect(mockFlow2.getEndTime()).andReturn(null).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(expectedEndTime, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationFirstFailedSecondRunning() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+        DateTime falseStartTime = new DateTime(1);
+        DateTime expectedEndTime = new DateTime(100);
+        DateTime falseEndTime = new DateTime(99);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.FAILED).once();
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(falseStartTime).once();
+        EasyMock.expect(mockFlow1.getEndTime()).andReturn(expectedEndTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(expectedStartTime).once();
+        EasyMock.expect(mockFlow2.getEndTime()).andReturn(null).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(expectedEndTime, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationSecondFailed() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+        DateTime falseStartTime = new DateTime(1);
+        DateTime expectedEndTime = new DateTime(100);
+        DateTime falseEndTime = new DateTime(99);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.READY).once();
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.FAILED).once();
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(expectedStartTime).once();
+        EasyMock.expect(mockFlow1.getEndTime()).andReturn(falseEndTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(falseStartTime).once();
+        EasyMock.expect(mockFlow2.getEndTime()).andReturn(expectedEndTime).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(expectedEndTime, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationFirstRunning() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.RUNNING).times(2);
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.READY).times(2);
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(expectedStartTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(null).once();
+
+        Capture<FlowCallback> callbackCapture = new Capture<FlowCallback>();
+        mockFlow1.execute(EasyMock.capture(callbackCapture));
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(null, flow.getEndTime());
+
+        EasyMock.verify(mockFlow1, mockFlow2);
+        EasyMock.reset(mockFlow1, mockFlow2);
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).once();
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.READY).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        callbackCapture.getValue().completed(Status.SUCCEEDED);
+
+        Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(null, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationSecondRunning() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.READY).times(2);
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.RUNNING).times(2);
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(null).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(expectedStartTime).once();
+
+        Capture<FlowCallback> callbackCapture = new Capture<FlowCallback>();
+        mockFlow2.execute(EasyMock.capture(callbackCapture));
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(null, flow.getEndTime());
+
+        EasyMock.verify(mockFlow1, mockFlow2);
+        EasyMock.reset(mockFlow1, mockFlow2);
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.READY).once();
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.SUCCEEDED).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        callbackCapture.getValue().completed(Status.SUCCEEDED);
+
+        Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(null, flow.getEndTime());
+    }
+
+    @Test
+    public void testInitializationBothRunning() throws Exception
+    {
+        DateTime expectedStartTime = new DateTime(0);
+        DateTime falseStartTime = new DateTime(1);
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("a").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("b").once();
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.RUNNING).times(2);
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.RUNNING).times(2);
+
+        EasyMock.expect(mockFlow1.getStartTime()).andReturn(falseStartTime).once();
+        EasyMock.expect(mockFlow2.getStartTime()).andReturn(expectedStartTime).once();
+
+        Capture<FlowCallback> callbackCapture1 = new Capture<FlowCallback>();
+        Capture<FlowCallback> callbackCapture2 = new Capture<FlowCallback>();
+        mockFlow1.execute(EasyMock.capture(callbackCapture1));
+        mockFlow2.execute(EasyMock.capture(callbackCapture2));
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+
+        Assert.assertEquals(Status.RUNNING, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(null, flow.getEndTime());
+
+        EasyMock.verify(mockFlow1, mockFlow2);
+        EasyMock.reset(mockFlow1, mockFlow2);
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.RUNNING).once();
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.SUCCEEDED).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        Assert.assertSame(callbackCapture1.getValue(), callbackCapture2.getValue());
+
+        callbackCapture1.getValue().completed(Status.SUCCEEDED);
+
+        Assert.assertEquals(Status.RUNNING, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertEquals(null, flow.getEndTime());
+
+        EasyMock.verify(mockFlow1, mockFlow2);
+        EasyMock.reset(mockFlow1, mockFlow2);
+
+        EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).once();
+        EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.SUCCEEDED).once();
+
+        EasyMock.replay(mockFlow1, mockFlow2);
+
+        DateTime beforeTheEnd = new DateTime();
+        callbackCapture2.getValue().completed(Status.SUCCEEDED);
+
+        Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(expectedStartTime, flow.getStartTime());
+        Assert.assertFalse(
+                String.format(
+                        "flow's end time[%s] should be after beforeTheEnd[%s]",
+                        flow.getEndTime(),
+                        beforeTheEnd
+                ),
+                beforeTheEnd.isAfter(flow.getEndTime())
+        );
     }
 }

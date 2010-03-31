@@ -27,7 +27,10 @@ public class MultipleDependencyExecutableFlowTest
         dependeeFlow = EasyMock.createMock(ExecutableFlow.class);
 
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.READY).once();
-        EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.READY).once();
+        EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.READY).times(2);
+
+        EasyMock.expect(dependeeFlow.getStartTime()).andReturn(null).once();
+
         EasyMock.replay(dependerFlow, dependeeFlow);
 
         flow = new MultipleDependencyExecutableFlow("blah", dependerFlow, dependeeFlow);

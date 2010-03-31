@@ -81,7 +81,6 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                     jobState = Status.RUNNING;
                     startTime = new DateTime();
                     callbacksToCall.add(callback);
-                    job = jobFactory.factorizeJob();
                     break;
                 case RUNNING:
                     callbacksToCall.add(callback);
@@ -95,6 +94,10 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                     return;
             }
         }
+
+        // One one thread should ever be able to get to this point because of management of jobState
+        // Thus, this should only ever get called once before the job finishes (at which point it could be reset)
+        job = jobFactory.factorizeJob();
 
         final ClassLoader storeMyClassLoader = Thread.currentThread().getContextClassLoader();
 
@@ -113,14 +116,14 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                         try {
                             job.run();
                         }
-                        catch (RuntimeException e) {
+                        catch (Exception e) {
                             synchronized (sync) {
                                 jobState = Status.FAILED;
                                 callbackList = callbacksToCall; // Get the reference before leaving the synchronized
                             }
                             callCallbacks(callbackList, jobState);
 
-                            throw e;
+                            throw new RuntimeException(e);
                         }
 
                         synchronized (sync) {

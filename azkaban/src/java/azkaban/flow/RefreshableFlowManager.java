@@ -14,7 +14,7 @@
  * the License.
  */
 
-package azkaban.flow.manager;
+package azkaban.flow;
 
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobManager;

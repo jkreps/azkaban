@@ -45,7 +45,8 @@ public class ResourceThrottledJob extends DelegatingJob {
      * Wrapper that acquires needed permits, runs job, and then releases permits
      */
     @Override
-    public void run() {
+    public void run() throws Exception
+    {
         long start = System.currentTimeMillis();
         _logger.info("Attempting to acquire " + _jobLock + " at time " + start);
         try {

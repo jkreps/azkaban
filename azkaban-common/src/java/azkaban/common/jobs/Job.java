@@ -40,7 +40,7 @@ public interface Job {
      * Run the job. In general this method can only be run once. Must either
      * succeed or throw an exception.
      */
-    public void run();
+    public void run() throws Exception;
 
     /**
      * Best effort attempt to cancel the job.
