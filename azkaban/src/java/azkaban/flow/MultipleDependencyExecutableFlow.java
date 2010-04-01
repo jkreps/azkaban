@@ -71,7 +71,14 @@ public class MultipleDependencyExecutableFlow implements ExecutableFlow
     @Override
     public boolean reset()
     {
-        return actualFlow.reset();
+        final boolean actualFlowReset = actualFlow.reset();
+        final boolean groupFlowReset = true;
+
+        for (ExecutableFlow flow : actualFlow.getChildren()) {
+            flow.reset();
+        }
+
+        return actualFlowReset;
     }
 
     @Override

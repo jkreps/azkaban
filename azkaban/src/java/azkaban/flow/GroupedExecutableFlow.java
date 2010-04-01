@@ -41,7 +41,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
     private volatile List<FlowCallback> callbacksToCall;
     private volatile DateTime startTime;
     private volatile DateTime endTime;
-    private final GroupedExecutableFlow.GroupedFlowCallback theGroupCallback;
+    private volatile GroupedExecutableFlow.GroupedFlowCallback theGroupCallback;
 
     public GroupedExecutableFlow(String id, ExecutableFlow... flows)
     {
@@ -171,13 +171,23 @@ public class GroupedExecutableFlow implements ExecutableFlow
         if (startTime == null) {
             startTime = new DateTime();
         }
-        else {
-            throw new RuntimeException("Somehow managed to have execute() called with startTime != null");
-        }
 
         for (ExecutableFlow flow : flows) {
             if (jobState != Status.FAILED) {
-                flow.execute(theGroupCallback);
+                try {
+                    flow.execute(theGroupCallback);
+                }
+                catch (RuntimeException e) {
+                    final List<FlowCallback> callbacks;
+                    synchronized (sync) {
+                        jobState = Status.FAILED;
+                        callbacks = callbacksToCall;
+                    }
+
+                    callCallbacks(callbacks, Status.FAILED);
+
+                    throw e;
+                }
             }
         }
     }
@@ -232,6 +242,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 default:
                     jobState = Status.READY;
                     callbacksToCall = new ArrayList<FlowCallback>();
+                    theGroupCallback = new GroupedFlowCallback();
                     startTime = null;
                     endTime = null;
             }
@@ -288,6 +299,22 @@ public class GroupedExecutableFlow implements ExecutableFlow
         return endTime;
     }
 
+    private void callCallbacks(final List<FlowCallback> callbacksList, final Status status)
+    {
+        if (endTime == null) {
+            endTime = new DateTime();
+        }
+
+        for (FlowCallback callback : callbacksList) {
+            try {
+                callback.completed(status);
+            }
+            catch (RuntimeException t) {
+                // TODO: Figure out how to use the logger to log that a callback threw an exception.
+            }
+        }
+    }
+    
     private class GroupedFlowCallback implements FlowCallback
     {
         private final AtomicBoolean notifiedCallbackAlready;
@@ -328,22 +355,6 @@ public class GroupedExecutableFlow implements ExecutableFlow
             else {
                 for (FlowCallback flowCallback : callbackList) {
                     flowCallback.progressMade();
-                }
-            }
-        }
-
-        private void callCallbacks(final List<FlowCallback> callbacksList, final Status status)
-        {
-            if (endTime == null) {
-                endTime = new DateTime();
-            }
-
-            for (FlowCallback callback : callbacksList) {
-                try {
-                    callback.completed(status);
-                }
-                catch (RuntimeException t) {
-                    // TODO: Figure out how to use the logger to log that a callback threw an exception.
                 }
             }
         }

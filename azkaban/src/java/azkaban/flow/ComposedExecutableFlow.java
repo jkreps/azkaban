@@ -128,11 +128,21 @@ public class ComposedExecutableFlow implements ExecutableFlow
         if (startTime == null) {
             startTime = new DateTime();
         }
-        else {
-            throw new RuntimeException("Somehow managed to have execute() called with startTime != null");
-        }
 
-        dependee.execute(new DependeeCallback());
+        try {
+            dependee.execute(new DependeeCallback());
+        }
+        catch (RuntimeException e) {
+            final List<FlowCallback> callbacks;
+            synchronized (sync) {
+                jobState = Status.FAILED;
+                callbacks = callbacksToCall;
+            }
+
+            callCallbacks(callbacks, Status.FAILED);
+
+            throw e;
+        }
     }
 
     @Override
@@ -269,7 +279,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 callbackList = callbacksToCall;
             }
 
-            callCallbacks(callbackList, jobState);
+            callCallbacks(callbackList, status);
         }
     }
 
@@ -311,7 +321,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                         callbackList = callbacksToCall;
                     }
 
-                    callCallbacks(callbackList, jobState);
+                    callCallbacks(callbackList, status);
                     break;
                 default:
                     throw new IllegalStateException(String.format("Got unexpected status[%s] back in a callback.", status));
