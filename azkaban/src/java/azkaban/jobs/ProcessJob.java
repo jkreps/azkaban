@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Level;
 
 import azkaban.app.JobDescriptor;
@@ -44,10 +45,13 @@ public class ProcessJob extends AbstractJob implements Job {
 	public static final String ENV_PREFIX = "env.";
 	public static final String COMMAND = "command";
 	public static final String WORKING_DIR = "working.dir";
-
+	public static final String JOB_PROP_ENV = "JOB_PROP_FILE";
+    public static final String JOB_NAME_ENV = "JOB_NAME";
+    
 	private final Props _props;
 	private final String _jobPath;
 	private final String _name;
+	private final JobDescriptor _descriptor;
 	private volatile Process _process;
 	private volatile boolean _isComplete;
 
@@ -57,17 +61,24 @@ public class ProcessJob extends AbstractJob implements Job {
 		this._isComplete = false;
 		this._jobPath = descriptor.getFullPath();
 		this._name = descriptor.getId();
+		this._descriptor = descriptor;
 	}
 
 	public void run() {
 		// Sets a list of all the commands that need to be run.
 		List<String> commands = getCommandList();
 		info(commands.size() + " commands to execute.");
-
+        	
 		Map<String, String> env = getEnvironmentVariables();
 
 		String cwd = getWorkingDirectory();
+        // Create process file
+		File file = createFlattenedPropsFile(_descriptor, cwd);
+		System.out.println("Temp file created " + file.getAbsolutePath());
 
+		env.put(JOB_PROP_ENV, file.getAbsolutePath());
+	    env.put(JOB_NAME_ENV, _name);
+	      
 		// For each of the jobs, set up a process and run them.
 		for (String command : commands) {
 			info("Executing command: " + command);
@@ -108,8 +119,23 @@ public class ProcessJob extends AbstractJob implements Job {
 				Thread.currentThread().interrupt();
 			}
 		}
+		
+		file.delete();
 	}
 
+	private File createFlattenedPropsFile(JobDescriptor desc, String workingDir)  {
+	    File directory = new File(workingDir);
+	    File tempFile = null;
+	    try {
+	        tempFile = File.createTempFile(desc.getId() + "_", "_tmp", directory);
+	        desc.getProps().storeFlattened(tempFile);
+	    } catch (IOException e) {
+            throw new RuntimeException("Failed to create temp property file ", e);
+	    }
+	    
+	    return tempFile;
+	}
+	
 	protected List<String> getCommandList() {
 		List<String> commands = new ArrayList<String>();
 		commands.add(_props.getString(COMMAND));
@@ -170,11 +196,43 @@ public class ProcessJob extends AbstractJob implements Job {
 					String line = _inputReader.readLine();
 					if (line == null)
 						return;
-					getLog().log(_loggingLevel, line);
+					
+					logMessage(line);
 				}
 			} catch (IOException e) {
 				error("Error reading from logging stream:", e);
 			}
+		}
+		
+		private void logMessage(String message) {
+		    if (message.startsWith(Level.DEBUG.toString())) {
+		        String newMsg = message.substring(Level.DEBUG.toString().length());
+		        getLog().debug(newMsg);
+		    }
+		    else if (message.startsWith(Level.ERROR.toString())) {
+		        String newMsg = message.substring(Level.ERROR.toString().length());
+                getLog().error(newMsg);
+		    }
+	        else if (message.startsWith(Level.INFO.toString())) {
+	            String newMsg = message.substring(Level.INFO.toString().length());
+                getLog().info(newMsg);   
+	        }
+            else if (message.startsWith(Level.WARN.toString())) {
+                String newMsg = message.substring(Level.WARN.toString().length());
+                getLog().warn(newMsg);
+            }
+            else if (message.startsWith(Level.FATAL.toString())) {
+                String newMsg = message.substring(Level.FATAL.toString().length());
+                getLog().fatal(newMsg);
+            }
+            else if (message.startsWith(Level.TRACE.toString())) {
+                String newMsg = message.substring(Level.TRACE.toString().length());
+                getLog().trace(newMsg);
+            }
+            else {
+                getLog().log(_loggingLevel, message);
+            }
+		    
 		}
 	}
 
@@ -188,5 +246,9 @@ public class ProcessJob extends AbstractJob implements Job {
 	
 	public String getJobName() {
 		return _name;
+	}
+	
+	public JobDescriptor getJobDescriptor() {
+	    return _descriptor;
 	}
 }

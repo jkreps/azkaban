@@ -79,10 +79,10 @@ public class JobDescriptor {
         this._jobType = props.getString(JOB_TYPE, "");
 
         // @TODO Move this validation check in Java Job
-        if(_jobType.length() == 0 || _jobType.equalsIgnoreCase("java")) {
-            String className = props.getString(JOB_CLASS);
-            this._class = Utils.loadClass(className, classLoader);
-        }
+//        if(_jobType.length() == 0 || _jobType.equalsIgnoreCase("java")) {
+//            String className = props.getString(JOB_CLASS);
+//            this._class = Utils.loadClass(className, classLoader);
+//        }
 
         this._readResourceLocks = props.getStringList(READ_LOCKS, ",");
 

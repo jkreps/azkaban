@@ -168,11 +168,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
 
         Job currJob = job;
         while (true) {
-            if (currJob instanceof JavaJob) {
-                theThread.setContextClassLoader(((JavaJob) currJob).getDescriptor().getClassLoader());
-                break;
-            }
-            else if (currJob instanceof DelegatingJob) {
+            if (currJob instanceof DelegatingJob) {
                 currJob = ((DelegatingJob) currJob).getInnerJob();
             }
             else {

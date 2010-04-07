@@ -16,15 +16,12 @@
 
 package azkaban.jobs;
 
-import java.lang.reflect.Method;
-import java.util.Properties;
+import java.io.File;
+import java.util.List;
+import java.util.StringTokenizer;
 
 import azkaban.app.JobDescriptor;
-import azkaban.common.jobs.AbstractJob;
-import azkaban.common.jobs.Job;
-import azkaban.common.utils.Utils;
-
-public class JavaJob extends AbstractJob implements Job {
+public class JavaJob extends JavaProcessJob {
 
 	public static final String RUN_METHOD_PARAM = "method.run";
 	public static final String CANCEL_METHOD_PARAM = "method.cancel";
@@ -43,103 +40,45 @@ public class JavaJob extends AbstractJob implements Job {
 	private JobDescriptor _descriptor;
 
 	public JavaJob(JobDescriptor descriptor) {
-		super(descriptor.getId());
-
-		if (descriptor.getJobClass() == null) {
-			throw new IllegalArgumentException(
-					String
-							.format(
-									"A java job descriptor with no class is fairly pointless. JobDescriptor[%s]",
-									descriptor));
-		}
-
-		_descriptor = descriptor;
-		_runMethod = _descriptor.getProps().getString(RUN_METHOD_PARAM,
-				DEFAULT_RUN_METHOD);
-		_cancelMethod = _descriptor.getProps().getString(CANCEL_METHOD_PARAM,
-				DEFAULT_CANCEL_METHOD);
-		_progressMethod = _descriptor.getProps().getString(
-				PROGRESS_METHOD_PARAM, DEFAULT_PROGRESS_METHOD);
-
+		super(descriptor);
 	}
 
 	@Override
-	public void cancel() throws Exception {
-		// look for cancel method
-		if (_javaObject != null) {
-
-			Method method = Utils.getMethod(_javaObject.getClass(),
-					_cancelMethod, new Class<?>[]{});
-
-			if (method != null)
-				method.invoke(_javaObject, (Object)null);
-			else {
-				throw new RuntimeException("Job " + getId()
-						+ " does not support cancellation!");
-			}
-		}
+    protected List<String> getClassPaths() {
+        List<String> classPath = super.getClassPaths();
+        File file = new File(JavaJobRunnerMain.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+        if (!file.isDirectory() && file.getName().endsWith(".class")) {
+            String name = JavaJobRunnerMain.class.getName();
+            StringTokenizer tokenizer = new StringTokenizer(name, ".");
+            while(tokenizer.hasMoreTokens()) {
+                tokenizer.nextElement();
+                
+                file = file.getParentFile();
+            }
+            
+            classPath.add(file.getPath());    
+        }
+        else {
+            classPath.add(JavaJobRunnerMain.class.getProtectionDomain().getCodeSource().getLocation().getPath());    
+        }
+        
+        // Add hadoop home to classpath
+        String hadoopHome = System.getenv("HADOOP_HOME");
+        if (hadoopHome == null) {
+            info("HADOOP_HOME not set, using default hadoop config.");
+        } else {
+            info("Using hadoop config found in " + hadoopHome);
+            classPath.add(new File(hadoopHome, "conf").getPath());
+        }
+        
+        return classPath;
 	}
 
-	@Override
-	public String getId() {
-		return _descriptor.getId();
-	}
-
-	@Override
-	public double getProgress() throws Exception {
-		if (_javaObject != null) {
-
-			Method method = Utils.getMethod(_javaObject.getClass(),
-					_progressMethod, new Class<?>[]{});
-
-			if (method != null) {
-				Object progress = method.invoke(_javaObject, new Object[]{});
-
-				if (progress instanceof Double) {
-					return (Double) progress;
-				}
-			}
-		}
-		return super.getProgress();
-	}
-
-
-	public void run() {
-		@SuppressWarnings("unused")
-		ClassLoader loader = getClass().getClassLoader();
-
-		if (Utils.constructorExist(_descriptor.getJobClass(), getId(),
-				_descriptor.getProps())) {
-			_javaObject = Utils.callConstructor(_descriptor.getJobClass(),
-					getId(), _descriptor.getProps());
-		} else if (Utils.constructorExist(_descriptor.getJobClass(),
-				_descriptor.getProps())) {
-			_javaObject = Utils.callConstructor(_descriptor.getJobClass(),
-					_descriptor.getProps());
-		} else if (Utils.constructorExist(_descriptor.getJobClass(),
-				new Properties())) {
-			Properties properties = _descriptor.getProps().toProperties();
-			_javaObject = Utils.callConstructor(_descriptor.getJobClass(),
-					properties);
-		} else if (Utils.constructorExist(_descriptor.getJobClass(), getId())) {
-			_javaObject = Utils.callConstructor(_descriptor.getJobClass(),
-					getId());
-		} else {
-			_javaObject = Utils.callConstructor(_descriptor.getJobClass());
-		}
-
-		try {
-			Utils.getMethod(_javaObject.getClass(), _runMethod, new Class<?>[]{}).invoke(
-					_javaObject, new Object[]{});
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public JobDescriptor getDescriptor() {
-		return _descriptor;
-	}
-
+    @Override
+    protected String getJavaClass() {
+        return JavaJobRunnerMain.class.getName();
+    }
+    
 	@Override
 	public String toString() {
 		return "JavaJob{" + "_runMethod='" + _runMethod + '\''

@@ -508,7 +508,7 @@ public class Props {
     public void storeFlattened(File file) throws IOException {
         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));
         try {
-            storeLocal(out);
+            storeFlattened(out);
         } finally {
             out.close();
         }

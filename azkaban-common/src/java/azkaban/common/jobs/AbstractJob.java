@@ -25,11 +25,15 @@ public abstract class AbstractJob {
     private volatile double _progress;
 
     protected AbstractJob(String id) {
-        _id = id;
-        _log = Logger.getLogger(_id);
-        _progress = 0.0;
+        this(id, Logger.getLogger(id));
     }
 
+    protected AbstractJob(String id, Logger log) {
+        _id = id;
+        _log = log;
+        _progress = 0.0;
+    }
+    
     public String getId() {
         return _id;
     }

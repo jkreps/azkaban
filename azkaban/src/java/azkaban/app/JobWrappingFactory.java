@@ -33,7 +33,6 @@ import java.util.Map;
 
 public class JobWrappingFactory implements Function<JobDescriptor, Job>
 {
-
     private final ReadWriteLockManager _readWriteLockManager;
     private final String _logDir;
     private final String _defaultType;

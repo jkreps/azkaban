@@ -258,7 +258,7 @@ public class JobManager {
                                                             Props propsOverrides,
                                                             Map<File, File> pathOverrides,
                                                             boolean ignoreDeps) {
-        if(!jobDir.exists() && jobDir.isDirectory())
+        if(!jobDir.exists() || !jobDir.isDirectory())
             throw new AppConfigurationException(jobDir + " is not a readable directory.");
         Map<String, JobDescriptor> m = new HashMap<String, JobDescriptor>();
         loadJobDescriptorsWithoutDependencies(m,

@@ -23,7 +23,7 @@ import java.util.List;
 import azkaban.app.JobDescriptor;
 import azkaban.common.jobs.Job;
 
-public class JavaProcessJob extends ProcessJob implements Job {
+public class JavaProcessJob extends ProcessJob {
 	public static final String CLASSPATH = "classpath";
 	public static final String JAVA_CLASS = "java.class";
 	public static final String INITIAL_MEMORY_SIZE = "Xms";
