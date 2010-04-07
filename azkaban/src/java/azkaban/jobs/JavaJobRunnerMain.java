@@ -26,7 +26,6 @@ public class JavaJobRunnerMain {
         String jobName = System.getenv(ProcessJob.JOB_NAME_ENV);
         String propsFile = System.getenv(ProcessJob.JOB_PROP_ENV);
         
-      //  Logger logger = Logger.getLogger(jobName);
         Logger logger = Logger.getRootLogger();
         logger.removeAllAppenders();
         ConsoleAppender appender = new ConsoleAppender(DEFAULT_LAYOUT);
@@ -36,11 +35,13 @@ public class JavaJobRunnerMain {
         Properties prop = new Properties();
         prop.load(new BufferedReader(new FileReader(propsFile)));
 
+        logger.info("Running job " + jobName);
         String className = prop.getProperty(JOB_CLASS);
         if (className == null) {
             throw new Exception("Class name is not set.");
         }
-
+        logger.info("Class name " + className);
+        
         // Create the object.
         Object obj = getObject(jobName, className, prop);
         if (obj == null) {
@@ -48,6 +49,7 @@ public class JavaJobRunnerMain {
         }
 
         String runMethod = prop.getProperty(RUN_METHOD_PARAM, DEFAULT_RUN_METHOD);        
+        logger.info("Invoking method " + runMethod);
         obj.getClass().getMethod(runMethod, new Class<?>[]{}).invoke( obj, new Object[]{});
     }
     
