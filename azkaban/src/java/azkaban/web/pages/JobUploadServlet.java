@@ -35,11 +35,7 @@ public class JobUploadServlet extends AbstractAzkabanServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
-        Page page = new Page(req,
-                             resp,
-                             getApplication().getVelocityEngine(),
-                             "azkaban/web/pages/upload_jobs.vm");
-        
+        Page page = newPage(req, resp, "azkaban/web/pages/upload_jobs.vm");
         String fsPath = req.getPathInfo();
         if (fsPath != null && fsPath.length() > 1) {
             this.addMessage(req, fsPath.substring(1));

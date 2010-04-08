@@ -57,10 +57,7 @@ public class JobDetailServlet extends AbstractAzkabanServlet {
         Map<String, JobDescriptor> descriptors = jobManager.loadJobDescriptors();
         boolean isEditing = req.getParameter("edit") != null;
         if(jobId == null) {
-            Page page = new Page(req,
-                                 resp,
-                                 app.getVelocityEngine(),
-                                 "azkaban/web/pages/edit_job.vm");
+            Page page = newPage(req, resp, "azkaban/web/pages/edit_job.vm");
             page.render();
         } else if(isEditing) {
             Page page = newPage(req, resp, "azkaban/web/pages/edit_job.vm");
