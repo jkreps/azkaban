@@ -37,7 +37,8 @@ import azkaban.common.web.Page;
 public class AbstractAzkabanServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1;
-
+    private static final String AZKABAN_NAME = "instancename";
+    
     private AzkabanApp _app;
 
     public AzkabanApp getApplication() {
@@ -88,7 +89,10 @@ public class AbstractAzkabanServlet extends HttpServlet {
     }
 
     protected Page newPage(HttpServletRequest req, HttpServletResponse resp, String template) {
-        return new Page(req, resp, _app.getVelocityEngine(), template);
+        Page page = new Page(req, resp, _app.getVelocityEngine(), template);
+        page.add(AZKABAN_NAME, _app.getAppInstanceName());
+        
+        return page;
     }
 
 }

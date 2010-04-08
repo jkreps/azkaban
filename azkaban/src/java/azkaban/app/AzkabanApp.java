@@ -81,7 +81,9 @@ public class AzkabanApp {
     private static final Logger logger = Logger.getLogger(AzkabanApp.class);
     private static final String DEFAULT_STATIC_DIR = "azkaban/web/static";
     private static final String DEFAULT_PLUGIN_DIR = "azkaban/plugin";
-
+    private static final String INSTANCE_NAME = "instance.name";
+    
+    private final String _instanceName;
     private final List<File> _jobDirs;
     private final File _logsDir;
     private final File _tempDir;
@@ -144,7 +146,8 @@ public class AzkabanApp {
         String failureEmail = defaultProps.getString("job.failure.email", null);
         String successEmail = defaultProps.getString("job.success.email", null);
         int schedulerThreads = defaultProps.getInt("scheduler.threads", 50);
-
+        _instanceName = defaultProps.getString(INSTANCE_NAME, "");
+        
         final File initialJobDir = _jobDirs.get(0);
         File schedule = getScheduleFile(defaultProps, initialJobDir);
         File backup = getBackupFile(defaultProps, initialJobDir);
@@ -340,6 +343,10 @@ public class AzkabanApp {
         return _baseClassLoader;
     }
 
+    public String getAppInstanceName() {
+        return _instanceName;
+    }
+    
     public FlowManager getAllFlows()
     {
         return _allFlows;

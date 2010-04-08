@@ -2,23 +2,6 @@
   Azkaban Job Controller
 #end
 
-#macro(appnamebox_old)
-  <div id="header-box">
-    <div id="title-box">
-      <a href="${context}/">#appname()</a>
-    </div>
-    <div class="subtitle">
-      <a href="$!context/job">Create Job</a>
-      &middot;
-      <a href="$!context/upload-job">Upload Job</a>
-      &middot;
-      <a href="$!context/history">History</a>
-      &middot;
-      <a href="$!context/fs">HDFS</a>
-    </div>
-  </div>
-#end
-
 #macro(appnamebox)
 	<div id="header" >
 		<div id="icon"></div>
@@ -33,6 +16,9 @@
 				<li><a href="$!context/fs">HDFS</a></li>
 			</ul>
 		</div>
+		<div id="label" >
+    		<p>$instancename</p>
+    	</div>
 	</div>
 #end
 
