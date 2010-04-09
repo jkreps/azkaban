@@ -28,6 +28,7 @@ public class JavaJobRunnerMain {
     public String _cancelMethod;
     public String _jobName;
     public Object _javaObject;
+    private boolean _isFinished = false;
     
     public static void main(String[] args) throws Exception {
         @SuppressWarnings("unused")
@@ -72,9 +73,13 @@ public class JavaJobRunnerMain {
         String runMethod = prop.getProperty(RUN_METHOD_PARAM, DEFAULT_RUN_METHOD);
         _logger.info("Invoking method " + runMethod);
         _javaObject.getClass().getMethod(runMethod, new Class<?>[] {}).invoke(_javaObject, new Object[] {});
+        _isFinished = true;
     }
 
     public void cancelJob() {
+        if (_isFinished) {
+            return;
+        }
         _logger.info("Attempting to call cancel on this job");
         if (_javaObject != null) {
             Method method = null;
