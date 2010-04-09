@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import azkaban.app.JobDescriptor;
-import azkaban.common.jobs.Job;
 
 public class JavaProcessJob extends ProcessJob {
 	public static final String CLASSPATH = "classpath";

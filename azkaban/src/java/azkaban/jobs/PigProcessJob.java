@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import azkaban.app.JobDescriptor;
-import azkaban.common.jobs.Job;
 
 public class PigProcessJob extends JavaProcessJob {
 	public static final String PIG_SCRIPT = "pig.script";

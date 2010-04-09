@@ -91,12 +91,13 @@ public class IndexServlet extends AbstractAzkabanServlet {
     }
 
     private void cancelJob(AzkabanApp app, HttpServletRequest req) throws ServletException {
-        String jobName = getParam(req, "job");
+        String jobId = getParam(req, "job");
         Collection<ScheduledJobAndInstance> executing = app.getScheduler().getExecutingJobs();
         for(ScheduledJobAndInstance curr: executing) {
             ExecutableFlow flow = curr.getExecutableFlow();
-            final String flowName = flow.getName();
-            if(flowName.equals(jobName)) {
+            final String flowId = flow.getId();
+            if(flowId.equals(jobId)) {
+                final String flowName = flow.getName();
                 try {
                     if (flow.cancel()) {
                         addMessage(req, "Cancelled " + flowName);

@@ -124,7 +124,7 @@
             <td>
               <form action="${context}/" method="post" style="display:inline">
                 <input type="hidden" name="action" value="cancel"/>
-                <input type="hidden" name="job" value="${exec.jobInstance.id}"/>
+                <input type="hidden" name="job" value="${exec.executableFlow.id}"/>
                 <input type="submit" value="Cancel"/>
               </form>
             </td>
