@@ -48,7 +48,7 @@ public class ProcessJob extends AbstractJob implements Job {
     public static final String JOB_PROP_ENV = "JOB_PROP_FILE";
     public static final String JOB_NAME_ENV = "JOB_NAME";
     public static final int CLEAN_UP_TIME_MS = 1000;
-    
+
     private final Props _props;
     private final String _jobPath;
     private final String _name;
@@ -83,7 +83,8 @@ public class ProcessJob extends AbstractJob implements Job {
         // For each of the jobs, set up a process and run them.
         for(String command: commands) {
             info("Executing command: " + command);
-            String[] cmdPieces = command.split("\\s+");
+            String[] cmdPieces = partitionCommandLine(command);
+
             ProcessBuilder builder = new ProcessBuilder(cmdPieces);
 
             builder.directory(new File(cwd));
@@ -92,39 +93,39 @@ public class ProcessJob extends AbstractJob implements Job {
             try {
                 _process = builder.start();
             } catch(IOException e) {
+                file.delete();
                 throw new RuntimeException(e);
             }
             Thread outputGobbler = new LoggingGobbler(new InputStreamReader(_process.getInputStream()),
                                                       Level.INFO);
             Thread errorGobbler = new LoggingGobbler(new InputStreamReader(_process.getErrorStream()),
                                                      Level.ERROR);
-            
+
             int processId = getProcessId();
-            if ( processId == 0 ) {
+            if(processId == 0) {
                 info("Spawned thread. Unknowned processId");
-            }
-            else {
+            } else {
                 info("Spawned thread with processId " + processId);
             }
             outputGobbler.start();
             errorGobbler.start();
-            int exitCode = 0;
+            int exitCode = -999;
             try {
                 exitCode = _process.waitFor();
             } catch(InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
 
             _isComplete = true;
-            if(exitCode != 0)
+            if(exitCode != 0) {
+                file.delete();
                 throw new RuntimeException("Processes ended with exit code " + exitCode + ".");
+            }
 
             // try to wait for everything to get logged out before exiting
             try {
                 outputGobbler.join(1000);
                 errorGobbler.join(1000);
             } catch(InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
         }
 
@@ -180,27 +181,26 @@ public class ProcessJob extends AbstractJob implements Job {
     public void cancel() throws Exception {
         if(_process != null) {
             int processId = getProcessId();
-            if (processId != 0) {
-                warn("Attempting to kill the process " + processId);                
+            if(processId != 0) {
+                warn("Attempting to kill the process " + processId);
                 try {
                     Runtime.getRuntime().exec("kill " + processId);
                     synchronized(this) {
                         wait(CLEAN_UP_TIME_MS);
                     }
-                }
-                catch(InterruptedException e) {
+                } catch(InterruptedException e) {
                     // Do nothing. We don't really care.
                 }
-                if (!_isComplete) {
-                    error("After " + CLEAN_UP_TIME_MS + " ms, the job hasn't terminated. Will force terminate the job.");
+                if(!_isComplete) {
+                    error("After " + CLEAN_UP_TIME_MS
+                          + " ms, the job hasn't terminated. Will force terminate the job.");
                 }
-            }
-            else {
+            } else {
                 info("Cound not get process id");
             }
-            
-            if ( !_isComplete ) {
-                warn("Force kill the process");    
+
+            if(!_isComplete) {
+                warn("Force kill the process");
                 _process.destroy();
             }
         }
@@ -290,4 +290,65 @@ public class ProcessJob extends AbstractJob implements Job {
     public JobDescriptor getJobDescriptor() {
         return _descriptor;
     }
+
+    /**
+     * Splits the command into a unix like command line structure. Quotes and
+     * single quotes are treated as nested strings.
+     * 
+     * @param command
+     * @return
+     */
+    public static String[] partitionCommandLine(String command) {
+        ArrayList<String> commands = new ArrayList<String>();
+
+        int index = 0;
+
+        StringBuffer buffer = new StringBuffer(command.length());
+
+        boolean isApos = false;
+        boolean isQuote = false;
+        while(index < command.length()) {
+            char c = command.charAt(index);
+
+            switch(c) {
+                case ' ':
+                    if(!isQuote && !isApos) {
+                        String arg = buffer.toString();
+                        buffer = new StringBuffer(command.length() - index);
+                        if(arg.length() > 0) {
+                            commands.add(arg);
+                        }
+                    } else {
+                        buffer.append(c);
+                    }
+                    break;
+                case '\'':
+                    if(!isQuote) {
+                        isApos = !isApos;
+                    } else {
+                        buffer.append(c);
+                    }
+                    break;
+                case '"':
+                    if(!isApos) {
+                        isQuote = !isQuote;
+                    } else {
+                        buffer.append(c);
+                    }
+                    break;
+                default:
+                    buffer.append(c);
+            }
+
+            index++;
+        }
+
+        if(buffer.length() > 0) {
+            String arg = buffer.toString();
+            commands.add(arg);
+        }
+
+        return commands.toArray(new String[commands.size()]);
+    }
+
 }

@@ -26,7 +26,7 @@ public class JavaProcessJob extends ProcessJob {
 	public static final String CLASSPATH = "classpath";
 	public static final String JAVA_CLASS = "java.class";
 	public static final String INITIAL_MEMORY_SIZE = "Xms";
-	public static final String MAX_MEMORY_SIZE = "Xms";
+	public static final String MAX_MEMORY_SIZE = "Xmx";
 	public static final String MAIN_ARGS = "main.args";
 	public static final String JVM_PARAMS = "jvm.args";
 
