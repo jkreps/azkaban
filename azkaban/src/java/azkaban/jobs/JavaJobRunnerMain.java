@@ -43,37 +43,42 @@ public class JavaJobRunnerMain {
         }
         );
         
-        _jobName = System.getenv(ProcessJob.JOB_NAME_ENV);
-        String propsFile = System.getenv(ProcessJob.JOB_PROP_ENV);
-
-        _logger = Logger.getRootLogger();
-        _logger.removeAllAppenders();
-        ConsoleAppender appender = new ConsoleAppender(DEFAULT_LAYOUT);
-        appender.activateOptions();
-        _logger.addAppender(appender);
-
-        Properties prop = new Properties();
-        prop.load(new BufferedReader(new FileReader(propsFile)));
-
-        _logger.info("Running job " + _jobName);
-        String className = prop.getProperty(JOB_CLASS);
-        if(className == null) {
-            throw new Exception("Class name is not set.");
+        try {
+            _jobName = System.getenv(ProcessJob.JOB_NAME_ENV);
+            String propsFile = System.getenv(ProcessJob.JOB_PROP_ENV);
+    
+            _logger = Logger.getRootLogger();
+            _logger.removeAllAppenders();
+            ConsoleAppender appender = new ConsoleAppender(DEFAULT_LAYOUT);
+            appender.activateOptions();
+            _logger.addAppender(appender);
+    
+            Properties prop = new Properties();
+            prop.load(new BufferedReader(new FileReader(propsFile)));
+    
+            _logger.info("Running job " + _jobName);
+            String className = prop.getProperty(JOB_CLASS);
+            if(className == null) {
+                throw new Exception("Class name is not set.");
+            }
+            _logger.info("Class name " + className);
+    
+            // Create the object.
+            _javaObject = getObject(_jobName, className, prop);
+            if(_javaObject == null) {
+                throw new Exception("Could not create running object");
+            }
+    
+            _cancelMethod = prop.getProperty(CANCEL_METHOD_PARAM, DEFAULT_CANCEL_METHOD);
+            
+            String runMethod = prop.getProperty(RUN_METHOD_PARAM, DEFAULT_RUN_METHOD);
+            _logger.info("Invoking method " + runMethod);
+            _javaObject.getClass().getMethod(runMethod, new Class<?>[] {}).invoke(_javaObject, new Object[] {});
+            _isFinished = true;
+        } catch (Exception e) {
+            _isFinished = true;
+            throw e;
         }
-        _logger.info("Class name " + className);
-
-        // Create the object.
-        _javaObject = getObject(_jobName, className, prop);
-        if(_javaObject == null) {
-            throw new Exception("Could not create running object");
-        }
-
-        _cancelMethod = prop.getProperty(CANCEL_METHOD_PARAM, DEFAULT_CANCEL_METHOD);
-        
-        String runMethod = prop.getProperty(RUN_METHOD_PARAM, DEFAULT_RUN_METHOD);
-        _logger.info("Invoking method " + runMethod);
-        _javaObject.getClass().getMethod(runMethod, new Class<?>[] {}).invoke(_javaObject, new Object[] {});
-        _isFinished = true;
     }
 
     public void cancelJob() {
