@@ -39,9 +39,13 @@ a:focus {
 	text-align: right;
 	float: right;
 	left: 355px;
-	top: -70px;
+	top: -45px;
 	color: #CCCCCC;
 	text-shadow: 0.07em 0.07em #333
+}
+#header #label p {
+	height: 35px;
+	margin: 0;
 }
 
 #header #icon {
