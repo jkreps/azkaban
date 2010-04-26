@@ -46,20 +46,11 @@ public class JavaJob extends JavaProcessJob {
 	@Override
     protected List<String> getClassPaths() {
         List<String> classPath = super.getClassPaths();
-        File file = new File(JavaJobRunnerMain.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-        if (!file.isDirectory() && file.getName().endsWith(".class")) {
-            String name = JavaJobRunnerMain.class.getName();
-            StringTokenizer tokenizer = new StringTokenizer(name, ".");
-            while(tokenizer.hasMoreTokens()) {
-                tokenizer.nextElement();
-                
-                file = file.getParentFile();
-            }
-            
-            classPath.add(file.getPath());    
-        }
-        else {
-            classPath.add(JavaJobRunnerMain.class.getProtectionDomain().getCodeSource().getLocation().getPath());    
+        
+        classPath.add(getSourcePathFromClass(JavaJobRunnerMain.class));
+        String loggerPath = getSourcePathFromClass(org.apache.log4j.Logger.class);
+        if (!classPath.contains(loggerPath)) {
+            classPath.add(loggerPath);
         }
         
         // Add hadoop home to classpath
@@ -74,6 +65,25 @@ public class JavaJob extends JavaProcessJob {
         return classPath;
 	}
 
+	private static String getSourcePathFromClass(Class containedClass) {
+	    File file = new File(containedClass.getProtectionDomain().getCodeSource().getLocation().getPath());
+	    
+        if (!file.isDirectory() && file.getName().endsWith(".class")) {
+            String name = JavaJobRunnerMain.class.getName();
+            StringTokenizer tokenizer = new StringTokenizer(name, ".");
+            while(tokenizer.hasMoreTokens()) {
+                tokenizer.nextElement();
+                
+                file = file.getParentFile();
+            }
+            
+            return file.getPath();  
+        }
+        else {
+            return JavaJobRunnerMain.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        }
+	}
+	
     @Override
     protected String getJavaClass() {
         return JavaJobRunnerMain.class.getName();
