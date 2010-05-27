@@ -148,14 +148,24 @@ public class CommandLineJobRunner {
 
         for(String jobName: jobNames) {
             try {
-                System.out.println("Running " + jobName);
                 final ExecutableFlow flowToRun = allFlows.createNewExecutableFlow(jobName);
+
+                if (flowToRun == null) {
+                    System.out.printf("Job[%s] is unknown.  Not running.%n", jobName);
+
+                    countDown.countDown();
+                    continue;
+                }
+                else {
+                    System.out.println("Running " + jobName);
+                }
 
                 if (ignoreDeps) {
                     for (ExecutableFlow flow : flowToRun.getChildren()) {
                         flow.markCompleted();
                     }
                 }
+
 
                 flowToRun.execute(new FlowCallback()
                 {

@@ -106,7 +106,13 @@ public class ImmutableFlowManager implements FlowManager
     @Override
     public ExecutableFlow createNewExecutableFlow(String name)
     {
-        return getFlow(name).createExecutableFlow(String.valueOf(getNextId()), new HashMap<String, ExecutableFlow>());
+        final Flow flow = getFlow(name);
+
+        if (flow == null) {
+            return null;
+        }
+
+        return flow.createExecutableFlow(String.valueOf(getNextId()), new HashMap<String, ExecutableFlow>());
     }
 
     @Override
