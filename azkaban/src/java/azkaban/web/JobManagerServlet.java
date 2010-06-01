@@ -37,6 +37,7 @@ import org.apache.commons.io.IOUtils;
 
 import azkaban.app.JobManager;
 import azkaban.common.utils.Utils;
+import org.apache.log4j.Logger;
 
 /**
  * Deploy and undeploy jobs
@@ -48,6 +49,8 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
 
     private static final long serialVersionUID = 1;
     private static final int DEFAULT_UPLOAD_DISK_SPOOL_SIZE = 20 * 1024 * 1024;
+
+    private static final Logger log = Logger.getLogger(JobManagerServlet.class);
     
     private MultipartParser _multipartParser;
     private String _tempDir;
@@ -91,6 +94,7 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
 
             jobManager.deployJobDir(jobDir.getAbsolutePath(), deployPath);
         } catch (Exception e) {
+            log.info("Installation Failed.", e);
             String redirectError = (String)params.get("redirect_error");
             setMessagedUrl(response, redirectError, "Installation Failed: " + e.getLocalizedMessage());
 

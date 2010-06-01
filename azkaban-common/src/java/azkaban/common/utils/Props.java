@@ -88,8 +88,7 @@ public class Props {
     private void loadFrom(InputStream inputStream) throws IOException {
         Properties properties = new Properties();
         properties.load(inputStream);
-        for(Map.Entry<Object, Object> e: properties.entrySet())
-            this.put((String) e.getKey(), (String) e.getValue());
+        this.put(properties);
     }
 
     public Props(Props parent, Map<String, String>... props) {
@@ -101,8 +100,7 @@ public class Props {
     public Props(Props parent, Properties... properties) {
         this(parent);
         for(int i = properties.length - 1; i >= 0; i--)
-            for(Map.Entry<Object, Object> e: properties[i].entrySet())
-                this.put((String) e.getKey(), (String) e.getValue());
+            this.put(properties[i]);
     }
 
     public Props(Props parent, Props props) {
@@ -191,6 +189,42 @@ public class Props {
         }
         matcher.appendTail(replaced);
         return _current.put(key, replaced.toString());
+    }
+
+    /**
+     * Put the given Properties into the Props. This method performs any
+     * variable substitution in the value replacing any occurrence of ${name}
+     * with the value of get("name").  get() is called first on the Props and
+     * next on the Properties object.
+     *
+     * @param properties The properties to put
+     *
+     * @throws IllegalArgumentException If the variable given for substitution
+     *         is not a valid key in this Props.
+     */
+    public void put(Properties properties) {
+        for (String propName : properties.stringPropertyNames()) {
+            String key = propName;
+            String value = properties.getProperty(key);
+
+            StringBuffer replaced = new StringBuffer();
+            Matcher matcher = VARIABLE_PATTERN.matcher(value);
+            while(matcher.find()) {
+                String variableName = matcher.group(1);
+                String replacement = get(variableName);
+
+                if (replacement == null) {
+                    replacement = properties.getProperty(variableName);
+                }
+
+                if(replacement == null)
+                    throw new UndefinedPropertyException("Could not find variable substitution for variable '"
+                                                         + variableName + "' in key '" + key + "'.");
+                matcher.appendReplacement(replaced, replacement);
+            }
+            matcher.appendTail(replaced);
+            _current.put(key, replaced.toString());
+        }
     }
 
     public String put(String key, Integer value) {
