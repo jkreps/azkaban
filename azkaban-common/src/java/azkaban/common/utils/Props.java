@@ -181,11 +181,27 @@ public class Props {
         Matcher matcher = VARIABLE_PATTERN.matcher(value);
         while(matcher.find()) {
             String variableName = matcher.group(1);
+
+            if (variableName.equals(key)) {
+                throw new IllegalArgumentException(
+                        String.format("Circular property definition starting from property[%s]", key)
+                );
+            }
+
             String replacement = get(variableName);
             if(replacement == null)
                 throw new UndefinedPropertyException("Could not find variable substitution for variable '"
                                                      + variableName + "' in key '" + key + "'.");
+
+            replacement = replacement.replaceAll("\\\\", "\\\\\\\\");
+            replacement = replacement.replaceAll("\\$", "\\\\\\$");
+
             matcher.appendReplacement(replaced, replacement);
+            matcher.appendTail(replaced);
+
+            value = replaced.toString();
+            replaced = new StringBuffer();
+            matcher = VARIABLE_PATTERN.matcher(value);
         }
         matcher.appendTail(replaced);
         return _current.put(key, replaced.toString());
@@ -211,6 +227,13 @@ public class Props {
             Matcher matcher = VARIABLE_PATTERN.matcher(value);
             while(matcher.find()) {
                 String variableName = matcher.group(1);
+
+                if (variableName.equals(key)) {
+                    throw new IllegalArgumentException(
+                            String.format("Circular property definition starting from property[%s]", key)
+                    );
+                }
+                
                 String replacement = get(variableName);
 
                 if (replacement == null) {
@@ -220,7 +243,16 @@ public class Props {
                 if(replacement == null)
                     throw new UndefinedPropertyException("Could not find variable substitution for variable '"
                                                          + variableName + "' in key '" + key + "'.");
+
+                replacement = replacement.replaceAll("\\\\", "\\\\\\\\");
+                replacement = replacement.replaceAll("\\$", "\\\\\\$");
+
                 matcher.appendReplacement(replaced, replacement);
+                matcher.appendTail(replaced);
+
+                value = replaced.toString();
+                replaced = new StringBuffer();
+                matcher = VARIABLE_PATTERN.matcher(value);
             }
             matcher.appendTail(replaced);
             _current.put(key, replaced.toString());
