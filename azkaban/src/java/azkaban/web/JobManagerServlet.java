@@ -16,6 +16,7 @@
 
 package azkaban.web;
 
+import azkaban.app.AzkabanApplication;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -29,7 +30,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import azkaban.app.AzkabanApp;
 import azkaban.flow.FlowManager;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -37,6 +37,7 @@ import org.apache.commons.io.IOUtils;
 
 import azkaban.app.JobManager;
 import azkaban.common.utils.Utils;
+import org.apache.log4j.Logger;
 
 /**
  * Deploy and undeploy jobs
@@ -48,6 +49,8 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
 
     private static final long serialVersionUID = 1;
     private static final int DEFAULT_UPLOAD_DISK_SPOOL_SIZE = 20 * 1024 * 1024;
+
+    private static final Logger log = Logger.getLogger(JobManagerServlet.class);
     
     private MultipartParser _multipartParser;
     private String _tempDir;
@@ -81,7 +84,7 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
         Map<String, Object> params = this._multipartParser.parseMultipart(request);
 
         try {
-            final AzkabanApp app = getApplication();
+            final AzkabanApplication app = getApplication();
             final JobManager jobManager = app.getJobManager();
             final FlowManager allFlows = app.getAllFlows();
 
@@ -91,6 +94,7 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
 
             jobManager.deployJobDir(jobDir.getAbsolutePath(), deployPath);
         } catch (Exception e) {
+            log.info("Installation Failed.", e);
             String redirectError = (String)params.get("redirect_error");
             setMessagedUrl(response, redirectError, "Installation Failed: " + e.getLocalizedMessage());
 

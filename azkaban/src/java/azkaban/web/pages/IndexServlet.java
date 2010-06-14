@@ -16,6 +16,7 @@
 
 package azkaban.web.pages;
 
+import azkaban.app.AzkabanApplication;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -26,8 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import azkaban.flow.ExecutableFlow;
-import azkaban.flow.Flow;
-import azkaban.util.IterableCollection;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
@@ -37,7 +36,6 @@ import org.joda.time.Minutes;
 import org.joda.time.ReadablePeriod;
 import org.joda.time.Seconds;
 
-import azkaban.app.AzkabanApp;
 import azkaban.app.JobDescriptor;
 import azkaban.app.Scheduler.ScheduledJobAndInstance;
 import azkaban.web.AbstractAzkabanServlet;
@@ -59,7 +57,7 @@ public class IndexServlet extends AbstractAzkabanServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
-        AzkabanApp app = getApplication();
+        AzkabanApplication app = getApplication();
         Map<String, JobDescriptor> descriptors = app.getJobManager().loadJobDescriptors();
         Page page = newPage(req, resp, "azkaban/web/pages/index.vm");
         page.add("logDir", app.getLogDirectory());
@@ -75,7 +73,7 @@ public class IndexServlet extends AbstractAzkabanServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        AzkabanApp app = getApplication();
+        AzkabanApplication app = getApplication();
         String action = getParam(req, "action");
         if("unschedule".equals(action)) {
             String job = getParam(req, "job");
@@ -90,7 +88,7 @@ public class IndexServlet extends AbstractAzkabanServlet {
         resp.sendRedirect(req.getContextPath());
     }
 
-    private void cancelJob(AzkabanApp app, HttpServletRequest req) throws ServletException {
+    private void cancelJob(AzkabanApplication app, HttpServletRequest req) throws ServletException {
         String jobId = getParam(req, "job");
         Collection<ScheduledJobAndInstance> executing = app.getScheduler().getExecutingJobs();
         for(ScheduledJobAndInstance curr: executing) {
@@ -115,7 +113,7 @@ public class IndexServlet extends AbstractAzkabanServlet {
         }
     }
 
-    private void scheduleJobs(AzkabanApp app, HttpServletRequest req, HttpServletResponse resp)
+    private void scheduleJobs(AzkabanApplication app, HttpServletRequest req, HttpServletResponse resp)
             throws IOException, ServletException {
         String[] jobNames = req.getParameterValues("jobs");
         if(!hasParam(req, "jobs")) {

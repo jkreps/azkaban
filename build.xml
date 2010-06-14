@@ -37,7 +37,21 @@
 		</subant>
 	</target>
 
-	<target name="testjobs" depends="jars" description="Compile files for test">
+    <target name="jar-with-deps" depends="jars" description="Make big bad jar">
+        <delete dir="${dist.dir}/jar-with-deps"/>
+        <mkdir dir="${dist.dir}/jar-with-deps"/>
+
+        <jar jarfile="${dist.dir}/jar-with-deps/${name}-self-contained-${curr.release}.jar" filesetmanifest="merge">
+            <manifest>
+                <attribute name="Main-Class" value="azkaban.jobs.CommandLineJobRunner"/>
+            </manifest>
+            <fileset dir="${dist.dir}/azkaban/classes"/>
+            <fileset dir="${dist.dir}/azkaban-common/classes"/>
+            <zipgroupfileset dir="${lib.dir}" includes="*.jar" excludes="jarjar-1.0.jar" />
+        </jar>
+    </target>
+
+    <target name="testjobs" depends="jars" description="Compile files for test">
 		<echo message="building test jar" />
 		<subant target="jar">
 			<fileset dir="test" includes="build.xml" />

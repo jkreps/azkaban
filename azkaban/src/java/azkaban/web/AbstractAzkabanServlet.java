@@ -16,6 +16,7 @@
 
 package azkaban.web;
 
+import azkaban.app.AzkabanApplication;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import azkaban.app.AzkabanApp;
 import azkaban.common.web.Page;
 
 /**
@@ -39,9 +39,9 @@ public class AbstractAzkabanServlet extends HttpServlet {
     private static final long serialVersionUID = 1;
     private static final String AZKABAN_NAME = "instancename";
     
-    private AzkabanApp _app;
+    private AzkabanApplication _app;
 
-    public AzkabanApp getApplication() {
+    public AzkabanApplication getApplication() {
         return _app;
     }
 

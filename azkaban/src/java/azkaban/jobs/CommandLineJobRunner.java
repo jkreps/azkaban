@@ -22,6 +22,7 @@ import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
 import azkaban.flow.ExecutableFlow;
+import azkaban.flow.Flow;
 import azkaban.flow.FlowCallback;
 import azkaban.flow.FlowManager;
 import azkaban.flow.JobManagerFlowDeserializer;
@@ -147,8 +148,26 @@ public class CommandLineJobRunner {
 
         for(String jobName: jobNames) {
             try {
-                System.out.println("Running " + jobName);
-                allFlows.createNewExecutableFlow(jobName).execute(new FlowCallback()
+                final ExecutableFlow flowToRun = allFlows.createNewExecutableFlow(jobName);
+
+                if (flowToRun == null) {
+                    System.out.printf("Job[%s] is unknown.  Not running.%n", jobName);
+
+                    countDown.countDown();
+                    continue;
+                }
+                else {
+                    System.out.println("Running " + jobName);
+                }
+
+                if (ignoreDeps) {
+                    for (ExecutableFlow flow : flowToRun.getChildren()) {
+                        flow.markCompleted();
+                    }
+                }
+
+
+                flowToRun.execute(new FlowCallback()
                 {
                     @Override
                     public void progressMade()

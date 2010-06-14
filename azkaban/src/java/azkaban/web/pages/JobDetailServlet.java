@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 
-import azkaban.app.AzkabanApp;
+import azkaban.app.AzkabanApplication;
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobExecution;
 import azkaban.app.JobManager;
@@ -51,7 +51,7 @@ public class JobDetailServlet extends AbstractAzkabanServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
-        AzkabanApp app = getApplication();
+        AzkabanApplication app = getApplication();
         String jobId = req.getParameter("id");
         JobManager jobManager = app.getJobManager();
         Map<String, JobDescriptor> descriptors = jobManager.loadJobDescriptors();
@@ -82,7 +82,7 @@ public class JobDetailServlet extends AbstractAzkabanServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        AzkabanApp app = getApplication();
+        AzkabanApplication app = getApplication();
         JobManager jobManager = app.getJobManager();
         String jobName = req.getParameter("job_name");
         String jobPath = req.getParameter("job_path");
