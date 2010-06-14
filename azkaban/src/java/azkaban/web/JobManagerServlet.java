@@ -16,6 +16,7 @@
 
 package azkaban.web;
 
+import azkaban.app.AzkabanApplication;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -29,7 +30,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import azkaban.app.AzkabanApp;
 import azkaban.flow.FlowManager;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -84,7 +84,7 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
         Map<String, Object> params = this._multipartParser.parseMultipart(request);
 
         try {
-            final AzkabanApp app = getApplication();
+            final AzkabanApplication app = getApplication();
             final JobManager jobManager = app.getJobManager();
             final FlowManager allFlows = app.getAllFlows();
 

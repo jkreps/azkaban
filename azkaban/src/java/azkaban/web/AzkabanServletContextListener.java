@@ -16,6 +16,7 @@
 
 package azkaban.web;
 
+import azkaban.app.AzkabanApplication;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -23,20 +24,19 @@ import java.util.Collections;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import azkaban.app.AzkabanApp;
 
 /**
- * A ServletContextListener that loads the batch application
- * 
- * @author jkreps
- * 
- */
+* A ServletContextListener that loads the batch application
+*
+* @author jkreps
+*
+*/
 public class AzkabanServletContextListener implements ServletContextListener {
 
     public static final String AZKABAN_SERVLET_CONTEXT_KEY = "azkaban_app";
     private static final String AZKABAN_HOME_VAR_NAME = "AZKABAN_HOME";
 
-    private AzkabanApp app;
+    private AzkabanApplication app;
 
     /**
      * Delete the app
@@ -60,7 +60,7 @@ public class AzkabanServletContextListener implements ServletContextListener {
             File jobDir = new File(homeDir, "jobs");
             File tempDir = new File(homeDir, "temp");
 
-            this.app = new AzkabanApp(Collections.singletonList(jobDir), logDir, tempDir, false);
+            this.app = new AzkabanApplication(Collections.singletonList(jobDir), logDir, tempDir, false);
         } catch(IOException e) {
             throw new IllegalArgumentException(e);
         }
