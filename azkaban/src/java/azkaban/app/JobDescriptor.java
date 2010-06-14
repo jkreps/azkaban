@@ -67,6 +67,7 @@ public class JobDescriptor {
     private final ClassLoader _classLoader;
     private final List<String> _readResourceLocks;
     private final List<String> _writeResourceLocks;
+    private final String _sourceEmailList;
     private final List<String> _emailList;
     private final String _jobType;
 
@@ -94,6 +95,8 @@ public class JobDescriptor {
 
         this._writeResourceLocks = props.getStringList(WRITE_LOCKS, ",");
 
+        this._sourceEmailList = props.getString("mail.sender", null);
+        
         // Ordered resource locking should help prevent simple deadlocking
         // situations.
         Collections.sort(this._readResourceLocks);
@@ -181,5 +184,9 @@ public class JobDescriptor {
 
     public String getJobType() {
         return _jobType;
+    }
+    
+    public String getSenderEmail() {
+        return _sourceEmailList;
     }
 }

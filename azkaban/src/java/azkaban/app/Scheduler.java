@@ -416,15 +416,18 @@ public class Scheduler
         return periodStr;
     }
 
-    private void sendErrorEmail(ScheduledJob job, Throwable e, List<String> emailList)
+    private void sendErrorEmail(ScheduledJob job, Throwable e, String senderAddress, List<String> emailList)
     {
         if ((emailList == null || emailList.isEmpty()) && _jobFailureEmail != null) {
             emailList = Arrays.asList(_jobFailureEmail);
         }
 
-        if (emailList != null && _mailman != null) {
+        if (senderAddress == null) {
+            logger.error("Parameter mail.sender needs to be set to send emails.");
+        }
+        else if (emailList != null && _mailman != null) {
             try {
-                _mailman.sendEmailIfPossible("azkaban@azkaban.com",
+                _mailman.sendEmailIfPossible(senderAddress,
                                              emailList,
                                              "Job '" + job.getId() + "' has failed!",
                                              "The job '" + job.getId() + "' running on " + InetAddress.getLocalHost().getHostName() +
@@ -438,15 +441,18 @@ public class Scheduler
         }
     }
 
-    private void sendSuccessEmail(ScheduledJob job, Duration duration, List<String> emailList)
+    private void sendSuccessEmail(ScheduledJob job, Duration duration, String senderAddress, List<String> emailList)
     {
         if ((emailList == null || emailList.isEmpty()) && _jobSuccessEmail != null) {
             emailList = Arrays.asList(_jobSuccessEmail);
         }
 
-        if (emailList != null && _mailman != null) {
+        if (senderAddress == null) {
+            logger.error("Parameter mail.sender needs to be set to send emails.");
+        }
+        else if (emailList != null && _mailman != null) {
             try {
-                _mailman.sendEmailIfPossible("azkaban@azkaban.com",
+                _mailman.sendEmailIfPossible(senderAddress,
                                              emailList,
                                              "Job '" + job.getId() + "' has completed on " + InetAddress.getLocalHost().getHostName() + "!",
                                              "The job '" + job.getId() + "' completed in " +
@@ -566,6 +572,7 @@ public class Scheduler
         public void run()
         {
             List<String> emailList = null;
+            String senderAddress = null;
             try {
                 if (_scheduledJob.isInvalid()) {
                     return;
@@ -573,6 +580,7 @@ public class Scheduler
 
                 JobDescriptor desc = _jobManager.loadJobDescriptors(null, null, _ignoreDep).get(_scheduledJob.getId());
                 emailList = desc.getEmailNotificationList();
+
                 final List<String> finalEmailList = emailList;
 
                 final ExecutableFlow flowToRun = allKnownFlows.createNewExecutableFlow(_scheduledJob.getId());
@@ -583,6 +591,9 @@ public class Scheduler
                     }
                 }
 
+                senderAddress = desc.getSenderEmail();
+                final String senderEmail = senderAddress;
+                
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
                 _scheduledJob.setStarted(new DateTime());
@@ -603,13 +614,13 @@ public class Scheduler
                         allKnownFlows.saveExecutableFlow(flowToRun);
                         switch (status) {
                             case SUCCEEDED:
-                                sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), finalEmailList);
+                                sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
                                 break;
                             case FAILED:
-                                sendErrorEmail(_scheduledJob, new RuntimeException("This is a dummy exception"), finalEmailList);
+                                sendErrorEmail(_scheduledJob, new RuntimeException("This is a dummy exception"), senderEmail, finalEmailList);
                                 break;
                             default:
-                                sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), finalEmailList);
+                                sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
                         }
 
                         // mark the job as completed
@@ -640,7 +651,7 @@ public class Scheduler
             }
             catch (Throwable t) {
                 if (emailList != null) {
-                    sendErrorEmail(_scheduledJob, t, emailList);
+                    sendErrorEmail(_scheduledJob, t, senderAddress, emailList);
                 }
                 _scheduled.remove(_scheduledJob.getId());
                 _executing.remove(_scheduledJob.getId());
@@ -672,12 +683,16 @@ public class Scheduler
             logger.info("Starting run of " + _flow.getName());
 
             List<String> emailList = null;
+            String senderAddress = null;
             try {
                 emailList = _jobManager.getJobDescriptor(_flow.getName()).getEmailNotificationList();
                 final List<String> finalEmailList = emailList;
 
                 final ExecutableFlow flowToRun = _flow;
 
+                senderAddress = _jobManager.getJobDescriptor(_flow.getName()).getSenderEmail();
+                final String senderEmail = senderAddress;
+                
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
                 _scheduledJob.setStarted(new DateTime());
@@ -698,13 +713,13 @@ public class Scheduler
                         allKnownFlows.saveExecutableFlow(flowToRun);
                         switch (status) {
                             case SUCCEEDED:
-                                sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), finalEmailList);
+                                sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
                                 break;
                             case FAILED:
-                                sendErrorEmail(_scheduledJob, new RuntimeException("This is a dummy exception"), finalEmailList);
+                                sendErrorEmail(_scheduledJob, new RuntimeException("This is a dummy exception"), senderEmail, finalEmailList);
                                 break;
                             default:
-                                sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), finalEmailList);
+                                sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
                         }
 
                         // mark the job as completed
@@ -717,7 +732,7 @@ public class Scheduler
             }
             catch (Throwable t) {
                 if (emailList != null) {
-                    sendErrorEmail(_scheduledJob, t, emailList);
+                    sendErrorEmail(_scheduledJob, t, senderAddress, emailList);
                 }
                 _scheduled.remove(_scheduledJob.getId());
                 _executing.remove(_scheduledJob.getId());
