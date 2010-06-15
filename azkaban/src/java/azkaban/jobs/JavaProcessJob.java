@@ -72,9 +72,8 @@ public class JavaProcessJob extends ProcessJob {
 	}
 
 	protected List<String> getClassPaths() {
-		List<String> classPaths = getProps()
-				.getStringList(CLASSPATH, null, ",");
-
+		List<String> classPaths = getProps().getStringList(CLASSPATH, null, ",");
+		
 		if (classPaths == null) {
 			File path = new File(getPath());
 			File parent = path.getParentFile();
@@ -84,9 +83,12 @@ public class JavaProcessJob extends ProcessJob {
 					classPaths.add(file.getName());
 				}
 			}
+
+			return classPaths;
 		}
 
-		return classPaths;
+		// inserting class path in a non-immutable list.
+		return new ArrayList<String>(classPaths);
 	}
 
 	protected String getInitialMemorySize() {
