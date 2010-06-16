@@ -35,6 +35,9 @@ public class ResourceThrottledJob extends DelegatingJob {
     private final JobLock _jobLock;
     private final Logger _logger;
 
+    private final Object lock = new Object();
+    private volatile boolean canceled = false;
+
     public ResourceThrottledJob(Job job, JobLock lock) {
         super(job);
         _jobLock = lock;
@@ -58,9 +61,28 @@ public class ResourceThrottledJob extends DelegatingJob {
         long totalWait = System.currentTimeMillis() - start;
         _logger.info(_jobLock + " Time: " + totalWait + " ms.");
         try {
-            getInnerJob().run();
+            boolean shouldRunJob;
+            synchronized(lock) {
+                shouldRunJob = ! canceled;
+            }
+            if(shouldRunJob) {
+                getInnerJob().run();
+            }
+            else {
+                _logger.info("Job was canceled while waiting for lock.  Not running.");
+            }
         } finally {
             _jobLock.releaseLock();
+        }
+    }
+
+    @Override
+    public void cancel() throws Exception
+    {
+        synchronized (lock) {
+            canceled = true;
+
+            super.cancel();
         }
     }
 }
