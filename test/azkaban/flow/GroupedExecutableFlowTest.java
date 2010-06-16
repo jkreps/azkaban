@@ -128,6 +128,7 @@ public class GroupedExecutableFlowTest
 
         Assert.assertTrue("Callback wasn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan)
@@ -142,11 +143,13 @@ public class GroupedExecutableFlowTest
 
         Assert.assertTrue("Callback wasn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
     public void testFailureJob1() throws Exception
     {
+        final RuntimeException theException = new RuntimeException();
         final AtomicLong numJobsComplete = new AtomicLong(0);
 
         /**** Setup mockFlow1 ****/
@@ -165,9 +168,9 @@ public class GroupedExecutableFlowTest
         }).once();
 
         EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.FAILED).times(1);
+        EasyMock.expect(mockFlow1.getException()).andReturn(theException).times(1);
 
         /**** Setup mockFlow2 ****/
-
         EasyMock.replay(mockFlow1, mockFlow2);
 
         /**** Start the test ****/
@@ -194,11 +197,16 @@ public class GroupedExecutableFlowTest
 
         Assert.assertTrue("Callback wasn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
+
+        Assert.assertTrue("Expected to be able to reset the flow", flow.reset());
+        Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
     public void testFailureJob2() throws Exception
     {
+        final RuntimeException theException = new RuntimeException();
         final AtomicLong numJobsComplete = new AtomicLong(0);
 
         /**** Setup mockFlow1 ****/
@@ -217,6 +225,7 @@ public class GroupedExecutableFlowTest
         }).once();
 
         EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).times(2);
+        EasyMock.expect(mockFlow1.getException()).andReturn(null).times(1);
 
         /**** Setup mockFlow2 ****/
         final Capture<FlowCallback> flow2Callback = new Capture<FlowCallback>();
@@ -249,6 +258,8 @@ public class GroupedExecutableFlowTest
             }
         }).times(2);
 
+        EasyMock.expect(mockFlow2.getException()).andReturn(theException).times(1);
+
         EasyMock.replay(mockFlow1, mockFlow2);
 
         /**** Start the test ****/
@@ -276,6 +287,10 @@ public class GroupedExecutableFlowTest
 
         Assert.assertTrue("Callback wasn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
+
+        Assert.assertTrue("Expected to be able to reset the flow", flow.reset());
+        Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -357,6 +372,7 @@ public class GroupedExecutableFlowTest
         Assert.assertTrue("mockFlow1, upon completion, sends another execute() call to the flow.  " +
                           "The callback from that execute call was apparently not called.",
                           executeCallWhileStateWasRunningHadItsCallbackCalled.get());
+        Assert.assertEquals(null, flow.getException());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan)
@@ -371,6 +387,7 @@ public class GroupedExecutableFlowTest
 
         Assert.assertTrue("Callback wasn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -439,6 +456,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.READY, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(null, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -462,6 +480,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.READY, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(null, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -490,6 +509,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -518,6 +538,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -546,6 +567,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
 
@@ -575,6 +597,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -602,6 +625,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.FAILED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -629,6 +653,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.FAILED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -656,6 +681,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.FAILED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -684,6 +710,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.FAILED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -724,6 +751,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.READY, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(null, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -764,6 +792,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.READY, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(null, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -809,6 +838,7 @@ public class GroupedExecutableFlowTest
         Assert.assertEquals(Status.RUNNING, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(null, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
 
         EasyMock.verify(mockFlow1, mockFlow2);
         EasyMock.reset(mockFlow1, mockFlow2);
@@ -831,5 +861,6 @@ public class GroupedExecutableFlowTest
                 ),
                 beforeTheEnd.isAfter(flow.getEndTime())
         );
+        Assert.assertEquals(null, flow.getException());
     }
 }

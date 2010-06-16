@@ -47,6 +47,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private volatile DateTime startTime;
     private volatile DateTime endTime;
     private volatile Job job;
+    private volatile Throwable exception;
 
     public IndividualJobExecutableFlow(String id, String name, JobFactory jobFactory)
     {
@@ -58,6 +59,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         callbacksToCall = new ArrayList<FlowCallback>();
         startTime = null;
         endTime = null;
+        exception = null;
     }
 
     @Override
@@ -119,6 +121,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                         catch (Exception e) {
                             synchronized (sync) {
                                 jobState = Status.FAILED;
+                                exception = e;
                                 callbackList = callbacksToCall; // Get the reference before leaving the synchronized
                             }
                             callCallbacks(callbackList, jobState);
@@ -139,22 +142,24 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                             endTime = new DateTime();
                         }
 
-                        Thread callbackThread = new Thread(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                for (FlowCallback callback : callbackList) {
-                                    try {
-                                        callback.completed(status);
+                        Thread callbackThread = new Thread(
+                                new Runnable()
+                                {
+                                    @Override
+                                    public void run()
+                                    {
+                                        for (FlowCallback callback : callbackList) {
+                                            try {
+                                                callback.completed(status);
+                                            }
+                                            catch (RuntimeException t) {
+                                                // TODO: Figure out how to use the logger to log that a callback threw an exception.
+                                            }
+                                        }
                                     }
-                                    catch (RuntimeException t) {
-                                        // TODO: Figure out how to use the logger to log that a callback threw an exception.
-                                    }
-                                }
-                            }
-                        },
-                                                           String.format("%s-callback", Thread.currentThread().getName()));
+                                },
+                                String.format("%s-callback", Thread.currentThread().getName())
+                        );
 
                         // Use the primary Azkaban classloader for callbacks
                         // This is only needed for JavaJobs, but won't hurt other instances, so do for everything
@@ -230,6 +235,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                     callbacksToCall = new ArrayList<FlowCallback>();
                     startTime = null;
                     endTime = null;
+                    exception = null;
             }
         }
 
@@ -281,6 +287,12 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     public DateTime getEndTime()
     {
         return endTime;
+    }
+
+    @Override
+    public Throwable getException()
+    {
+        return exception;
     }
 
     IndividualJobExecutableFlow setStatus(Status newStatus)

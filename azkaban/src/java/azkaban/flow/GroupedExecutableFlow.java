@@ -42,6 +42,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
     private volatile DateTime startTime;
     private volatile DateTime endTime;
     private volatile GroupedExecutableFlow.GroupedFlowCallback theGroupCallback;
+    private volatile Throwable exception;
 
     public GroupedExecutableFlow(String id, ExecutableFlow... flows)
     {
@@ -245,6 +246,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                     theGroupCallback = new GroupedFlowCallback();
                     startTime = null;
                     endTime = null;
+                    exception = null;
             }
         }
 
@@ -299,6 +301,12 @@ public class GroupedExecutableFlow implements ExecutableFlow
         return endTime;
     }
 
+    @Override
+    public Throwable getException()
+    {
+        return exception;
+    }
+
     private void callCallbacks(final List<FlowCallback> callbacksList, final Status status)
     {
         if (endTime == null) {
@@ -350,6 +358,11 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 callCallbacks(callbackList, Status.SUCCEEDED);
             }
             else if (jobState == Status.FAILED && notifiedCallbackAlready.compareAndSet(false, true)) {
+                for (ExecutableFlow flow : flows) {
+                    if (exception == null) {
+                        exception = flow.getException();
+                    }
+                }
                 callCallbacks(callbackList, Status.FAILED);
             }
             else {

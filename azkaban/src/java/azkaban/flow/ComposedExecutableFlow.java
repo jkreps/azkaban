@@ -36,6 +36,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
     private volatile DateTime startTime;
     private volatile DateTime endTime;
     private volatile Status jobState;
+    private volatile Throwable exception;
     private volatile List<FlowCallback> callbacksToCall = new ArrayList<FlowCallback>();
 
 
@@ -163,20 +164,23 @@ public class ComposedExecutableFlow implements ExecutableFlow
     @Override
     public boolean reset()
     {
+        boolean retVal;
+
         synchronized (sync) {
             switch (jobState) {
                 case RUNNING:
                     return false;
                 default:
                     jobState = Status.READY;
-                    depender.reset();
+                    retVal = depender.reset();
                     callbacksToCall = new ArrayList<FlowCallback>();
                     startTime = null;
                     endTime = null;
+                    exception = null;
             }
         }
 
-        return true;
+        return retVal;
     }
 
     @Override
@@ -228,6 +232,12 @@ public class ComposedExecutableFlow implements ExecutableFlow
         return endTime;
     }
 
+    @Override
+    public Throwable getException()
+    {
+        return exception;
+    }
+
     public ExecutableFlow getDepender()
     {
         return depender;
@@ -276,6 +286,9 @@ public class ComposedExecutableFlow implements ExecutableFlow
 
             synchronized (sync) {
                 jobState = status;
+                if (status == Status.FAILED) {
+                    exception = depender.getException();
+                }
                 callbackList = callbacksToCall;
             }
 
@@ -318,6 +331,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 case FAILED:
                     synchronized (sync) {
                         jobState = status;
+                        exception = dependee.getException();
                         callbackList = callbacksToCall;
                     }
 

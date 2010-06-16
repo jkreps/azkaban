@@ -114,4 +114,12 @@ public interface ExecutableFlow
      * @return time execution completed.  Null if not started yet.
      */
     public DateTime getEndTime();
+
+
+    /**
+     * Gets the exception that caused this Flow to fail, if it has failed
+     *
+     * @return an exception if the Flow has failed, null otherwise
+     */
+    public Throwable getException();
 }

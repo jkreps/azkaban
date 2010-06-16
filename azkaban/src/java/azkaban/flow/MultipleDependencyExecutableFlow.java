@@ -112,6 +112,12 @@ public class MultipleDependencyExecutableFlow implements ExecutableFlow
     }
 
     @Override
+    public Throwable getException()
+    {
+        return actualFlow.getException();
+    }
+
+    @Override
     public String toString()
     {
         return "MultipleDependencyExecutableFlow{" +

@@ -96,6 +96,7 @@ public class ComposedExecutableFlowTest
         Assert.assertTrue("Internal flow executes never ran.", dependeeRan.get());
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan) {
@@ -108,11 +109,13 @@ public class ComposedExecutableFlowTest
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
     public void testFailureInDependee() throws Exception
     {
+        final RuntimeException theException = new RuntimeException();
         final AtomicBoolean dependeeRan = new AtomicBoolean(false);
 
         final Capture<FlowCallback> dependeeCallback = new Capture<FlowCallback>();
@@ -130,6 +133,7 @@ public class ComposedExecutableFlowTest
                 return null;
             }
         }).once();
+        EasyMock.expect(dependeeFlow.getException()).andReturn(theException).once();
 
         EasyMock.replay(dependerFlow, dependeeFlow);
 
@@ -147,6 +151,7 @@ public class ComposedExecutableFlowTest
         Assert.assertTrue("Internal flow executes never ran.", dependeeRan.get());
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(theException, flow.getException());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan) {
@@ -159,11 +164,24 @@ public class ComposedExecutableFlowTest
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(theException, flow.getException());
+
+        EasyMock.verify(dependerFlow, dependeeFlow);
+        EasyMock.reset(dependerFlow, dependeeFlow);
+
+        EasyMock.expect(dependerFlow.reset()).andReturn(true).once();
+
+        EasyMock.replay(dependerFlow, dependeeFlow);
+
+        Assert.assertTrue("Expected to be able to reset the flow", flow.reset());
+        Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
     public void testFailureInDepender() throws Exception
     {
+        RuntimeException theException = new RuntimeException();
         final AtomicBoolean dependeeRan = new AtomicBoolean(false);
 
         final Capture<FlowCallback> dependeeCallback = new Capture<FlowCallback>();
@@ -197,6 +215,7 @@ public class ComposedExecutableFlowTest
                 return null;
             }
         }).once();
+        EasyMock.expect(dependerFlow.getException()).andReturn(theException).once();
 
         EasyMock.replay(dependerFlow, dependeeFlow);
 
@@ -214,6 +233,7 @@ public class ComposedExecutableFlowTest
         Assert.assertTrue("Internal flow executes never ran.", dependeeRan.get());
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(theException, flow.getException());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan) {
@@ -226,6 +246,18 @@ public class ComposedExecutableFlowTest
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(theException, flow.getException());
+
+        EasyMock.verify(dependerFlow, dependeeFlow);
+        EasyMock.reset(dependerFlow, dependeeFlow);
+
+        EasyMock.expect(dependerFlow.reset()).andReturn(true).once();
+
+        EasyMock.replay(dependerFlow, dependeeFlow);
+
+        Assert.assertTrue("Expected to be able to reset the flow", flow.reset());
+        Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -297,6 +329,7 @@ public class ComposedExecutableFlowTest
         Assert.assertTrue("dependeeFlow, upon completion, sends another execute() call to the flow.  " +
                           "The callback from that execute call was apparently not called.",
                           executeCallWhileStateWasRunningHadItsCallbackCalled.get());
+        Assert.assertEquals(null, flow.getException());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan) {
@@ -309,6 +342,7 @@ public class ComposedExecutableFlowTest
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -338,6 +372,7 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(Status.FAILED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
 
         EasyMock.verify(dependerFlow);
         EasyMock.reset(dependerFlow);
@@ -348,6 +383,7 @@ public class ComposedExecutableFlowTest
         flow.reset();
 
         Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -366,6 +402,7 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(Status.FAILED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
 
         EasyMock.verify(dependerFlow);
         EasyMock.reset(dependerFlow);
@@ -376,6 +413,7 @@ public class ComposedExecutableFlowTest
         flow.reset();
 
         Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -394,6 +432,7 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(Status.FAILED, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
 
         EasyMock.verify(dependerFlow);
         EasyMock.reset(dependerFlow);
@@ -404,6 +443,7 @@ public class ComposedExecutableFlowTest
         flow.reset();
 
         Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -421,6 +461,7 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(Status.READY, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(null, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
 
         EasyMock.verify(dependerFlow);
         EasyMock.reset(dependerFlow);
@@ -431,6 +472,7 @@ public class ComposedExecutableFlowTest
         flow.reset();
 
         Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -455,6 +497,7 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(Status.RUNNING, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(null, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
 
         DateTime beforeTheEnd = new DateTime();
         dependeeFlowCallback.getValue().completed(Status.SUCCEEDED);
@@ -470,6 +513,8 @@ public class ComposedExecutableFlowTest
                 ),
                 beforeTheEnd.isAfter(flow.getEndTime())
         );
+        Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(null, flow.getException());
 
         EasyMock.verify(dependerFlow);
         EasyMock.reset(dependerFlow);
@@ -480,6 +525,7 @@ public class ComposedExecutableFlowTest
         flow.reset();
 
         Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -500,6 +546,7 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(Status.RUNNING, flow.getStatus());
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(null, flow.getEndTime());
+        Assert.assertEquals(null, flow.getException());
 
         DateTime beforeTheEnd = new DateTime();
         dependerFlowCallback.getValue().completed(Status.SUCCEEDED);
@@ -514,6 +561,7 @@ public class ComposedExecutableFlowTest
                 ),
                 beforeTheEnd.isAfter(flow.getEndTime())
         );
+        Assert.assertEquals(null, flow.getException());
 
         EasyMock.verify(dependerFlow);
         EasyMock.reset(dependerFlow);
@@ -524,6 +572,7 @@ public class ComposedExecutableFlowTest
         flow.reset();
 
         Assert.assertEquals(Status.READY, flow.getStatus());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -535,6 +584,7 @@ public class ComposedExecutableFlowTest
         EasyMock.replay(dependerFlow, dependeeFlow);
 
         Assert.assertTrue("Expected cancel to be successful", flow.cancel());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -546,6 +596,7 @@ public class ComposedExecutableFlowTest
         EasyMock.replay(dependerFlow, dependeeFlow);
 
         Assert.assertFalse("Expected cancel to be UN-successful", flow.cancel());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -557,6 +608,7 @@ public class ComposedExecutableFlowTest
         EasyMock.replay(dependerFlow, dependeeFlow);
 
         Assert.assertFalse("Expected cancel to be UN-successful", flow.cancel());
+        Assert.assertEquals(null, flow.getException());
     }
 
     @Test
@@ -568,5 +620,6 @@ public class ComposedExecutableFlowTest
         EasyMock.replay(dependerFlow, dependeeFlow);
 
         Assert.assertFalse("Expected cancel to be UN-successful", flow.cancel());
+        Assert.assertEquals(null, flow.getException());
     }
 }
