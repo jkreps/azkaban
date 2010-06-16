@@ -177,6 +177,17 @@ public class CommandLineJobRunner {
                     @Override
                     public void completed(Status status)
                     {
+                        if (status == Status.FAILED) {
+                            System.out.printf("Job failed.%n");
+                            final Throwable exception = flowToRun.getException();
+
+                            if (exception == null) {
+                                System.out.println("flowToRun.getException() was null when it should not have been.  Please notify the Azkaban developers.");
+                            }
+
+                            exception.printStackTrace();
+                        }
+
                         countDown.countDown();
                     }
                 });

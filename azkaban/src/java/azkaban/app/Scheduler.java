@@ -617,7 +617,7 @@ public class Scheduler
                                 sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
                                 break;
                             case FAILED:
-                                sendErrorEmail(_scheduledJob, new RuntimeException("This is a dummy exception"), senderEmail, finalEmailList);
+                                sendErrorEmail(_scheduledJob, flowToRun.getException(), senderEmail, finalEmailList);
                                 break;
                             default:
                                 sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
@@ -688,21 +688,19 @@ public class Scheduler
                 emailList = _jobManager.getJobDescriptor(_flow.getName()).getEmailNotificationList();
                 final List<String> finalEmailList = emailList;
 
-                final ExecutableFlow flowToRun = _flow;
-
                 senderAddress = _jobManager.getJobDescriptor(_flow.getName()).getSenderEmail();
                 final String senderEmail = senderAddress;
                 
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
                 _scheduledJob.setStarted(new DateTime());
-                _executing.put(flowToRun.getName(), new ScheduledJobAndInstance(flowToRun, _scheduledJob));
-                flowToRun.execute(new FlowCallback()
+                _executing.put(_flow.getName(), new ScheduledJobAndInstance(_flow, _scheduledJob));
+                _flow.execute(new FlowCallback()
                 {
                     @Override
                     public void progressMade()
                     {
-                        allKnownFlows.saveExecutableFlow(flowToRun);
+                        allKnownFlows.saveExecutableFlow(_flow);
                     }
 
                     @Override
@@ -710,13 +708,13 @@ public class Scheduler
                     {
                         _scheduledJob.setEnded(new DateTime());
 
-                        allKnownFlows.saveExecutableFlow(flowToRun);
+                        allKnownFlows.saveExecutableFlow(_flow);
                         switch (status) {
                             case SUCCEEDED:
                                 sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
                                 break;
                             case FAILED:
-                                sendErrorEmail(_scheduledJob, new RuntimeException("This is a dummy exception"), senderEmail, finalEmailList);
+                                sendErrorEmail(_scheduledJob, _flow.getException(), senderEmail, finalEmailList);
                                 break;
                             default:
                                 sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
@@ -728,7 +726,7 @@ public class Scheduler
                     }
                 });
 
-                allKnownFlows.saveExecutableFlow(flowToRun);
+                allKnownFlows.saveExecutableFlow(_flow);
             }
             catch (Throwable t) {
                 if (emailList != null) {
