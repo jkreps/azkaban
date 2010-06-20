@@ -1,0 +1,11 @@
+2010/03/25 00:11:21.154 INFO [AzkabanApp] [] Job log directory set to /var/folders/wV/wVHRnnYrEX0ZFMG7ypsUXE+++TM/-Tmp-
+2010/03/25 00:11:21.156 INFO [AzkabanApp] [] Job directories set to [/tmp/jobs]
+2010/03/25 00:11:21.160 INFO [AzkabanApp] [] HADOOP_HOME not set, using default hadoop config.
+2010/03/25 00:11:21.311 INFO [AzkabanApp] [] Schedule file param not set. Defaulting to /tmp/jobs/jobs.schedule
+2010/03/25 00:11:21.311 INFO [AzkabanApp] [] Schedule backup file param not set. Defaulting to /tmp/jobs/jobs.schedule.backup
+2010/03/25 00:11:21.314 INFO [AzkabanApp] [] Using path[/tmp/jobs/executions] for storing executions.
+2010/03/25 00:11:21.315 INFO [AzkabanApp] [] Last known execution id was [0]
+2010/03/25 00:11:21.384 WARN [Scheduler] [] No schedule files found looking for /tmp/jobs/jobs.schedule
+2010/03/25 00:11:21.516 INFO [AzkabanApp] [] Server running on port 8081.
+2010/03/25 00:11:38.556 INFO [AzkabanApp] [] Shutting down http server...
+2010/03/25 00:11:38.639 INFO [AzkabanApp] [] kk thx bye.

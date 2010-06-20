@@ -1,4 +1,4 @@
-package test.azkaban.common.utils;
+package azkaban.utils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 
 import azkaban.common.utils.Utils;
 
-public class TestUtils {
+public class UtilsTest {
 
     @Test
     public void unzipFiles() throws Exception {
