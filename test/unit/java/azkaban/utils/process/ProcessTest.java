@@ -1,7 +1,10 @@
 package azkaban.utils.process;
 
-import java.util.concurrent.Executor;
+import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -15,7 +18,7 @@ import static org.junit.Assert.*;
 public class ProcessTest {
     
     @Test
-    public void helloWorld() { 
+    public void helloWorld() throws Exception { 
         AzkabanProcess process = new AzkabanProcessBuilder("echo", "hello", "world").build();
         assertTrue("Process is not started.", !process.isStarted());
         assertTrue("Process is not running.", !process.isRunning());
@@ -26,43 +29,40 @@ public class ProcessTest {
     }
     
     @Test(expected = ProcessFailureException.class)
-    public void testFailOnNonZeroExitCode() {
+    public void testFailOnNonZeroExitCode() throws Exception {
         new AzkabanProcessBuilder("ls", "alkdjfalsjdflkasdjf").build().run();
     }
     
-    @Test(expected = ProcessFailureException.class)
-    public void testFailOnBadCommand() {
+    @Test(expected = IOException.class)
+    public void testFailOnBadCommand() throws Exception {
         new AzkabanProcessBuilder("alkdjfalsjdflkasdjf").build().run();
     }
     
     @Test
-    public void testKill() throws InterruptedException {
-        Executor executor = Executors.newFixedThreadPool(2);
+    public void testKill() throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
         
-        final AzkabanProcess p1 = new AzkabanProcessBuilder("sleep", "10").build();
-        executor.execute(new Runnable() {
-            public void run() {
-                p1.run();
-            }
-        });
-        p1.awaitStartup();
+        AzkabanProcess p1 = new AzkabanProcessBuilder("sleep", "10").build();
+        runInSeperateThread(executor, p1);
         assertTrue("Soft kill should interrupt sleep.", p1.softKill(5, TimeUnit.SECONDS));
+        p1.awaitCompletion();
         
-        final AzkabanProcess p2 = new AzkabanProcessBuilder("sleep", "10").build();
-        executor.execute(new Runnable() {
-            public void run() {
-                p2.run();
-            }
-        });
-        p2.awaitStartup();
+        AzkabanProcess p2 = new AzkabanProcessBuilder("sleep", "10").build();
+        runInSeperateThread(executor, p2);
         p2.hardKill();
-        Thread.sleep(1000);
+        p2.awaitCompletion();
         assertTrue(p2.isComplete());
     }
     
-    @Test
-    public void testEnv() throws InterruptedException {
-
+    private Future<Object> runInSeperateThread(final ExecutorService executor, final AzkabanProcess process) throws InterruptedException {
+        Future<Object> result = executor.submit(new Callable<Object>() {
+            public Object call() throws IOException {
+                process.run();
+                return null;
+            }
+        });
+        process.awaitStartup();
+        return result;
     }
     
 }

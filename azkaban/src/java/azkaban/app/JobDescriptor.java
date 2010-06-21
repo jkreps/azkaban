@@ -1,16 +1,14 @@
 /*
  * Copyright 2010 LinkedIn, Inc
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  * 
  * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
 
@@ -24,21 +22,18 @@ import java.util.Set;
 
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
-import azkaban.common.utils.Utils;
 
 /**
- * A job descriptor represents the configuration information for a job This
- * includes the job class, the job properties, the job dependencies, and the
- * job's id.
+ * A job descriptor represents the configuration information for a job This includes the job class,
+ * the job properties, the job dependencies, and the job's id.
  * 
- * This serves as a template for creating Job instances when the time comes to
- * run the Job.
+ * This serves as a template for creating Job instances when the time comes to run the Job.
  * 
  * @author jkreps
  * 
  */
 public class JobDescriptor {
-
+    
     public static final String JOB_TYPE = "type";
     public static final String JOB_CLASS = "job.class";
     public static final String READ_LOCKS = "read.lock";
@@ -47,146 +42,141 @@ public class JobDescriptor {
     public static final String RETRY_BACKOFF = "retry.backoff";
     public static final String JOB_PERMITS = "job.permits";
     public static final String NOTIFY_EMAIL = "notify.emails";
-
+    
     public static final Comparator<JobDescriptor> NAME_COMPARATOR = new Comparator<JobDescriptor>() {
-
+        
         public int compare(JobDescriptor d1, JobDescriptor d2) {
             return d1.getId().compareTo(d2.getId());
         }
     };
-
-    private final String _id;
-    private final String _path;
-    private final String _fullpath;
-    private Class<?> _class;
-    private final int _retries;
-    private final long _retryBackoffMs;
-    private final Integer _requiredPermits;
-    private final Props _props;
-    private final Set<JobDescriptor> _dependencies;
-    private final ClassLoader _classLoader;
-    private final List<String> _readResourceLocks;
-    private final List<String> _writeResourceLocks;
-    private final String _sourceEmailList;
-    private final List<String> _emailList;
-    private final String _jobType;
-
-    public JobDescriptor(String id, String conicalPath, String fullpath, Props props, ClassLoader classLoader) {
-        this._id = id;
-        this._path = conicalPath;
-        this._fullpath = fullpath;
-        this._props = props;
-
-        this._jobType = props.getString(JOB_TYPE, "");
-
-        // @TODO Move this validation check in Java Job
-//        if(_jobType.length() == 0 || _jobType.equalsIgnoreCase("java")) {
-//            String className = props.getString(JOB_CLASS);
-//            this._class = Utils.loadClass(className, classLoader);
-//        }
-
-        this._readResourceLocks = props.getStringList(READ_LOCKS, ",");
-
-        this._dependencies = new HashSet<JobDescriptor>();
-        this._retries = props.getInt(RETRIES, 0);
-        this._retryBackoffMs = props.getLong(RETRY_BACKOFF, 0);
-        this._requiredPermits = props.getInt(JOB_PERMITS, 0);
-        this._classLoader = classLoader;
-
-        this._writeResourceLocks = props.getStringList(WRITE_LOCKS, ",");
-
-        this._sourceEmailList = props.getString("mail.sender", null);
+    
+    private final String id;
+    private final String path;
+    private final String fullpath;
+    private Class<?> klass;
+    private final int retries;
+    private final long retryBackoffMs;
+    private final Integer requiredPermits;
+    private final Props props;
+    private final Set<JobDescriptor> dependencies;
+    private final ClassLoader classLoader;
+    private final List<String> readResourceLocks;
+    private final List<String> writeResourceLocks;
+    private final String sourceEmailList;
+    private final List<String> emailList;
+    private final String jobType;
+    
+    public JobDescriptor(String id,
+                         String conicalPath,
+                         String fullpath,
+                         Props props,
+                         ClassLoader classLoader) {
+        this.id = id;
+        this.path = conicalPath;
+        this.fullpath = fullpath;
+        this.props = props;
+        
+        this.jobType = props.getString(JOB_TYPE, "");
+        this.readResourceLocks = props.getStringList(READ_LOCKS, ",");
+        
+        this.dependencies = new HashSet<JobDescriptor>();
+        this.retries = props.getInt(RETRIES, 0);
+        this.retryBackoffMs = props.getLong(RETRY_BACKOFF, 0);
+        this.requiredPermits = props.getInt(JOB_PERMITS, 0);
+        this.classLoader = classLoader;
+        
+        this.writeResourceLocks = props.getStringList(WRITE_LOCKS, ",");
+        
+        this.sourceEmailList = props.getString("mail.sender", "triddle@azkaban.com");
         
         // Ordered resource locking should help prevent simple deadlocking
         // situations.
-        Collections.sort(this._readResourceLocks);
-        Collections.sort(this._writeResourceLocks);
-
-        this._emailList = props.getStringList(NOTIFY_EMAIL);
+        Collections.sort(this.readResourceLocks);
+        Collections.sort(this.writeResourceLocks);
+        
+        this.emailList = props.getStringList(NOTIFY_EMAIL);
     }
-
+    
     /**
      * Add a dependency to this job
      * 
      * @param dep
      */
     public void addDependency(JobDescriptor dep) {
-        this._dependencies.add(dep);
+        this.dependencies.add(dep);
     }
-
+    
     public String getId() {
-        return this._id;
+        return this.id;
     }
-
+    
     @SuppressWarnings("unchecked")
     public Class<? extends Job> getJobClass() {
-        return (Class<? extends Job>) this._class;
+        return (Class<? extends Job>) this.klass;
     }
-
+    
     public Set<JobDescriptor> getDependencies() {
-        return this._dependencies;
+        return this.dependencies;
     }
-
+    
     public Props getProps() {
-        return this._props;
+        return this.props;
     }
-
+    
     public boolean hasDependencies() {
-        return this._dependencies.size() > 0;
+        return this.dependencies.size() > 0;
     }
-
+    
     public int getRetries() {
-        return this._retries;
+        return this.retries;
     }
-
+    
     public long getRetryBackoffMs() {
-        return this._retryBackoffMs;
+        return this.retryBackoffMs;
     }
-
+    
     public String getPath() {
-        return this._path;
+        return this.path;
     }
-
+    
     public String getFullPath() {
-        return this._fullpath;
+        return this.fullpath;
     }
     
     @Override
     public String toString() {
-        return String.format(
-                "Job(id=%s, class=%s, path=%s, deps = %s)",
-                _id,
-                (_class == null? "?" : _class.getName()),
-                _path,
-                getProps().getStringList("dependencies", null, "\\s*,\\s*")
-        );
+        return String.format("Job(id=%s, class=%s, path=%s, deps = %s)",
+                             id,
+                             (klass == null ? "?" : klass.getName()),
+                             path,
+                             getProps().getStringList("dependencies", null, "\\s*,\\s*"));
     }
-
+    
     public ClassLoader getClassLoader() {
-        return this._classLoader;
+        return this.classLoader;
     }
-
+    
     public int getNumRequiredPermits() {
-        return this._requiredPermits;
+        return this.requiredPermits;
     }
-
+    
     public List<String> getReadResourceLocks() {
-        return _readResourceLocks;
+        return readResourceLocks;
     }
-
+    
     public List<String> getWriteResourceLocks() {
-        return _writeResourceLocks;
+        return writeResourceLocks;
     }
-
+    
     public List<String> getEmailNotificationList() {
-        return _emailList;
+        return emailList;
     }
-
+    
     public String getJobType() {
-        return _jobType;
+        return jobType;
     }
     
     public String getSenderEmail() {
-        return _sourceEmailList;
+        return sourceEmailList;
     }
 }

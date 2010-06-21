@@ -42,7 +42,6 @@
             <th>Ended</th>
             <th>Elapsed</th>
             <th>Status</th>
-            <th>Log</th>
             <th>Restart</th>
           </tr>
           #foreach($flow in $executions)
@@ -72,11 +71,6 @@
               </td>
               <td>
                 $flow.status
-              </td>
-              <td>
-                <a href="${context}/logs?file=${exec.id}">
-                 log
-                </a>
               </td>
               <td>
                 <a href="${context}/history?action=restart&id=${flow.id}">restart</a>

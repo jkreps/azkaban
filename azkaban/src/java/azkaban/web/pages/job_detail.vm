@@ -50,7 +50,7 @@
           <span>Job Name</span>: $job.id
         </div>
         <div>
-          <span>Class</span>: $job.jobClass.name
+          <span>Type</span>: $job.jobType
         </div>
         <div>
           <span>Path</span>: $job.path

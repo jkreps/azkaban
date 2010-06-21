@@ -22,6 +22,8 @@ import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowCallback;
 import azkaban.flow.FlowManager;
 import azkaban.flow.Status;
+import azkaban.util.process.ProcessFailureException;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -418,21 +420,22 @@ public class Scheduler
 
     private void sendErrorEmail(ScheduledJob job, Throwable e, String senderAddress, List<String> emailList)
     {
-        if ((emailList == null || emailList.isEmpty()) && _jobFailureEmail != null) {
+        if ((emailList == null || emailList.isEmpty()) && _jobFailureEmail != null)
             emailList = Arrays.asList(_jobFailureEmail);
-        }
 
-        if (senderAddress == null) {
-            logger.error("Parameter mail.sender needs to be set to send emails.");
-        }
-        else if (emailList != null && _mailman != null) {
+        if (emailList != null && _mailman != null) {
             try {
+                String error;
+                if(e instanceof ProcessFailureException)
+                    error = ((ProcessFailureException) e).getLogSnippet();
+                else
+                    error = Utils.stackTrace(e);
                 _mailman.sendEmailIfPossible(senderAddress,
                                              emailList,
                                              "Job '" + job.getId() + "' has failed!",
                                              "The job '" + job.getId() + "' running on " + InetAddress.getLocalHost().getHostName() +
                                              " has failed with the following error: \r\n\r\n" +
-                                             Utils.stackTrace(e) + "\r\n\r\n" +
+                                             error + "\r\n\r\n" +
                                              " See log for detailed message.");
             }
             catch (UnknownHostException uhe) {
@@ -447,10 +450,7 @@ public class Scheduler
             emailList = Arrays.asList(_jobSuccessEmail);
         }
 
-        if (senderAddress == null) {
-            logger.error("Parameter mail.sender needs to be set to send emails.");
-        }
-        else if (emailList != null && _mailman != null) {
+        if (emailList != null && _mailman != null) {
             try {
                 _mailman.sendEmailIfPossible(senderAddress,
                                              emailList,

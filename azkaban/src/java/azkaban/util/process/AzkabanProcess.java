@@ -35,7 +35,7 @@ public class AzkabanProcess {
 	private final CountDownLatch startupLatch;
 	private final CountDownLatch completeLatch;
 	private volatile int processId;
-	private volatile java.lang.Process process;
+	private volatile Process process;
 
 	public AzkabanProcess(List<String> cmd, Map<String, String> env, String workingDir, Logger logger) {
 		this.cmd = cmd;
@@ -50,19 +50,15 @@ public class AzkabanProcess {
 	/**
 	 * Execute this process, blocking until it has completed.
 	 */
-	public void run() {
+	public void run() throws IOException {
 	    if(this.isStarted() || this.isComplete())
 	        throw new IllegalStateException("The process can only be used once.");
 	    
-		java.lang.ProcessBuilder builder = new java.lang.ProcessBuilder(cmd);
+		ProcessBuilder builder = new ProcessBuilder(cmd);
 		builder.directory(new File(workingDir));
 		builder.environment().putAll(env);
-		try {
-			this.process = builder.start();
-			this.startupLatch.countDown();
-		} catch (IOException e) {
-			throw new ProcessFailureException(-1);
-		}
+		this.process = builder.start();
+		this.startupLatch.countDown();
 		LogGobbler outputGobbler = new LogGobbler(new InputStreamReader(
 				process.getInputStream()), logger, Level.INFO, 30);
 		LogGobbler errorGobbler = new LogGobbler(new InputStreamReader(process
@@ -85,11 +81,11 @@ public class AzkabanProcess {
 
 		completeLatch.countDown();
 		if (exitCode != 0)
-			throw new ProcessFailureException(exitCode);
+			throw new ProcessFailureException(exitCode, errorGobbler.getRecentLog());
 
 		// try to wait for everything to get logged out before exiting
-		outputGobbler.awaitCompletion(1000);
-		errorGobbler.awaitCompletion(1000);
+		outputGobbler.awaitCompletion(5000);
+		errorGobbler.awaitCompletion(5000);
 	}
 	
 	/**

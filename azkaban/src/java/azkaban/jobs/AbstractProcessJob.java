@@ -30,19 +30,24 @@ public abstract class AbstractProcessJob extends AbstractJob {
         super(desc.getId());
         this.descriptor = desc;
         String cwd = descriptor.getProps().getString(WORKING_DIR, new File(descriptor.getFullPath()).getParent());
-        this.builder = new AzkabanProcessBuilder(command).setEnv(descriptor.getProps().getMapByPrefix(ENV_PREFIX)).setWorkingDir(cwd);
+        this.builder = new AzkabanProcessBuilder(command).setEnv(descriptor.getProps().getMapByPrefix(ENV_PREFIX)).setWorkingDir(cwd).setLogger(getLog());
     }
 
     public void run() throws Exception {
+        long startMs = System.currentTimeMillis();
         info("Command: " + builder.getCommandString());
-        info("Environment: " + builder.getEnv());
+        if(builder.getEnv().size() > 0)
+            info("Environment variables: " + builder.getEnv());
         info("Working directory: " + builder.getWorkingDir());
         
+        boolean success = false;
         this.process = builder.build();
         try {
             this.process.run();
+            success = true;
         } finally {
             this.process = null;
+            info("Process completed " + (success? "successfully" : "unsuccessfully") + " in " + ((System.currentTimeMillis() - startMs) / 1000) + " seconds.");
         }
     }
     

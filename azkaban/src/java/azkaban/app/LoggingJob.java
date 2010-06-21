@@ -1,16 +1,14 @@
 /*
  * Copyright 2010 LinkedIn, Inc
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  * 
  * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
 
@@ -33,25 +31,25 @@ import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
 
 /**
- * A wrapper for a job that attaches a Log4J appender to write to the logs
- * directory in the particular format expected
+ * A wrapper for a job that attaches a Log4J appender to write to the logs directory in the
+ * particular format expected
  * 
  * @author jkreps
  * 
  */
 public class LoggingJob extends DelegatingJob {
-
+    
     private static final Layout DEFAULT_LAYOUT = new PatternLayout("%d{dd-MM-yyyy HH:mm:ss} %c{1} %p - %m\n");
-
+    
     private final Logger _logger;
     private final String _logDir;
-
+    
     public LoggingJob(String logDir, Job innerJob, String loggerName) {
         super(innerJob);
         this._logDir = Utils.nonNull(logDir);
         this._logger = Logger.getLogger(loggerName);
     }
-
+    
     @Override
     public void run() {
         String jobName = getInnerJob().getId();
@@ -69,16 +67,19 @@ public class LoggingJob extends DelegatingJob {
         } catch(IOException e) {
             _logger.error("Could not open log file in " + _logDir, e);
         }
-
+        
         boolean succeeded = false;
         boolean jobNotStaleException = false;
         long start = System.currentTimeMillis();
         try {
             getInnerJob().run();
             succeeded = true;
-        } catch(Throwable t) {
-            _logger.error("Fatal error occurred while running job '" + jobName + "':", t);
-            throw new RuntimeException(t);
+        } catch(Exception e) {
+            _logger.error("Fatal error occurred while running job '" + jobName + "':", e);
+            if(e instanceof RuntimeException)
+                throw (RuntimeException) e;
+            else
+                throw new RuntimeException(e);
         } finally {
             long end = System.currentTimeMillis();
             Props props = new Props();
@@ -88,14 +89,15 @@ public class LoggingJob extends DelegatingJob {
             props.put("jobNotStaleException", Boolean.toString(jobNotStaleException));
             try {
                 props.storeLocal(new File(runLogDir, "run.properties"));
-            } catch (IOException e) {
-                _logger.warn(String.format("IOException when storing props to local dir[%s]", runLogDir), e);
+            } catch(IOException e) {
+                _logger.warn(String.format("IOException when storing props to local dir[%s]",
+                                           runLogDir), e);
                 throw new RuntimeException(e);
             }
-
+            
             if(jobAppender != null)
                 _logger.removeAppender(jobAppender);
         }
     }
-
+    
 }
