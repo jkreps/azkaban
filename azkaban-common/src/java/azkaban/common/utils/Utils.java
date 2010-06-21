@@ -342,6 +342,9 @@ public class Utils {
     }
 
     public static String stackTrace(Throwable t) {
+        if (t == null) {
+            return "Utils.stackTrace(...) -- Throwable was null.";
+        }
         StringWriter writer = new StringWriter();
         t.printStackTrace(new PrintWriter(writer));
         return writer.toString();
