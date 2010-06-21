@@ -611,37 +611,44 @@ public class Scheduler
                     {
                         _scheduledJob.setEnded(new DateTime());
 
-                        allKnownFlows.saveExecutableFlow(flowToRun);
-                        switch (status) {
-                            case SUCCEEDED:
-                                sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
-                                break;
-                            case FAILED:
-                                sendErrorEmail(_scheduledJob, flowToRun.getException(), senderEmail, finalEmailList);
-                                break;
-                            default:
-                                sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
-                        }
-
-                        // mark the job as completed
-                        _executing.remove(_scheduledJob.getId());
-                        _completed.put(_scheduledJob.getId(), _scheduledJob);
-
-                        // if this is a recurring job, schedule the next execution as well
-                        if (_scheduledJob.isRecurring() && !_scheduledJob.isInvalid()) {
-                            DateTime nextRun = _scheduledJob.getScheduledExecution().plus(_scheduledJob.getPeriod());
-                            // This call will also save state.
-                            schedule(_scheduledJob.getId(),
-                                     nextRun,
-                                     _scheduledJob.getPeriod(),
-                                     _ignoreDep);
-                        }
-                        else {
-                            try {
-                                saveSchedule();
+                        try {
+                            allKnownFlows.saveExecutableFlow(flowToRun);
+                            switch (status) {
+                                case SUCCEEDED:
+                                    sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
+                                    break;
+                                case FAILED:
+                                    sendErrorEmail(_scheduledJob, flowToRun.getException(), senderEmail, finalEmailList);
+                                    break;
+                                default:
+                                    sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
                             }
-                            catch (IOException e) {
-                                logger.warn("Error trying to update schedule.");
+                        }
+                        catch (RuntimeException e) {
+                            logger.warn("Exception caught while saving flow/sending emails", e);
+                            throw e;
+                        }
+                        finally {
+                            // mark the job as completed
+                            _executing.remove(_scheduledJob.getId());
+                            _completed.put(_scheduledJob.getId(), _scheduledJob);
+
+                            // if this is a recurring job, schedule the next execution as well
+                            if (_scheduledJob.isRecurring() && !_scheduledJob.isInvalid()) {
+                                DateTime nextRun = _scheduledJob.getScheduledExecution().plus(_scheduledJob.getPeriod());
+                                // This call will also save state.
+                                schedule(_scheduledJob.getId(),
+                                         nextRun,
+                                         _scheduledJob.getPeriod(),
+                                         _ignoreDep);
+                            }
+                            else {
+                                try {
+                                    saveSchedule();
+                                }
+                                catch (IOException e) {
+                                    logger.warn("Error trying to update schedule.");
+                                }
                             }
                         }
                     }
@@ -708,21 +715,28 @@ public class Scheduler
                     {
                         _scheduledJob.setEnded(new DateTime());
 
-                        allKnownFlows.saveExecutableFlow(_flow);
-                        switch (status) {
-                            case SUCCEEDED:
-                                sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
-                                break;
-                            case FAILED:
-                                sendErrorEmail(_scheduledJob, _flow.getException(), senderEmail, finalEmailList);
-                                break;
-                            default:
-                                sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
+                        try {
+                            allKnownFlows.saveExecutableFlow(_flow);
+                            switch (status) {
+                                case SUCCEEDED:
+                                    sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
+                                    break;
+                                case FAILED:
+                                    sendErrorEmail(_scheduledJob, _flow.getException(), senderEmail, finalEmailList);
+                                    break;
+                                default:
+                                    sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
+                            }
                         }
-
-                        // mark the job as completed
-                        _executing.remove(_scheduledJob.getId());
-                        _completed.put(_scheduledJob.getId(), _scheduledJob);
+                        catch (RuntimeException e) {
+                            logger.warn("Exception caught while saving flow/sending emails", e);
+                            throw e;
+                        }
+                        finally {
+                            // mark the job as completed
+                            _executing.remove(_scheduledJob.getId());
+                            _completed.put(_scheduledJob.getId(), _scheduledJob);
+                        }
                     }
                 });
 
