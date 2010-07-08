@@ -113,7 +113,7 @@ public class PropsUtils {
     public static Props resolveProps(Props props) {
     	Props resolvedProps = new Props();
 
-    	for(String key : resolvedProps.getKeySet()) {
+    	for(String key : props.getKeySet()) {
 	        StringBuffer replaced = new StringBuffer();
 	        String value = props.get(key);
 	        Matcher matcher = VARIABLE_PATTERN.matcher(value);
