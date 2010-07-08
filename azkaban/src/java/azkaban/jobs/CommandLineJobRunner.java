@@ -86,13 +86,13 @@ public class CommandLineJobRunner {
 
         // parse override properties
         boolean ignoreDeps = options.has(ignoreDepsOpt);
-        Props overrides = new Props(null);
+        Props overrideProps = new Props(null);
         for(String override: options.valuesOf(overrideOpt)) {
             String[] pieces = override.split("=");
             if(pieces.length != 2)
                 Utils.croak("Invalid property override: '" + override
                             + "', properties must be in the form key=value", 1);
-            overrides.put(pieces[0], pieces[1]);
+            overrideProps.put(pieces[0], pieces[1]);
         }
 
         NamedPermitManager permitManager = new NamedPermitManager();
@@ -148,7 +148,7 @@ public class CommandLineJobRunner {
 
         for(String jobName: jobNames) {
             try {
-                final ExecutableFlow flowToRun = allFlows.createNewExecutableFlow(jobName);
+                final ExecutableFlow flowToRun = allFlows.createNewExecutableFlow(jobName, overrideProps);
 
                 if (flowToRun == null) {
                     System.out.printf("Job[%s] is unknown.  Not running.%n", jobName);

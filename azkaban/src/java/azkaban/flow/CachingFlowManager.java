@@ -16,6 +16,7 @@
 
 package azkaban.flow;
 
+import azkaban.common.utils.Props;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flow;
 import org.apache.log4j.Logger;
@@ -99,9 +100,9 @@ public class CachingFlowManager implements FlowManager
         return baseManager.iterator();
     }
 
-    public ExecutableFlow createNewExecutableFlow(String name)
+    public ExecutableFlow createNewExecutableFlow(String name, Props overrideProps)
     {
-        final ExecutableFlow retVal = baseManager.createNewExecutableFlow(name);
+        final ExecutableFlow retVal = baseManager.createNewExecutableFlow(name, overrideProps);
 
         addToCache(retVal);
 

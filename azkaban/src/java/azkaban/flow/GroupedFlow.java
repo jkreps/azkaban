@@ -16,6 +16,8 @@
 
 package azkaban.flow;
 
+import azkaban.common.utils.Props;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
@@ -76,14 +78,14 @@ public class GroupedFlow implements Flow
     }
 
     @Override
-    public ExecutableFlow createExecutableFlow(String id, Map<String, ExecutableFlow> overrides)
+    public ExecutableFlow createExecutableFlow(String id, Props overrideProps, Map<String, ExecutableFlow> overrides)
     {
         ExecutableFlow executableFlows[] = new ExecutableFlow[flows.length];
 
         for (int i = 0; i < executableFlows.length; i++) {
             executableFlows[i] = overrides.containsKey(flows[i].getName()) ?
                                  overrides.get(flows[i].getName()) :
-                                 flows[i].createExecutableFlow(id, overrides);
+                                 flows[i].createExecutableFlow(id, overrideProps, overrides);
         }
 
         // Grouped(Executable)Flow is just an abstraction, it doesn't represent anything concrete and thus shouldn't

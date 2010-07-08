@@ -16,17 +16,17 @@
 
 package azkaban.flow;
 
-import azkaban.app.JobDescriptor;
-import azkaban.app.JobManager;
-import azkaban.app.JobWrappingFactory;
-import azkaban.app.LazyJobFactory;
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import azkaban.app.JobDescriptor;
+import azkaban.app.JobManager;
+import azkaban.app.JobWrappingFactory;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 /**
  *
@@ -66,7 +66,7 @@ public class Flows
             retVal = new MultipleDependencyFlow(
                     new IndividualJobFlow(
                             rootDescriptor.getId(),
-                            new LazyJobFactory(jobFactory, jobManager, rootDescriptor.getId())
+                            jobManager
                             ),
                     dependencyFlows.toArray(new Flow[dependencyFlows.size()])
             );
@@ -74,7 +74,7 @@ public class Flows
         else {
             retVal = new IndividualJobFlow(
                     rootDescriptor.getId(),
-                    new LazyJobFactory(jobFactory, jobManager, rootDescriptor.getId())
+                    jobManager
             );
         }
 

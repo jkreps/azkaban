@@ -51,8 +51,6 @@ import com.google.common.base.Objects;
  */
 public class Props {
 
-    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([a-zA-Z_.0-9]+)\\}");
-
     private final Map<String, String> _current;
     private final Props _parent;
 
@@ -177,34 +175,7 @@ public class Props {
      *         is not a valid key in this Props.
      */
     public String put(String key, String value) {
-        StringBuffer replaced = new StringBuffer();
-        Matcher matcher = VARIABLE_PATTERN.matcher(value);
-        while(matcher.find()) {
-            String variableName = matcher.group(1);
-
-            if (variableName.equals(key)) {
-                throw new IllegalArgumentException(
-                        String.format("Circular property definition starting from property[%s]", key)
-                );
-            }
-
-            String replacement = get(variableName);
-            if(replacement == null)
-                throw new UndefinedPropertyException("Could not find variable substitution for variable '"
-                                                     + variableName + "' in key '" + key + "'.");
-
-            replacement = replacement.replaceAll("\\\\", "\\\\\\\\");
-            replacement = replacement.replaceAll("\\$", "\\\\\\$");
-
-            matcher.appendReplacement(replaced, replacement);
-            matcher.appendTail(replaced);
-
-            value = replaced.toString();
-            replaced = new StringBuffer();
-            matcher = VARIABLE_PATTERN.matcher(value);
-        }
-        matcher.appendTail(replaced);
-        return _current.put(key, replaced.toString());
+        return _current.put(key, value);
     }
 
     /**
@@ -220,42 +191,7 @@ public class Props {
      */
     public void put(Properties properties) {
         for (String propName : properties.stringPropertyNames()) {
-            String key = propName;
-            String value = properties.getProperty(key);
-
-            StringBuffer replaced = new StringBuffer();
-            Matcher matcher = VARIABLE_PATTERN.matcher(value);
-            while(matcher.find()) {
-                String variableName = matcher.group(1);
-
-                if (variableName.equals(key)) {
-                    throw new IllegalArgumentException(
-                            String.format("Circular property definition starting from property[%s]", key)
-                    );
-                }
-                
-                String replacement = get(variableName);
-
-                if (replacement == null) {
-                    replacement = properties.getProperty(variableName);
-                }
-
-                if(replacement == null)
-                    throw new UndefinedPropertyException("Could not find variable substitution for variable '"
-                                                         + variableName + "' in key '" + key + "'.");
-
-                replacement = replacement.replaceAll("\\\\", "\\\\\\\\");
-                replacement = replacement.replaceAll("\\$", "\\\\\\$");
-
-                matcher.appendReplacement(replaced, replacement);
-                matcher.appendTail(replaced);
-
-                value = replaced.toString();
-                replaced = new StringBuffer();
-                matcher = VARIABLE_PATTERN.matcher(value);
-            }
-            matcher.appendTail(replaced);
-            _current.put(key, replaced.toString());
+            _current.put(propName, properties.getProperty(propName));
         }
     }
 
@@ -615,6 +551,18 @@ public class Props {
                 values.put(key.substring(prefix.length()), get(key));
         }
         return values;
+    }
+    
+    public Set<String> getKeySet() {
+    	HashSet<String> keySet = new HashSet<String>();
+    	
+    	keySet.addAll(localKeySet());
+    	
+     	if(_parent != null) {
+    		keySet.addAll(_parent.getKeySet());
+    	}
+    	
+    	return keySet;
     }
 
 }

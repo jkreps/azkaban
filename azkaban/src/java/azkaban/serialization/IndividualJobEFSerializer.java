@@ -43,12 +43,13 @@ public class IndividualJobEFSerializer implements Function<ExecutableFlow, Map<S
         // TODO MED: Fix the above.
         final String jobName = flow.getName();
 
-        ImmutableMap.Builder<String, String> jobInfoMapBuilder = ImmutableMap.builder();
-
+        ImmutableMap.Builder<String, Object> jobInfoMapBuilder = ImmutableMap.builder();
+        
         jobInfoMapBuilder.put("type", "jobManagerLoaded");
         jobInfoMapBuilder.put("name", jobName);
         jobInfoMapBuilder.put("status", flow.getStatus().toString());
         jobInfoMapBuilder.put("id", flow.getId());
+        jobInfoMapBuilder.put("overrideProps", flow.getOverrideProps().getMapByPrefix(""));
 
         if (flow.getStartTime() != null) {
             jobInfoMapBuilder.put("startTime", flow.getStartTime().toString());

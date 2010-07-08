@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import azkaban.common.utils.Props;
+
 /**
  *
  */
@@ -54,15 +56,16 @@ public class ComposedFlow implements Flow
     }
 
     @Override
-    public ExecutableFlow createExecutableFlow(String id, Map<String, ExecutableFlow> overrides)
+    public ExecutableFlow createExecutableFlow(String id, Props overrideProps, Map<String, ExecutableFlow> overrides)
     {
         final ExecutableFlow dependeeFlow = overrides.containsKey(dependee.getName()) ?
                                             overrides.get(dependee.getName()) :
-                                            dependee.createExecutableFlow(id, overrides);
+                                            dependee.createExecutableFlow(id, overrideProps, overrides);
 
         final ExecutableFlow dependerFlow = overrides.containsKey(depender.getName()) ?
                                             overrides.get(depender.getName()) :
-                                            depender.createExecutableFlow(id, new HashMap<String, ExecutableFlow>());
+                                            // TODO why are we not using overides here? not sure.. :/
+                                            depender.createExecutableFlow(id, overrideProps, new HashMap<String, ExecutableFlow>());
 
         final ComposedExecutableFlow retVal = new ComposedExecutableFlow(id, dependerFlow, dependeeFlow);
 

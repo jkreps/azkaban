@@ -16,18 +16,17 @@
 
 package azkaban.flow;
 
-import azkaban.jobs.JavaJob;
-import azkaban.app.JobDescriptor;
-import azkaban.app.JobFactory;
-import azkaban.app.JobWrappingFactory;
-import azkaban.common.jobs.DelegatingJob;
-import azkaban.common.jobs.Job;
-import org.joda.time.DateTime;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.joda.time.DateTime;
+
+import azkaban.app.JobManager;
+import azkaban.common.jobs.DelegatingJob;
+import azkaban.common.jobs.Job;
+import azkaban.common.utils.Props;
 
 /**
  *
@@ -40,7 +39,8 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private final Object sync = new Object();
     private final String id;
     private final String name;
-    private final JobFactory jobFactory;
+    private final JobManager jobManager;
+    private final Props overrideProps;
 
     private volatile Status jobState;
     private volatile List<FlowCallback> callbacksToCall;
@@ -49,11 +49,12 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private volatile Job job;
     private volatile Throwable exception;
 
-    public IndividualJobExecutableFlow(String id, String name, JobFactory jobFactory)
+    public IndividualJobExecutableFlow(String id, String name, Props overrideProps, JobManager jobManager)
     {
         this.id = id;
         this.name = name;
-        this.jobFactory = jobFactory;
+        this.jobManager = jobManager;
+        this.overrideProps = overrideProps;
 
         jobState = Status.READY;
         callbacksToCall = new ArrayList<FlowCallback>();
@@ -62,7 +63,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         exception = null;
     }
 
-    @Override
+	@Override
     public String getId()
     {
         return id;
@@ -74,6 +75,10 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         return name;
     }
 
+    public Props getOverrideProps() {
+		return overrideProps;
+	}
+    
     @Override
     public void execute(FlowCallback callback)
     {
@@ -97,9 +102,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
             }
         }
 
-        // One one thread should ever be able to get to this point because of management of jobState
-        // Thus, this should only ever get called once before the job finishes (at which point it could be reset)
-        job = jobFactory.factorizeJob();
+        job = jobManager.loadJob(getName(), overrideProps, true);
 
         final ClassLoader storeMyClassLoader = Thread.currentThread().getContextClassLoader();
 

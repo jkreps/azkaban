@@ -16,12 +16,11 @@
 
 package azkaban.flow;
 
-import azkaban.flow.ExecutableFlow;
-import azkaban.flow.Flow;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
+
+import azkaban.common.utils.Props;
 
 /**
  *
@@ -73,7 +72,7 @@ public interface FlowManager extends Iterable<Flow>
      * @param name name of flow
      * @return A clone of the Flow that is executable
      */
-    ExecutableFlow createNewExecutableFlow(String name);
+    ExecutableFlow createNewExecutableFlow(String name, Props overrideProps);
 
     /**
      * A method that will return a unique "next id".  The contract around this method is that if value X will only ever

@@ -16,18 +16,16 @@
 
 package azkaban.flow;
 
-import azkaban.app.JobFactory;
-import azkaban.app.JobManager;
-import azkaban.app.JobWrappingFactory;
-import azkaban.app.LazyJobFactory;
-import azkaban.common.jobs.Job;
-import azkaban.flow.ExecutableFlow;
-import azkaban.flow.IndividualJobExecutableFlow;
-import azkaban.serialization.Verifier;
-import com.google.common.base.Function;
+import java.util.Map;
+
 import org.joda.time.DateTime;
 
-import java.util.Map;
+import azkaban.app.JobManager;
+import azkaban.app.JobWrappingFactory;
+import azkaban.common.utils.Props;
+import azkaban.serialization.Verifier;
+
+import com.google.common.base.Function;
 
 /**
  *
@@ -54,11 +52,16 @@ public class JobManagerFlowDeserializer implements Function<Map<String, Object>,
         String id = Verifier.getString(descriptor, "id");
         DateTime startTime = Verifier.getOptionalDateTime(descriptor, "startTime");
         DateTime endTime = Verifier.getOptionalDateTime(descriptor, "endTime");
+        Map<String, String> overridePropsMap = Verifier.getVerifiedObject(descriptor, "overrideProps", Map.class);
+        Props overrideProps = new Props();
+        
+        overrideProps.putAll(overridePropsMap);
 
         final IndividualJobExecutableFlow retVal = new IndividualJobExecutableFlow(
                 id,
                 jobName,
-                new LazyJobFactory(jobFactory, jobManager, jobName)
+                overrideProps,
+                jobManager
         );
         if (jobStatus != Status.RUNNING) {
             retVal.setStatus(jobStatus);

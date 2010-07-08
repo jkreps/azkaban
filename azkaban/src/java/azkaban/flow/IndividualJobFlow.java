@@ -16,14 +16,12 @@
 
 package azkaban.flow;
 
-import azkaban.app.JobDescriptor;
-import azkaban.app.JobFactory;
-import azkaban.app.JobWrappingFactory;
-import azkaban.common.jobs.Job;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import azkaban.app.JobManager;
+import azkaban.common.utils.Props;
 
 
 /**
@@ -31,13 +29,13 @@ import java.util.Map;
  */
 public class IndividualJobFlow implements Flow
 {
-    private final JobFactory jobFactory;
+    private final JobManager jobManager;
     private final String name;
 
-    public IndividualJobFlow(String name, JobFactory jobFactory)
+    public IndividualJobFlow(String name, JobManager jobManager)
     {
         this.name = name;
-        this.jobFactory = jobFactory;
+        this.jobManager = jobManager;
     }
 
     @Override
@@ -59,11 +57,11 @@ public class IndividualJobFlow implements Flow
     }
 
     @Override
-    public ExecutableFlow createExecutableFlow(String id, Map<String, ExecutableFlow> overrides)
+    public ExecutableFlow createExecutableFlow(String id, Props overrideProps, Map<String, ExecutableFlow> overrides)
     {
         final ExecutableFlow retVal = overrides.containsKey(getName()) ?
                                       overrides.get(getName()) :
-                                      new IndividualJobExecutableFlow(id, name, jobFactory);
+                                      new IndividualJobExecutableFlow(id, name, overrideProps, jobManager);
 
         if (overrides.containsKey(retVal.getName())) {
             throw new RuntimeException(String.format("overrides already has an entry with my key[%s], wtf?", retVal.getName()));

@@ -19,8 +19,11 @@ package azkaban.app;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import azkaban.common.utils.Props;
+import azkaban.common.utils.UndefinedPropertyException;
 
 public class PropsUtils {
 
@@ -103,5 +106,45 @@ public class PropsUtils {
             if(file.getName().endsWith(suffix))
                 return true;
         return false;
+    }
+    
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([a-zA-Z_.0-9]+)\\}");
+    
+    public static Props resolveProps(Props props) {
+    	Props resolvedProps = new Props();
+
+    	for(String key : resolvedProps.getKeySet()) {
+	        StringBuffer replaced = new StringBuffer();
+	        String value = props.get(key);
+	        Matcher matcher = VARIABLE_PATTERN.matcher(value);
+	        while(matcher.find()) {
+	            String variableName = matcher.group(1);
+	
+	            if (variableName.equals(key)) {
+	                throw new IllegalArgumentException(
+	                        String.format("Circular property definition starting from property[%s]", key)
+	                );
+	            }
+	
+	            String replacement = props.get(variableName);
+	            if(replacement == null)
+	                throw new UndefinedPropertyException("Could not find variable substitution for variable '"
+	                                                     + variableName + "' in key '" + key + "'.");
+	
+	            replacement = replacement.replaceAll("\\\\", "\\\\\\\\");
+	            replacement = replacement.replaceAll("\\$", "\\\\\\$");
+	
+	            matcher.appendReplacement(replaced, replacement);
+	            matcher.appendTail(replaced);
+	
+	            value = replaced.toString();
+	            replaced = new StringBuffer();
+	            matcher = VARIABLE_PATTERN.matcher(value);
+	        }
+	        matcher.appendTail(replaced);
+	        resolvedProps.put(key, replaced.toString());
+    	}
+    	
+    	return resolvedProps;
     }
 }

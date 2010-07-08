@@ -16,15 +16,6 @@
 
 package azkaban.flow;
 
-import azkaban.app.JobDescriptor;
-import azkaban.app.JobManager;
-import azkaban.app.JobWrappingFactory;
-import azkaban.flow.ExecutableFlow;
-import azkaban.flow.Flow;
-import azkaban.flow.Flows;
-import azkaban.serialization.ExecutableFlowSerializer;
-import azkaban.serialization.de.ExecutableFlowDeserializer;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,6 +24,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
+
+import azkaban.app.JobDescriptor;
+import azkaban.app.JobManager;
+import azkaban.app.JobWrappingFactory;
+import azkaban.common.utils.Props;
+import azkaban.serialization.ExecutableFlowSerializer;
+import azkaban.serialization.de.ExecutableFlowDeserializer;
 
 /**
  *
@@ -99,9 +97,9 @@ public class RefreshableFlowManager implements FlowManager
     }
 
     @Override
-    public ExecutableFlow createNewExecutableFlow(String name)
+    public ExecutableFlow createNewExecutableFlow(String name, Props overrideProps)
     {
-        return delegateManager.get().createNewExecutableFlow(name);
+        return delegateManager.get().createNewExecutableFlow(name, overrideProps);
     }
 
     @Override

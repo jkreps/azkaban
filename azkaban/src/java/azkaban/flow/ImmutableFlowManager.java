@@ -16,16 +16,6 @@
 
 package azkaban.flow;
 
-import azkaban.flow.ExecutableFlow;
-import azkaban.flow.Flow;
-import azkaban.flow.FlowManager;
-import azkaban.serialization.ExecutableFlowSerializer;
-import azkaban.serialization.de.ExecutableFlowDeserializer;
-import azkaban.util.JSONToJava;
-import org.apache.commons.fileupload.util.Streams;
-import org.apache.commons.io.IOUtils;
-import org.json.JSONObject;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -38,6 +28,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.commons.fileupload.util.Streams;
+import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
+
+import azkaban.common.utils.Props;
+import azkaban.serialization.ExecutableFlowSerializer;
+import azkaban.serialization.de.ExecutableFlowDeserializer;
+import azkaban.util.JSONToJava;
 
 /**
  * An "append-only" set of Flows.  If you need to remove flows, this object should be thrown away and a
@@ -104,15 +103,19 @@ public class ImmutableFlowManager implements FlowManager
     }
 
     @Override
-    public ExecutableFlow createNewExecutableFlow(String name)
+    public ExecutableFlow createNewExecutableFlow(String name, Props overrideProps)
     {
         final Flow flow = getFlow(name);
 
         if (flow == null) {
             return null;
         }
+        
+        String flowId = String.valueOf(getNextId());
+        
+        overrideProps.put("azkaban.flow.id", flowId);
 
-        return flow.createExecutableFlow(String.valueOf(getNextId()), new HashMap<String, ExecutableFlow>());
+        return flow.createExecutableFlow(flowId, overrideProps, new HashMap<String, ExecutableFlow>());
     }
 
     @Override

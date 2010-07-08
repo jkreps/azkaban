@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import azkaban.common.utils.Props;
+
 /**
  *
  */
@@ -55,14 +57,14 @@ public class MultipleDependencyFlow implements Flow
     }
 
     @Override
-    public ExecutableFlow createExecutableFlow(String id, Map<String, ExecutableFlow> overrides)
+    public ExecutableFlow createExecutableFlow(String id, Props overrideProps, Map<String, ExecutableFlow> overrides)
     {
-        final List<ExecutableFlow> childList = dependeesGrouping.createExecutableFlow(id, overrides).getChildren();
+        final List<ExecutableFlow> childList = dependeesGrouping.createExecutableFlow(id, overrideProps, overrides).getChildren();
         ExecutableFlow[] executableChildren = childList.toArray(new ExecutableFlow[childList.size()]);
 
         final ExecutableFlow dependerFlow = overrides.containsKey(depender.getName()) ?
                                             overrides.get(depender.getName()) :
-                                            depender.createExecutableFlow(id, new HashMap<String, ExecutableFlow>());
+                                            depender.createExecutableFlow(id, overrideProps, new HashMap<String, ExecutableFlow>());
 
 
         final MultipleDependencyExecutableFlow retVal = new MultipleDependencyExecutableFlow(id, dependerFlow, executableChildren);

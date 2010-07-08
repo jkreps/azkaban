@@ -30,6 +30,7 @@ import java.util.Set;
 import org.apache.log4j.Level;
 
 import azkaban.app.JobDescriptor;
+import azkaban.app.PropsUtils;
 import azkaban.common.jobs.AbstractJob;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
@@ -49,10 +50,10 @@ public class ProcessJob extends AbstractJob implements Job {
     public static final String JOB_NAME_ENV = "JOB_NAME";
     public static final int CLEAN_UP_TIME_MS = 1000;
 
-    private final Props _props;
     private final String _jobPath;
     private final String _name;
     private final JobDescriptor _descriptor;
+    private volatile Props _props;
     private volatile Process _process;
     private volatile boolean _isComplete;
 
@@ -66,6 +67,8 @@ public class ProcessJob extends AbstractJob implements Job {
     }
 
     public void run() {
+    	_props = PropsUtils.resolveProps(_props);
+    	
         // Sets a list of all the commands that need to be run.
         List<String> commands = getCommandList();
         info(commands.size() + " commands to execute.");

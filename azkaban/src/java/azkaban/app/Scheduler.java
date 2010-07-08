@@ -16,29 +16,6 @@
 
 package azkaban.app;
 
-import azkaban.common.utils.Props;
-import azkaban.common.utils.Utils;
-import azkaban.flow.ExecutableFlow;
-import azkaban.flow.FlowCallback;
-import azkaban.flow.FlowManager;
-import azkaban.flow.Status;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.Days;
-import org.joda.time.Duration;
-import org.joda.time.DurationFieldType;
-import org.joda.time.Hours;
-import org.joda.time.Minutes;
-import org.joda.time.ReadablePartial;
-import org.joda.time.ReadablePeriod;
-import org.joda.time.Seconds;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.PeriodFormat;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -53,6 +30,31 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.joda.time.Duration;
+import org.joda.time.DurationFieldType;
+import org.joda.time.Hours;
+import org.joda.time.Minutes;
+import org.joda.time.ReadablePartial;
+import org.joda.time.ReadablePeriod;
+import org.joda.time.Seconds;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.PeriodFormat;
+
+import azkaban.common.utils.Props;
+import azkaban.common.utils.Utils;
+import azkaban.flow.ExecutableFlow;
+import azkaban.flow.FlowCallback;
+import azkaban.flow.FlowManager;
+import azkaban.flow.Status;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 /**
  * A scheduler that kicks off jobs at a given time on a repeating schedule.
@@ -582,8 +584,8 @@ public class Scheduler
                 emailList = desc.getEmailNotificationList();
 
                 final List<String> finalEmailList = emailList;
-
-                final ExecutableFlow flowToRun = allKnownFlows.createNewExecutableFlow(_scheduledJob.getId());
+                
+                final ExecutableFlow flowToRun = allKnownFlows.createNewExecutableFlow(_scheduledJob.getId(), new Props());
 
                 if (_ignoreDep) {
                     for (ExecutableFlow subFlow : flowToRun.getChildren()) {

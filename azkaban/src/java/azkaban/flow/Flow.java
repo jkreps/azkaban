@@ -19,6 +19,8 @@ package azkaban.flow;
 import java.util.List;
 import java.util.Map;
 
+import azkaban.common.utils.Props;
+
 /**
  */
 public interface Flow {
@@ -55,5 +57,5 @@ public interface Flow {
      *
      * @return an ExecutableFlow that, when executed, will run the flow represented by this object
      */
-    ExecutableFlow createExecutableFlow(String id, Map<String, ExecutableFlow> overrides);
+    ExecutableFlow createExecutableFlow(String id, Props overrideProps, Map<String, ExecutableFlow> overrides);
 }
