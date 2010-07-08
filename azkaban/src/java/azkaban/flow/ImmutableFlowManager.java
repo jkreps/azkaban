@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.fileupload.util.Streams;
@@ -114,6 +115,7 @@ public class ImmutableFlowManager implements FlowManager
         String flowId = String.valueOf(getNextId());
         
         overrideProps.put("azkaban.flow.id", flowId);
+        overrideProps.put("azkaban.flow.uuid", UUID.randomUUID().toString());
 
         return flow.createExecutableFlow(flowId, overrideProps, new HashMap<String, ExecutableFlow>());
     }
