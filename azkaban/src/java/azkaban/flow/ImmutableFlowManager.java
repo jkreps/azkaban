@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.IOUtils;
+import org.joda.time.DateTime;
 import org.json.JSONObject;
 
 import azkaban.common.utils.Props;
@@ -116,6 +117,18 @@ public class ImmutableFlowManager implements FlowManager
         
         overrideProps.put("azkaban.flow.id", flowId);
         overrideProps.put("azkaban.flow.uuid", UUID.randomUUID().toString());
+
+        DateTime loadTime = new DateTime();
+
+        overrideProps.put("azkaban.flow.start.timestamp", loadTime.toString());
+        overrideProps.put("azkaban.flow.start.year", loadTime.toString("yyyy"));
+        overrideProps.put("azkaban.flow.start.month", loadTime.toString("MM"));
+        overrideProps.put("azkaban.flow.start.day", loadTime.toString("dd"));
+        overrideProps.put("azkaban.flow.start.hour", loadTime.toString("HH"));
+        overrideProps.put("azkaban.flow.start.minute", loadTime.toString("mm"));
+        overrideProps.put("azkaban.flow.start.seconds", loadTime.toString("ss"));
+        overrideProps.put("azkaban.flow.start.milliseconds", loadTime.toString("SSS"));
+        overrideProps.put("azkaban.flow.start.timezone", loadTime.toString("ZZZZ"));
 
         return flow.createExecutableFlow(flowId, overrideProps, new HashMap<String, ExecutableFlow>());
     }

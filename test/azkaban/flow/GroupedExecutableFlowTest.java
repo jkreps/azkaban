@@ -1,9 +1,7 @@
 package azkaban.flow;
 
-import azkaban.app.JobDescriptor;
-import azkaban.app.JobFactory;
-import azkaban.app.JobWrappingFactory;
-import azkaban.common.jobs.Job;
+import azkaban.app.JobManager;
+import azkaban.common.utils.Props;
 import org.easymock.Capture;
 import org.easymock.IAnswer;
 import org.easymock.classextension.EasyMock;
@@ -13,7 +11,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -406,11 +403,11 @@ public class GroupedExecutableFlowTest
     {
         EasyMock.replay(mockFlow1, mockFlow2);
 
-        final JobFactory factory = EasyMock.createStrictMock(JobFactory.class);
+        final JobManager factory = EasyMock.createStrictMock(JobManager.class);
         EasyMock.replay(factory);
 
-        final IndividualJobExecutableFlow completedJob1 = new IndividualJobExecutableFlow("blah", "blah", factory);
-        final IndividualJobExecutableFlow completedJob2 = new IndividualJobExecutableFlow("blah", "blah", factory);
+        final IndividualJobExecutableFlow completedJob1 = new IndividualJobExecutableFlow("blah", "blah", new Props(), factory);
+        final IndividualJobExecutableFlow completedJob2 = new IndividualJobExecutableFlow("blah", "blah", new Props(), factory);
 
         flow = new GroupedExecutableFlow(
                 "blah",
