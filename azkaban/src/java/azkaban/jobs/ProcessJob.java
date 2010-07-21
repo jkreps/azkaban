@@ -52,7 +52,6 @@ public class ProcessJob extends AbstractJob implements Job {
 
     private final String _jobPath;
     private final String _name;
-    private final JobDescriptor _descriptor;
     private volatile Props _props;
     private volatile Process _process;
     private volatile boolean _isComplete;
@@ -63,7 +62,6 @@ public class ProcessJob extends AbstractJob implements Job {
         this._isComplete = false;
         this._jobPath = descriptor.getFullPath();
         this._name = descriptor.getId();
-        this._descriptor = descriptor;
     }
 
     public void run() {
@@ -77,7 +75,7 @@ public class ProcessJob extends AbstractJob implements Job {
 
         String cwd = getWorkingDirectory();
         // Create process file
-        File file = createFlattenedPropsFile(_descriptor, cwd);
+        File file = createFlattenedPropsFile(cwd, _props, _name);
         System.out.println("Temp file created " + file.getAbsolutePath());
 
         env.put(JOB_PROP_ENV, file.getAbsolutePath());
@@ -135,12 +133,12 @@ public class ProcessJob extends AbstractJob implements Job {
         file.delete();
     }
 
-    private File createFlattenedPropsFile(JobDescriptor desc, String workingDir) {
-        File directory = new File(workingDir);
-        File tempFile = null;
+    private File createFlattenedPropsFile(String workingDir, final Props props, final String id) {
+        final File directory = new File(workingDir);
+        final File tempFile;
         try {
-            tempFile = File.createTempFile(desc.getId() + "_", "_tmp", directory);
-            desc.getProps().storeFlattened(tempFile);
+            tempFile = File.createTempFile(id + "_", "_tmp", directory);
+            props.storeFlattened(tempFile);
         } catch(IOException e) {
             throw new RuntimeException("Failed to create temp property file ", e);
         }
@@ -288,10 +286,6 @@ public class ProcessJob extends AbstractJob implements Job {
 
     public String getJobName() {
         return _name;
-    }
-
-    public JobDescriptor getJobDescriptor() {
-        return _descriptor;
     }
 
     /**
