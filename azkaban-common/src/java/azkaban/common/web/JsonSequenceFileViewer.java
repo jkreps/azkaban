@@ -29,59 +29,57 @@ import voldemort.serialization.json.JsonTypeSerializer;
 
 public class JsonSequenceFileViewer extends HdfsSequenceFileViewer {
 
-	private static Logger logger = Logger.getLogger(JsonSequenceFileViewer.class);
-	
-	public boolean canReadFile(Reader reader) {
-		Text keySchema = reader.getMetadata().get(new Text("key.schema"));
-		Text valueSchema = reader.getMetadata().get(new Text("value.schema"));
+    private static Logger logger = Logger.getLogger(JsonSequenceFileViewer.class);
 
-		return keySchema != null && valueSchema != null;
-	}
+    public boolean canReadFile(Reader reader) {
+        Text keySchema = reader.getMetadata().get(new Text("key.schema"));
+        Text valueSchema = reader.getMetadata().get(new Text("value.schema"));
 
-	public void displaySequenceFile(SequenceFile.Reader reader,
-			PrintWriter output, int startLine, int endLine) throws IOException {
-		
-		if (logger.isDebugEnabled())	logger.debug("display json file");
+        return keySchema != null && valueSchema != null;
+    }
 
-		try {
-			BytesWritable keyWritable = new BytesWritable();
-			BytesWritable valueWritable = new BytesWritable();
-			Text keySchema = reader.getMetadata().get(new Text("key.schema"));
-			Text valueSchema = reader.getMetadata().get(
-					new Text("value.schema"));
+    public void displaySequenceFile(SequenceFile.Reader reader,
+                                    PrintWriter output,
+                                    int startLine,
+                                    int endLine) throws IOException {
 
-			JsonTypeSerializer keySerializer = new JsonTypeSerializer(
-					keySchema.toString());
-			JsonTypeSerializer valueSerializer = new JsonTypeSerializer(
-					valueSchema.toString());
+        if(logger.isDebugEnabled())
+            logger.debug("display json file");
 
-			// skip lines before the start line
-			for (int i = 1; i < startLine; i++)
-				reader.next(keyWritable, valueWritable);
+        try {
+            BytesWritable keyWritable = new BytesWritable();
+            BytesWritable valueWritable = new BytesWritable();
+            Text keySchema = reader.getMetadata().get(new Text("key.schema"));
+            Text valueSchema = reader.getMetadata().get(new Text("value.schema"));
 
-			// now actually output lines
-			for (int i = startLine; i <= endLine; i++) {
-				boolean readSomething = reader.next(keyWritable, valueWritable);
-				if (!readSomething)
-					break;
-				output.write(safeToString(keySerializer.toObject(keyWritable
-						.get())));
-				output.write("\t=>\t");
-				output.write(safeToString(valueSerializer
-						.toObject(valueWritable.get())));
-				output.write("\n");
-				output.flush();
-			}
-		} finally {
-			reader.close();
-		}
-	}
+            JsonTypeSerializer keySerializer = new JsonTypeSerializer(keySchema.toString());
+            JsonTypeSerializer valueSerializer = new JsonTypeSerializer(valueSchema.toString());
 
-	private String safeToString(Object value) {
-		if (value == null)
-			return "null";
-		else
-			return value.toString();
-	}
+            // skip lines before the start line
+            for(int i = 1; i < startLine; i++)
+                reader.next(keyWritable, valueWritable);
+
+            // now actually output lines
+            for(int i = startLine; i <= endLine; i++) {
+                boolean readSomething = reader.next(keyWritable, valueWritable);
+                if(!readSomething)
+                    break;
+                output.write(safeToString(keySerializer.toObject(keyWritable.get())));
+                output.write("\t=>\t");
+                output.write(safeToString(valueSerializer.toObject(valueWritable.get())));
+                output.write("\n");
+                output.flush();
+            }
+        } finally {
+            reader.close();
+        }
+    }
+
+    private String safeToString(Object value) {
+        if(value == null)
+            return "null";
+        else
+            return value.toString();
+    }
 
 }

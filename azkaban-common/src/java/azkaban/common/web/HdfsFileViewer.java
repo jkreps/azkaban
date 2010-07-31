@@ -24,9 +24,12 @@ import org.apache.hadoop.fs.Path;
 
 public interface HdfsFileViewer {
 
-	public boolean canReadFile(FileSystem fs, Path path);
+    public boolean canReadFile(FileSystem fs, Path path);
 
-	public void displayFile(FileSystem fs, Path path, OutputStream outStream,
-			int startLine, int endLine) throws IOException;
-	
+    public void displayFile(FileSystem fs,
+                            Path path,
+                            OutputStream outStream,
+                            int startLine,
+                            int endLine) throws IOException;
+
 }

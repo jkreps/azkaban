@@ -30,46 +30,50 @@ import org.apache.log4j.Logger;
 
 public class TextFileViewer implements HdfsFileViewer {
 
-	private static Logger logger = Logger.getLogger(TextFileViewer.class);
-	private HashSet<String> acceptedSuffix = new HashSet<String>();
+    private static Logger logger = Logger.getLogger(TextFileViewer.class);
+    private HashSet<String> acceptedSuffix = new HashSet<String>();
 
-	public TextFileViewer() {
-		acceptedSuffix.add(".txt");
-		acceptedSuffix.add(".csv");
-		acceptedSuffix.add(".props");
-		acceptedSuffix.add(".xml");
-		acceptedSuffix.add(".html");
-		acceptedSuffix.add(".json");
-		acceptedSuffix.add(".log");
-	}
+    public TextFileViewer() {
+        acceptedSuffix.add(".txt");
+        acceptedSuffix.add(".csv");
+        acceptedSuffix.add(".props");
+        acceptedSuffix.add(".xml");
+        acceptedSuffix.add(".html");
+        acceptedSuffix.add(".json");
+        acceptedSuffix.add(".log");
+    }
 
-	public boolean canReadFile(FileSystem fs, Path path) {
-		for (String suffix : acceptedSuffix) {
-			if (path.toString().endsWith(suffix)) {
-				return true;
-			}
-		}
+    public boolean canReadFile(FileSystem fs, Path path) {
+        for(String suffix: acceptedSuffix) {
+            if(path.toString().endsWith(suffix)) {
+                return true;
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public void displayFile(FileSystem fs, Path path, OutputStream outputStream,
-			int startLine, int endLine) throws IOException {
-		
-		if (logger.isDebugEnabled()) logger.debug("read in uncompressed text file");
-		InputStream inputStream = fs.open(path);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-		PrintWriter output = new PrintWriter(outputStream);
-		for (int i = 1; i < startLine; i++)
-			reader.readLine();
-		for (int i = startLine; i < endLine; i++) {
-			String line = reader.readLine();
-			if (line == null)
-				break;
-			output.write(line);
-			output.write("\n");
-		}
-		output.flush();
-		reader.close();
-	}
+    public void displayFile(FileSystem fs,
+                            Path path,
+                            OutputStream outputStream,
+                            int startLine,
+                            int endLine) throws IOException {
+
+        if(logger.isDebugEnabled())
+            logger.debug("read in uncompressed text file");
+        InputStream inputStream = fs.open(path);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        PrintWriter output = new PrintWriter(outputStream);
+        for(int i = 1; i < startLine; i++)
+            reader.readLine();
+        for(int i = startLine; i < endLine; i++) {
+            String line = reader.readLine();
+            if(line == null)
+                break;
+            output.write(line);
+            output.write("\n");
+        }
+        output.flush();
+        reader.close();
+    }
 }
