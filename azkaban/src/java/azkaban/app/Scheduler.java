@@ -519,18 +519,20 @@ public class Scheduler {
                                     + lastLogLineNum + " lines in the log are:\n");
 
                         /* append last N lines of the log file */
-                        String logFilePath = this._jobManager.getLogDir() + File.pathSeparator + logPath;
+                        String logFilePath = this._jobManager.getLogDir() + File.separator + logPath;
                         Vector<String> lastNLines = Utils.tail(logFilePath, 60);
 
-                        for(String line: lastNLines) {
-                            body.append(line + "\n");
+                        if (lastNLines != null) {
+                            for(String line: lastNLines) {
+                                body.append(line + "\n");
+                            }
                         }
                     }
 
                     errorNo++;
                 }
 
-                logger.error("\n\n error email body: \n" + body.toString() + "\n");
+                //logger.error("\n\n error email body: \n" + body.toString() + "\n");
 
                 _mailman.sendEmailIfPossible(senderAddress,
                                              emailList,
