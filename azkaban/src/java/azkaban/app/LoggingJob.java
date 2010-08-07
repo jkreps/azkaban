@@ -76,9 +76,12 @@ public class LoggingJob extends DelegatingJob {
         try {
             getInnerJob().run();
             succeeded = true;
-        } catch(Throwable t) {
-            _logger.error("Fatal error occurred while running job '" + jobName + "':", t);
-            throw new RuntimeException(t);
+        } catch(Exception e) {
+            _logger.error("Fatal error occurred while running job '" + jobName + "':", e);
+            if(e instanceof RuntimeException)
+                throw (RuntimeException) e;
+            else
+                throw new RuntimeException(e);
         } finally {
             long end = System.currentTimeMillis();
             Props props = new Props();
@@ -88,8 +91,9 @@ public class LoggingJob extends DelegatingJob {
             props.put("jobNotStaleException", Boolean.toString(jobNotStaleException));
             try {
                 props.storeLocal(new File(runLogDir, "run.properties"));
-            } catch (IOException e) {
-                _logger.warn(String.format("IOException when storing props to local dir[%s]", runLogDir), e);
+            } catch(IOException e) {
+                _logger.warn(String.format("IOException when storing props to local dir[%s]",
+                                           runLogDir), e);
                 throw new RuntimeException(e);
             }
 

@@ -532,4 +532,37 @@ public class JobManager {
 
         updateFlowManager();
     }
+
+    /**
+     * Load most recent execution of a job
+     * 
+     * @param jobId
+     * @return
+     */
+    public JobExecution loadMostRecentJobExecution(String jobId) {
+
+        JobExecution ret = null;
+        try {
+            List<JobExecution> list = this.loadJobExecutions(jobId);
+
+            if(list == null)
+                logger.warn("Job execution list for " + jobId + " is null");
+            else if(list.isEmpty())
+                logger.warn("Empty execution for job " + jobId);
+            else
+                ret = list.get(0); // get the most recent job execution
+        } catch(IOException e) {
+            logger.error("Error in loading job execution list: \n" + Utils.stackTrace(e) + "\n");
+        }
+        return ret;
+    }
+
+    /**
+     * Get the absolute path of the log directory
+     * 
+     * @return
+     */
+    public String getLogDir() {
+        return _logDir;
+    }
 }

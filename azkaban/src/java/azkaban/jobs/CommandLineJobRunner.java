@@ -22,7 +22,6 @@ import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
 import azkaban.flow.ExecutableFlow;
-import azkaban.flow.Flow;
 import azkaban.flow.FlowCallback;
 import azkaban.flow.FlowManager;
 import azkaban.flow.JobManagerFlowDeserializer;
@@ -179,13 +178,24 @@ public class CommandLineJobRunner {
                     {
                         if (status == Status.FAILED) {
                             System.out.printf("Job failed.%n");
-                            final Throwable exception = flowToRun.getException();
-
-                            if (exception == null) {
-                                System.out.println("flowToRun.getException() was null when it should not have been.  Please notify the Azkaban developers.");
+                            //final Throwable exception = flowToRun.getException();
+                            final Map<String, Throwable> exceptions = flowToRun.getExceptions();
+                            
+                            if (exceptions == null || exceptions.isEmpty()) {
+                                System.out.println("flowToRun.getExceptions() was null when it should not have been.  Please notify the Azkaban developers.");
                             }
 
-                            exception.printStackTrace();
+                            // exception.printStackTrace();
+                            int errorNum = 1;
+                            for ( Map.Entry<String, Throwable> entry: exceptions.entrySet()) {
+                                final String jobId = entry.getKey();
+                                final Throwable e = entry.getValue();
+                                
+                                System.err.println(errorNum + ".  " + jobId + "\n" );
+                                e.printStackTrace(System.err);
+                                System.err.println("\n\n");
+                                errorNum ++;
+                            }
                         }
 
                         countDown.countDown();

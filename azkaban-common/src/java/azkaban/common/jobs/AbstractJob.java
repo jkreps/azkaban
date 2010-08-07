@@ -18,7 +18,7 @@ package azkaban.common.jobs;
 
 import org.apache.log4j.Logger;
 
-public abstract class AbstractJob {
+public abstract class AbstractJob implements Job {
 
     private final String _id;
     private final Logger _log;

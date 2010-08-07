@@ -20,7 +20,9 @@ import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -36,7 +38,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
     private volatile DateTime startTime;
     private volatile DateTime endTime;
     private volatile Status jobState;
-    private volatile Throwable exception;
+    private volatile Map<String, Throwable> exceptions = new HashMap<String, Throwable>();
     private volatile List<FlowCallback> callbacksToCall = new ArrayList<FlowCallback>();
 
 
@@ -176,7 +178,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                     callbacksToCall = new ArrayList<FlowCallback>();
                     startTime = null;
                     endTime = null;
-                    exception = null;
+                    exceptions.clear();
             }
         }
 
@@ -233,9 +235,9 @@ public class ComposedExecutableFlow implements ExecutableFlow
     }
 
     @Override
-    public Throwable getException()
+    public Map<String,Throwable> getExceptions()
     {
-        return exception;
+        return exceptions;
     }
 
     public ExecutableFlow getDepender()
@@ -286,9 +288,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
 
             synchronized (sync) {
                 jobState = status;
-                if (status == Status.FAILED) {
-                    exception = depender.getException();
-                }
+                exceptions.putAll(depender.getExceptions());
                 callbackList = callbacksToCall;
             }
 
@@ -331,7 +331,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 case FAILED:
                     synchronized (sync) {
                         jobState = status;
-                        exception = dependee.getException();
+                         exceptions.putAll(dependee.getExceptions());
                         callbackList = callbacksToCall;
                     }
 

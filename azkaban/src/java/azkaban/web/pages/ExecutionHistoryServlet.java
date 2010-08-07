@@ -38,6 +38,9 @@ public class ExecutionHistoryServlet extends AbstractAzkabanServlet {
             IOException {
         final FlowManager allFlows = this.getApplication().getAllFlows();
 
+        /* set runtime properties from request and response*/
+        super.setRuntimeProperties (req, resp);
+        
         if (hasParam(req, "action")) {
             if ("restart".equals(getParam(req, "action")) && hasParam(req, "id")) {
                 try {

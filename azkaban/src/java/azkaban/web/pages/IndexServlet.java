@@ -16,7 +16,6 @@
 
 package azkaban.web.pages;
 
-import azkaban.app.AzkabanApplication;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -26,7 +25,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import azkaban.flow.ExecutableFlow;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
@@ -36,11 +34,12 @@ import org.joda.time.Minutes;
 import org.joda.time.ReadablePeriod;
 import org.joda.time.Seconds;
 
+import azkaban.app.AzkabanApplication;
 import azkaban.app.JobDescriptor;
 import azkaban.app.Scheduler.ScheduledJobAndInstance;
-import azkaban.web.AbstractAzkabanServlet;
-
 import azkaban.common.web.Page;
+import azkaban.flow.ExecutableFlow;
+import azkaban.web.AbstractAzkabanServlet;
 
 /**
  * The main page
@@ -57,7 +56,12 @@ public class IndexServlet extends AbstractAzkabanServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
+
+        /* set runtime properties from request and response */
+        super.setRuntimeProperties(req, resp);
+
         AzkabanApplication app = getApplication();
+        @SuppressWarnings("unused")
         Map<String, JobDescriptor> descriptors = app.getJobManager().loadJobDescriptors();
         Page page = newPage(req, resp, "azkaban/web/pages/index.vm");
         page.add("logDir", app.getLogDirectory());
@@ -73,6 +77,10 @@ public class IndexServlet extends AbstractAzkabanServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+
+        /* set runtime properties from request and response */
+        super.setRuntimeProperties(req, resp);
+
         AzkabanApplication app = getApplication();
         String action = getParam(req, "action");
         if("unschedule".equals(action)) {
@@ -89,6 +97,7 @@ public class IndexServlet extends AbstractAzkabanServlet {
     }
 
     private void cancelJob(AzkabanApplication app, HttpServletRequest req) throws ServletException {
+
         String jobId = getParam(req, "job");
         Collection<ScheduledJobAndInstance> executing = app.getScheduler().getExecutingJobs();
         for(ScheduledJobAndInstance curr: executing) {
@@ -97,11 +106,10 @@ public class IndexServlet extends AbstractAzkabanServlet {
             if(flowId.equals(jobId)) {
                 final String flowName = flow.getName();
                 try {
-                    if (flow.cancel()) {
+                    if(flow.cancel()) {
                         addMessage(req, "Cancelled " + flowName);
                         logger.info("Job '" + flowName + "' cancelled from gui.");
-                    }
-                    else {
+                    } else {
                         logger.info("Couldn't cancel flow '" + flowName + "' for some reason.");
                         addError(req, "Failed to cancel flow " + flowName + ".");
                     }
@@ -113,8 +121,9 @@ public class IndexServlet extends AbstractAzkabanServlet {
         }
     }
 
-    private void scheduleJobs(AzkabanApplication app, HttpServletRequest req, HttpServletResponse resp)
-            throws IOException, ServletException {
+    private void scheduleJobs(AzkabanApplication app,
+                              HttpServletRequest req,
+                              HttpServletResponse resp) throws IOException, ServletException {
         String[] jobNames = req.getParameterValues("jobs");
         if(!hasParam(req, "jobs")) {
             addError(req, "You must select at least one job to run.");
@@ -144,6 +153,7 @@ public class IndexServlet extends AbstractAzkabanServlet {
                 addMessage(req, job + " scheduled.");
             } else if(hasParam(req, "run_now")) {
                 boolean ignoreDeps = !hasParam(req, "include_deps");
+                @SuppressWarnings("unused")
                 ScheduledFuture<?> f = app.getScheduler().schedule(job, new DateTime(), ignoreDeps);
                 addMessage(req, "Running " + job);
             } else {

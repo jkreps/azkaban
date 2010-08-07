@@ -24,6 +24,7 @@ import java.util.Map;
 import azkaban.app.JobDescriptor;
 
 public class PigProcessJob extends JavaProcessJob {
+    
 	public static final String PIG_SCRIPT = "pig.script";
 	public static final String UDF_IMPORT = "udf.import.list";
 	public static final String PIG_PARAM_PREFIX = "param.";
@@ -35,7 +36,6 @@ public class PigProcessJob extends JavaProcessJob {
 
 	public PigProcessJob(JobDescriptor descriptor) {
 		super(descriptor);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override

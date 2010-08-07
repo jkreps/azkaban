@@ -17,13 +17,10 @@
 package azkaban.web.pages;
 
 import java.io.IOException;
-import java.util.Enumeration;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.io.filefilter.RegexFileFilter;
 
 import azkaban.common.web.Page;
 import azkaban.web.AbstractAzkabanServlet;

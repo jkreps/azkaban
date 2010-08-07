@@ -17,6 +17,19 @@
 package azkaban.app;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.log.Log4JLogChute;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
@@ -31,23 +44,16 @@ import azkaban.jobs.JavaJob;
 import azkaban.jobs.JavaProcessJob;
 import azkaban.jobs.PigProcessJob;
 import azkaban.jobs.ProcessJob;
+import azkaban.jobs.PythonJob;
+import azkaban.jobs.RubyJob;
+import azkaban.jobs.ScriptJob;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
 import azkaban.serialization.ExecutableFlowSerializer;
 import azkaban.serialization.de.ExecutableFlowDeserializer;
 import azkaban.serialization.de.JobFlowDeserializer;
+
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.List;
-import java.util.Map;
-import org.apache.log4j.Logger;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.log.Log4JLogChute;
-import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
 /**
  * Master application that runs everything
@@ -107,11 +113,14 @@ public class AzkabanApplication
                 new ReadWriteLockManager(),
                 _logsDir.getAbsolutePath(),
                 "java",
-                ImmutableMap.<String, Class<? extends Job>>of("java", JavaJob.class,
-                                                              "command", ProcessJob.class,
-                                                              "javaprocess", JavaProcessJob.class,
-                                                              "pig", PigProcessJob.class)
-        );
+                new ImmutableMap.Builder<String, Class<? extends Job>>()
+                  .put("java", JavaJob.class)
+                  .put("command", ProcessJob.class)
+                  .put("javaprocess", JavaProcessJob.class)
+                  .put("pig", PigProcessJob.class)
+                  .put("python", PythonJob.class) 
+                  .put("ruby", RubyJob.class)
+                  .put("script", ScriptJob.class).build());
 
         _hdfsUrl = defaultProps.getString("hdfs.instance.url", null);
         _jobManager = new JobManager(factory,
@@ -164,6 +173,16 @@ public class AzkabanApplication
                                         schedule,
                                         backup,
                                         schedulerThreads);
+        
+        /* set predefined log url prefix 
+        */
+        String server_url = defaultProps.getString("server.url", null) ;
+        if (server_url != null) {
+            if (server_url.endsWith("/"))
+                _scheduler.setRuntimeProperty(AppCommon.DEFAULT_LOG_URL_PREFIX, server_url + "logs?file=" );
+            else 
+                _scheduler.setRuntimeProperty(AppCommon.DEFAULT_LOG_URL_PREFIX, server_url + "/logs?file=" );
+        }
 
         this._velocityEngine = configureVelocityEngine(enableDevMode);
     }
@@ -313,5 +332,14 @@ public class AzkabanApplication
         }
 
         return lastId;
+    }
+
+    
+    public String getRuntimeProperty(String name) {
+        return _scheduler.getRuntimeProperty(name);
+    }
+
+    public void setRuntimeProperty(String key, String value) {
+        _scheduler.setRuntimeProperty(key, value);
     }
 }

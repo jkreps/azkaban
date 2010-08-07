@@ -18,9 +18,6 @@ package azkaban.util;
 
 import java.util.Iterator;
 
-/**
- *
- */
 public abstract class FoldLeft<InType, OutType>
 {
 

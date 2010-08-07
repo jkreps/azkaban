@@ -24,7 +24,9 @@ import org.joda.time.DateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -42,7 +44,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
     private volatile DateTime startTime;
     private volatile DateTime endTime;
     private volatile GroupedExecutableFlow.GroupedFlowCallback theGroupCallback;
-    private volatile Throwable exception;
+    private volatile Map<String,Throwable> exceptions = new HashMap<String, Throwable>();
 
     public GroupedExecutableFlow(String id, ExecutableFlow... flows)
     {
@@ -246,7 +248,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                     theGroupCallback = new GroupedFlowCallback();
                     startTime = null;
                     endTime = null;
-                    exception = null;
+                    exceptions.clear();
             }
         }
 
@@ -302,9 +304,9 @@ public class GroupedExecutableFlow implements ExecutableFlow
     }
 
     @Override
-    public Throwable getException()
+    public Map<String,Throwable> getExceptions()
     {
-        return exception;
+        return exceptions;
     }
 
     private void callCallbacks(final List<FlowCallback> callbacksList, final Status status)
@@ -359,9 +361,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
             }
             else if (jobState == Status.FAILED && notifiedCallbackAlready.compareAndSet(false, true)) {
                 for (ExecutableFlow flow : flows) {
-                    if (exception == null) {
-                        exception = flow.getException();
-                    }
+                    exceptions.putAll(flow.getExceptions());
                 }
                 callCallbacks(callbackList, Status.FAILED);
             }

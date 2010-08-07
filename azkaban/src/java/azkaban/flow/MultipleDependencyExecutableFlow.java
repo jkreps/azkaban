@@ -19,6 +19,7 @@ package azkaban.flow;
 import org.joda.time.DateTime;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -72,7 +73,7 @@ public class MultipleDependencyExecutableFlow implements ExecutableFlow
     public boolean reset()
     {
         final boolean actualFlowReset = actualFlow.reset();
-        final boolean groupFlowReset = true;
+        //final boolean groupFlowReset = true;
 
         for (ExecutableFlow flow : actualFlow.getChildren()) {
             flow.reset();
@@ -112,9 +113,9 @@ public class MultipleDependencyExecutableFlow implements ExecutableFlow
     }
 
     @Override
-    public Throwable getException()
+    public Map<String,Throwable> getExceptions()
     {
-        return actualFlow.getException();
+        return actualFlow.getExceptions();
     }
 
     @Override

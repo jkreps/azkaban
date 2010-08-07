@@ -19,6 +19,7 @@ package azkaban.flow;
 import org.joda.time.DateTime;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * An ExecutableFlow is a Flow object that has both the graph structure data as well as state required to execute the
@@ -117,9 +118,9 @@ public interface ExecutableFlow
 
 
     /**
-     * Gets the exception that caused this Flow to fail, if it has failed
+     * Gets exceptions that caused this Flow to fail, if it has failed
      *
-     * @return an exception if the Flow has failed, null otherwise
+     * @return a map of job name to an exception if the Flow has failed
      */
-    public Throwable getException();
+    public Map<String, Throwable> getExceptions();
 }

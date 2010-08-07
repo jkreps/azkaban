@@ -16,7 +16,7 @@
 
 package azkaban.common.jobs;
 
-import azkaban.common.utils.Props;
+
 
 /**
  * This interface defines a Raw Job interface. Each job defines

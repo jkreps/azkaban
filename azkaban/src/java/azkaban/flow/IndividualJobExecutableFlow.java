@@ -18,21 +18,18 @@ package azkaban.flow;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.joda.time.DateTime;
-
 import azkaban.app.JobManager;
 import azkaban.common.jobs.DelegatingJob;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 
-/**
- *
- */
-public class IndividualJobExecutableFlow implements ExecutableFlow
-{
+public class IndividualJobExecutableFlow implements ExecutableFlow {
 
     private static final AtomicLong threadCounter = new AtomicLong(0);
 
@@ -41,16 +38,17 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private final String name;
     private final JobManager jobManager;
     private final Props overrideProps;
-
     private volatile Status jobState;
     private volatile List<FlowCallback> callbacksToCall;
     private volatile DateTime startTime;
     private volatile DateTime endTime;
     private volatile Job job;
-    private volatile Throwable exception;
+    private volatile Map<String, Throwable> exceptions = new HashMap<String, Throwable>();
 
-    public IndividualJobExecutableFlow(String id, String name, Props overrideProps, JobManager jobManager)
-    {
+    public IndividualJobExecutableFlow(String id,
+                                       String name,
+                                       Props overrideProps,
+                                       JobManager jobManager) {
         this.id = id;
         this.name = name;
         this.jobManager = jobManager;
@@ -60,30 +58,26 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         callbacksToCall = new ArrayList<FlowCallback>();
         startTime = null;
         endTime = null;
-        exception = null;
     }
 
-	@Override
-    public String getId()
-    {
+    @Override
+    public String getId() {
         return id;
     }
 
     @Override
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
     public Props getOverrideProps() {
-		return overrideProps;
-	}
-    
+        return overrideProps;
+    }
+
     @Override
-    public void execute(FlowCallback callback)
-    {
-        synchronized (sync) {
-            switch (jobState) {
+    public void execute(FlowCallback callback) {
+        synchronized(sync) {
+            switch(jobState) {
                 case READY:
                     jobState = Status.RUNNING;
                     startTime = new DateTime();
@@ -104,82 +98,83 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
 
         job = jobManager.loadJob(getName(), overrideProps, true);
 
+        // One one thread should ever be able to get to this point because of
+        // management of jobState
+        // Thus, this should only ever get called once before the job finishes
+        // (at which point it could be reset)
+        // job = jobFactory.factorizeJob();
+
         final ClassLoader storeMyClassLoader = Thread.currentThread().getContextClassLoader();
 
-        if (job == null) {
+        if(job == null) {
             throw new RuntimeException("Cannot run a null job.  Probably an issue with the JobFactory?");
         }
 
-        Thread theThread = new Thread(
-                new Runnable()
-                {
+        Thread theThread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                final List<FlowCallback> callbackList;
+
+                try {
+                    job.run();
+                } catch(Exception e) {
+                    synchronized(sync) {
+                        jobState = Status.FAILED;
+                        // if (!exceptions.containsKey(job.getId()))
+                        exceptions.put(job.getId(), e);
+
+                        callbackList = callbacksToCall; // Get the reference
+                        // before leaving the
+                        // synchronized
+                    }
+                    callCallbacks(callbackList, jobState);
+
+                    throw new RuntimeException(e);
+                }
+
+                synchronized(sync) {
+                    jobState = Status.SUCCEEDED;
+                    callbackList = callbacksToCall; // Get the reference before
+                    // leaving the synchronized
+                }
+                callCallbacks(callbackList, jobState);
+            }
+
+            private void callCallbacks(final List<FlowCallback> callbackList, final Status status) {
+                if(endTime == null) {
+                    endTime = new DateTime();
+                }
+
+                Thread callbackThread = new Thread(new Runnable() {
+
                     @Override
-                    public void run()
-                    {
-                        final List<FlowCallback> callbackList;
-
-                        try {
-                            job.run();
-                        }
-                        catch (Exception e) {
-                            synchronized (sync) {
-                                jobState = Status.FAILED;
-                                exception = e;
-                                callbackList = callbacksToCall; // Get the reference before leaving the synchronized
+                    public void run() {
+                        for(FlowCallback callback: callbackList) {
+                            try {
+                                callback.completed(status);
+                            } catch(RuntimeException t) {
+                                // TODO: Figure out how to use the logger to log
+                                // that a callback threw an exception.
                             }
-                            callCallbacks(callbackList, jobState);
-
-                            throw new RuntimeException(e);
                         }
-
-                        synchronized (sync) {
-                            jobState = Status.SUCCEEDED;
-                            callbackList = callbacksToCall; // Get the reference before leaving the synchronized
-                        }
-                        callCallbacks(callbackList, jobState);
                     }
+                }, String.format("%s-callback", Thread.currentThread().getName()));
 
-                    private void callCallbacks(final List<FlowCallback> callbackList, final Status status)
-                    {
-                        if (endTime == null) {
-                            endTime = new DateTime();
-                        }
+                // Use the primary Azkaban classloader for callbacks
+                // This is only needed for JavaJobs, but won't hurt other
+                // instances, so do for everything
+                callbackThread.setContextClassLoader(storeMyClassLoader);
 
-                        Thread callbackThread = new Thread(
-                                new Runnable()
-                                {
-                                    @Override
-                                    public void run()
-                                    {
-                                        for (FlowCallback callback : callbackList) {
-                                            try {
-                                                callback.completed(status);
-                                            }
-                                            catch (RuntimeException t) {
-                                                // TODO: Figure out how to use the logger to log that a callback threw an exception.
-                                            }
-                                        }
-                                    }
-                                },
-                                String.format("%s-callback", Thread.currentThread().getName())
-                        );
-
-                        // Use the primary Azkaban classloader for callbacks
-                        // This is only needed for JavaJobs, but won't hurt other instances, so do for everything
-                        callbackThread.setContextClassLoader(storeMyClassLoader);
-
-                        callbackThread.start();
-                    }
-                },
-                String.format("%s thread-%s", job.getId(), threadCounter.getAndIncrement())
-        );
+                callbackThread.start();
+            }
+        }, String.format("%s thread-%s", job.getId(), threadCounter.getAndIncrement()));
 
         Job currJob = job;
-        while (true) {
-            if (currJob instanceof DelegatingJob) {
+        while(true) {
+            if(currJob instanceof DelegatingJob) {
                 currJob = ((DelegatingJob) currJob).getInnerJob();
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -188,10 +183,9 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     }
 
     @Override
-    public boolean cancel()
-    {
+    public boolean cancel() {
         final List<FlowCallback> callbacks;
-        synchronized (sync) {
+        synchronized(sync) {
             switch(jobState) {
                 case COMPLETED:
                 case SUCCEEDED:
@@ -204,33 +198,30 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
             }
         }
 
-        for (FlowCallback callback : callbacks) {
+        for(FlowCallback callback: callbacks) {
             callback.completed(Status.FAILED);
         }
 
         try {
-            if (job != null) {
+            if(job != null) {
                 job.cancel();
             }
 
             return true;
-        }
-        catch (Exception e) {
+        } catch(Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Status getStatus()
-    {
+    public Status getStatus() {
         return jobState;
     }
 
     @Override
-    public boolean reset()
-    {
-        synchronized (sync) {
-            switch (jobState) {
+    public boolean reset() {
+        synchronized(sync) {
+            switch(jobState) {
                 case RUNNING:
                     return false;
                 default:
@@ -238,7 +229,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                     callbacksToCall = new ArrayList<FlowCallback>();
                     startTime = null;
                     endTime = null;
-                    exception = null;
+                    exceptions.clear();
             }
         }
 
@@ -246,10 +237,9 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     }
 
     @Override
-    public boolean markCompleted()
-    {
-        synchronized (sync) {
-            switch (jobState) {
+    public boolean markCompleted() {
+        synchronized(sync) {
+            switch(jobState) {
                 case RUNNING:
                     return false;
                 default:
@@ -260,48 +250,38 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     }
 
     @Override
-    public boolean hasChildren()
-    {
+    public boolean hasChildren() {
         return false;
     }
 
     @Override
-    public List<ExecutableFlow> getChildren()
-    {
+    public List<ExecutableFlow> getChildren() {
         return Collections.emptyList();
     }
 
     @Override
-    public String toString()
-    {
-        return "IndividualJobExecutableFlow{" +
-               "job=" + job +
-               ", jobState=" + jobState +
-               '}';
+    public String toString() {
+        return "IndividualJobExecutableFlow{" + "job=" + job + ", jobState=" + jobState + '}';
     }
 
     @Override
-    public DateTime getStartTime()
-    {
+    public DateTime getStartTime() {
         return startTime;
     }
 
     @Override
-    public DateTime getEndTime()
-    {
+    public DateTime getEndTime() {
         return endTime;
     }
 
     @Override
-    public Throwable getException()
-    {
-        return exception;
+    public Map<String, Throwable> getExceptions() {
+        return exceptions;
     }
 
-    IndividualJobExecutableFlow setStatus(Status newStatus)
-    {
-        synchronized (sync) {
-            switch (jobState) {
+    IndividualJobExecutableFlow setStatus(Status newStatus) {
+        synchronized(sync) {
+            switch(jobState) {
                 case READY:
                     jobState = newStatus;
                     break;
@@ -313,15 +293,13 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         return this;
     }
 
-    IndividualJobExecutableFlow setStartTime(DateTime startTime)
-    {
+    IndividualJobExecutableFlow setStartTime(DateTime startTime) {
         this.startTime = startTime;
 
         return this;
     }
 
-    IndividualJobExecutableFlow setEndTime(DateTime endTime)
-    {
+    IndividualJobExecutableFlow setEndTime(DateTime endTime) {
         this.endTime = endTime;
 
         return this;

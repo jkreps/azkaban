@@ -17,6 +17,7 @@
 package azkaban.web;
 
 import azkaban.app.AzkabanApplication;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,6 +94,21 @@ public class AbstractAzkabanServlet extends HttpServlet {
         page.add(AZKABAN_NAME, _app.getAppInstanceName());
         
         return page;
+    }
+
+    /**
+     * set runtime properties
+     * 
+     * @param req
+     * @param resp
+     */
+    protected void setRuntimeProperties(HttpServletRequest req, HttpServletResponse resp) {
+        
+        if(_app != null &&  _app.getRuntimeProperty(azkaban.app.AppCommon.LOG_URL_PREFIX) == null ) {  
+            StringBuffer requestUrl = req.getRequestURL();
+            requestUrl.append("logs?file=");
+             _app.setRuntimeProperty (azkaban.app.AppCommon.LOG_URL_PREFIX, requestUrl.toString());
+        }
     }
 
 }

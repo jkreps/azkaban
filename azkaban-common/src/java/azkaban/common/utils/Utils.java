@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -36,15 +37,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -256,7 +257,7 @@ public class Utils {
         Class<?>[] argTypes = getTypes(args);
         try {
             @SuppressWarnings("unused")
-			Constructor<?> cons = c.getConstructor(argTypes);
+            Constructor<?> cons = c.getConstructor(argTypes);
         } catch(NoSuchMethodException e) {
             return false;
         }
@@ -342,7 +343,7 @@ public class Utils {
     }
 
     public static String stackTrace(Throwable t) {
-        if (t == null) {
+        if(t == null) {
             return "Utils.stackTrace(...) -- Throwable was null.";
         }
         StringWriter writer = new StringWriter();
@@ -406,4 +407,134 @@ public class Utils {
         return temp;
     }
 
+    /**
+     * Read in content of a file and get the last *lineCount* lines. It is
+     * equivalent to *tail* command
+     * 
+     * @param filename           input file name
+     * @param lineCount          desired number of tailing lines
+     * @return vector of the last *lineCount* lines
+     */
+    public static Vector<String> tail(String filename, int lineCount) {
+        return tail(filename, lineCount, 2000);
+    }
+
+    /**
+     * Read in content of a file and get the last *lineCount* lines. It is
+     * equivalent to *tail* command
+     * 
+     * @param filename
+     * @param lineCount
+     * @param chunkSize
+     * @return
+     */
+    public static Vector<String> tail(String filename, int lineCount, int chunkSize) {
+        try {
+            // read in content of the file
+            RandomAccessFile file = new RandomAccessFile(filename, "r");
+            // destination vector
+            Vector<String> lastNLines = new Vector<String>();
+            // current position
+            long currPos = file.length() - 1;
+            long startPos;
+            byte[] byteArray = new byte[chunkSize];
+
+            // read in content of the file in reverse order
+            while(true) {
+                // read in from *fromPos*
+                startPos = currPos - chunkSize;
+
+                if(startPos <= 0) { // toward the beginning of the file
+                    file.seek(0);
+                    file.read(byteArray, 0, (int) currPos); // only read in
+                                                            // curPos bytes
+                    parseLinesFromLast(byteArray, 0, (int) currPos, lineCount, lastNLines);
+                    break;
+                } else {
+                    file.seek(startPos);
+                    if(byteArray == null)
+                        byteArray = new byte[chunkSize];
+                    file.readFully(byteArray);
+                    if(parseLinesFromLast(byteArray, lineCount, lastNLines)) {
+                        break; // we got the last *lineCount* lines
+                    }
+
+                    // remove the last element in lastNLines for it might be an
+                    // incomplete line
+                    String lastLine = lastNLines.get(lastNLines.size() - 1);
+                    lastNLines.remove(lastNLines.size() - 1);
+
+                    // move the current position
+                    currPos = startPos + lastLine.getBytes().length;
+                }
+            }
+
+            // reverse the order of elements in lastNLines
+            Collections.reverse(lastNLines);
+            return lastNLines;
+        } catch(Exception e) {
+            return null;
+        }
+
+    }
+
+    /**
+     * Parse lines in byteArray and store the last *lineCount* lines in
+     * *lastNLines*
+     * 
+     * @param byteArray                 source byte array
+     * @param lineCount                   desired number of lines
+     * @param lastNLines                vector of last N lines
+     * @return true     indicates we get *lineCount* lines 
+     *                false     otherwise
+     */
+
+    protected static boolean parseLinesFromLast(byte[] byteArray,
+                                                int lineCount,
+                                                Vector<String> lastNLines) {
+        return parseLinesFromLast(byteArray, 0, byteArray.length, lineCount, lastNLines);
+    }
+
+    /**
+     * Parse lines in byteArray and store the last *lineCount* lines in
+     * *lastNLines*
+     * 
+     * @param byteArray         source byte array
+     * @param offset                offset of the byte array
+     * @param length                length of the byte array
+     * @param lineCount             desired number of lines
+     * @param lastNLines        vector of last N lines
+     * @return true         indicates we get *lineCount* lines 
+     *                false         otherwise
+     */
+    protected static boolean parseLinesFromLast(byte[] byteArray,
+                                                int offset,
+                                                int length,
+                                                int lineCount,
+                                                Vector<String> lastNLines) {
+
+        if(lastNLines.size() >= lineCount)
+            return true;
+
+        // convert byte array to string
+        String lastNChars = new String(byteArray, offset, length);
+
+        // reverse the string
+        StringBuffer sb = new StringBuffer(lastNChars);
+        lastNChars = sb.reverse().toString();
+
+        // tokenize the string using "\n"
+        StringTokenizer tokens = new StringTokenizer(lastNChars, "\n");
+
+        // append lines to lastNLines
+        while(tokens.hasMoreTokens()) {
+            StringBuffer sbLine = new StringBuffer((String) tokens.nextToken());
+            lastNLines.add(sbLine.reverse().toString());
+            if(lastNLines.size() == lineCount) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
