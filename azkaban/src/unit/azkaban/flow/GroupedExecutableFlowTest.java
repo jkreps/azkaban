@@ -183,7 +183,7 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow1.getExceptions()).andReturn(theExceptions).times(1);
 
         /**** Setup mockFlow2 ****/
-        EasyMock.expect(mockFlow2.getExceptions()).andReturn(theExceptions).times(1);
+        EasyMock.expect(mockFlow2.getExceptions()).andReturn(emptyExceptions).times(1);
         EasyMock.replay(mockFlow1, mockFlow2);
 
         /**** Start the test ****/
@@ -197,19 +197,20 @@ public class GroupedExecutableFlowTest
 
         Assert.assertTrue("Callback wasn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(theExceptions, flow.getExceptions());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan)
         {
             @Override
-            protected void theCallback(Status status)
-            {
+            protected void theCallback(Status status)  {
                 Assert.assertEquals(Status.FAILED, status);
             }
         });
 
         Assert.assertTrue("Callback wasn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(theExceptions, flow.getExceptions());
 
         Assert.assertTrue("Expected to be able to reset the flow", flow.reset());
         Assert.assertEquals(Status.READY, flow.getStatus());
@@ -271,7 +272,14 @@ public class GroupedExecutableFlowTest
             }
         }).times(2);
 
-        EasyMock.expect(mockFlow2.getExceptions()).andReturn(theExceptions).times(1);
+      final RuntimeException e1 = new RuntimeException();
+      final RuntimeException e2 = new RuntimeException();
+      
+      final Map<String, Throwable> e1s = new HashMap<String, Throwable>();
+      e1s.put("e1", e1);
+      e1s.put("e2", e2);
+
+      EasyMock.expect(mockFlow2.getExceptions()).andReturn(e1s).times(1);
 
         EasyMock.replay(mockFlow1, mockFlow2);
 
@@ -286,6 +294,7 @@ public class GroupedExecutableFlowTest
 
         Assert.assertTrue("Callback wasn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(e1s, flow.getExceptions());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan)
@@ -300,6 +309,7 @@ public class GroupedExecutableFlowTest
 
         Assert.assertTrue("Callback wasn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
+        Assert.assertEquals(e1s, flow.getExceptions());
 
         Assert.assertTrue("Expected to be able to reset the flow", flow.reset());
         Assert.assertEquals(Status.READY, flow.getStatus());
@@ -876,4 +886,113 @@ public class GroupedExecutableFlowTest
         );
         Assert.assertEquals(emptyExceptions, flow.getExceptions());
     }
+    
+    
+    
+    @Test
+    public void testBothFailured() throws Exception
+    {
+    
+      final RuntimeException e1 = new RuntimeException();
+      final RuntimeException e2 = new RuntimeException();
+      
+      final Map<String, Throwable> e1s = new HashMap<String, Throwable>();
+      e1s.put("e1", e1);
+      
+      final Map<String, Throwable> e2s = new HashMap<String, Throwable>();
+      e2s.put("e2", e2);
+      
+      final Map<String, Throwable> expected = new HashMap<String, Throwable>();
+      expected.putAll(e1s);
+      expected.putAll(e2s);
+      
+      final AtomicLong numJobsComplete = new AtomicLong(0);
+
+      /**** Setup mockFlow1 ****/
+      final Capture<FlowCallback> flow1Callback = new Capture<FlowCallback>();
+      mockFlow1.execute(EasyMock.capture(flow1Callback));
+      EasyMock.expectLastCall().andAnswer(new IAnswer<Void>() {
+          @Override
+          public Void answer() throws Throwable {
+              Assert.assertEquals(Status.RUNNING, flow.getStatus());
+              Assert.assertEquals(1, numJobsComplete.incrementAndGet());
+
+              flow1Callback.getValue().completed(Status.FAILED);
+
+              return null;
+          }
+      }).once();
+
+      EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).times(2);
+      EasyMock.expect(mockFlow1.getExceptions()).andReturn(e1s).times(1);
+
+      /**** Setup mockFlow2 ****/
+      final Capture<FlowCallback> flow2Callback = new Capture<FlowCallback>();
+      mockFlow2.execute(EasyMock.capture(flow2Callback));
+      EasyMock.expectLastCall().andAnswer(new IAnswer<Void>() {
+          @Override
+          public Void answer() throws Throwable {
+              Assert.assertEquals(Status.RUNNING, flow.getStatus());
+              Assert.assertEquals(2, numJobsComplete.incrementAndGet());
+
+              flow2Callback.getValue().completed(Status.FAILED);
+
+              return null;
+          }
+      }).once();
+
+      EasyMock.expect(mockFlow2.getStatus()).andAnswer(new IAnswer<Status>()
+      {
+          private volatile AtomicInteger count = new AtomicInteger(0);
+
+          @Override
+          public Status answer() throws Throwable
+          {
+              switch (count.getAndIncrement()) {
+                  case 0: return Status.READY;
+                  case 1: return Status.FAILED;
+                  default: Assert.fail("mockFlow2.getStatus() should only be called 2 times.");
+              }
+              return null;
+          }
+      }).times(2);
+
+    EasyMock.expect(mockFlow2.getExceptions()).andReturn(e2s).times(1);
+
+      EasyMock.replay(mockFlow1, mockFlow2);
+
+      /**** Start the test ****/
+      AtomicBoolean callbackRan = new AtomicBoolean(false);
+      flow.execute(new OneCallFlowCallback(callbackRan) {
+          @Override
+          public void theCallback(Status status) {
+              Assert.assertEquals(Status.FAILED, status);
+          }
+      });
+
+      Assert.assertTrue("Callback wasn't run.", callbackRan.get());
+      Assert.assertEquals(Status.FAILED, flow.getStatus());
+
+      callbackRan = new AtomicBoolean(false);
+      flow.execute(new OneCallFlowCallback(callbackRan)
+      {
+          @Override
+          protected void theCallback(Status status)
+          {
+              Assert.assertEquals(Status.FAILED, status);
+              Assert.assertEquals(2, numJobsComplete.get());
+          }
+      });
+
+      Assert.assertTrue("Callback wasn't run.", callbackRan.get());
+      Assert.assertEquals(Status.FAILED, flow.getStatus());
+      Assert.assertEquals(expected, flow.getExceptions());
+
+      Assert.assertTrue("Expected to be able to reset the flow", flow.reset());
+      Assert.assertEquals(Status.READY, flow.getStatus());
+      Assert.assertEquals(emptyExceptions, flow.getExceptions());
+
+    
+    }
+
 }

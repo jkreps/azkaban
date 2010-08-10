@@ -149,7 +149,7 @@
 		<mkdir dir="${unit.report.dir}" />
 		<mkdir dir="${unit.html.dir}" />
 
-		<junit printsummary="yes" showoutput="no" failureProperty="unit.failure" >
+		<junit printsummary="yes" showoutput="yes" failureProperty="unit.failure" >
 			<sysproperty key="tests.to.run" value="${tests.to.run} "/>
 			<jvmarg value="-Xms256m" />
 			<jvmarg value="-Xmx1g" />
@@ -165,13 +165,13 @@
 			</batchtest>
 		</junit>
 
-		<fail message="Unit test(s) failed!" if="unit.failure" />
 
 		<junitreport todir="${unit.html.dir}" >
 			<fileset dir="${unit.report.dir}" > <include name="TEST-*.xml"/> </fileset>
 			<report todir="${unit.html.dir}" format="frames"/>
 		</junitreport> 
 
+		<fail message="Unit test(s) failed!" if="unit.failure" />
 	</target>
 
 	<target name="snapshot"

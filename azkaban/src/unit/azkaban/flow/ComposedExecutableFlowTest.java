@@ -642,4 +642,5 @@ public class ComposedExecutableFlowTest
         Assert.assertFalse("Expected cancel to be UN-successful", flow.cancel());
         Assert.assertEquals(emptyExceptions, flow.getExceptions());
     }
+
 }
