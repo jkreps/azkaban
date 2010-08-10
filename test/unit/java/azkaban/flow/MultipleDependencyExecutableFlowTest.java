@@ -6,10 +6,12 @@ import org.easymock.classextension.EasyMock;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -20,6 +22,16 @@ public class MultipleDependencyExecutableFlowTest
     private volatile ExecutableFlow dependeeFlow;
     private MultipleDependencyExecutableFlow flow;
 
+   private static Map<String,Throwable> theExceptions;
+   private static Map<String, Throwable> emptyExceptions;
+   
+   @BeforeClass
+   public static void init() throws Exception {
+     theExceptions = new HashMap<String,Throwable>();
+     theExceptions.put("main", new RuntimeException());
+     emptyExceptions = new HashMap<String, Throwable>();
+   }
+    
     @Before
     public void setUp() throws Exception
     {
@@ -85,6 +97,8 @@ public class MultipleDependencyExecutableFlowTest
             }
         }).once();
 
+        EasyMock.expect(dependerFlow.getExceptions()).andReturn(emptyExceptions).times(1);
+        
         EasyMock.replay(dependerFlow, dependeeFlow);
 
         Assert.assertEquals(Status.READY, flow.getStatus());
@@ -101,7 +115,7 @@ public class MultipleDependencyExecutableFlowTest
         Assert.assertTrue("Internal flow executes never ran.", dependeeRan.get());
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
-        Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(emptyExceptions, flow.getExceptions());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan) {
@@ -114,13 +128,13 @@ public class MultipleDependencyExecutableFlowTest
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
-        Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(emptyExceptions, flow.getExceptions());
     }
 
     @Test
     public void testFailureInDependee() throws Exception
     {
-        final RuntimeException theException = new RuntimeException();
+        //final RuntimeException theException = new RuntimeException();
         final AtomicBoolean dependeeRan = new AtomicBoolean(false);
 
         final Capture<FlowCallback> dependeeCallback = new Capture<FlowCallback>();
@@ -140,7 +154,7 @@ public class MultipleDependencyExecutableFlowTest
         }).once();
 
         EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.FAILED).once();
-        EasyMock.expect(dependeeFlow.getException()).andReturn(theException).once();
+        EasyMock.expect(dependeeFlow.getExceptions()).andReturn(theExceptions).once();
 
         EasyMock.replay(dependerFlow, dependeeFlow);
 
@@ -158,7 +172,7 @@ public class MultipleDependencyExecutableFlowTest
         Assert.assertTrue("Internal flow executes never ran.", dependeeRan.get());
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
-        Assert.assertEquals(theException, flow.getException());
+        Assert.assertEquals(theExceptions, flow.getExceptions());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan) {
@@ -171,7 +185,7 @@ public class MultipleDependencyExecutableFlowTest
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
-        Assert.assertEquals(theException, flow.getException());
+        Assert.assertEquals(theExceptions, flow.getExceptions());
 
         EasyMock.verify(dependerFlow, dependeeFlow);
         EasyMock.reset(dependerFlow, dependeeFlow);
@@ -182,14 +196,14 @@ public class MultipleDependencyExecutableFlowTest
 
         Assert.assertTrue("Expected to be able to reset the flow", flow.reset());
         Assert.assertEquals(Status.READY, flow.getStatus());
-        Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(emptyExceptions, flow.getExceptions());
     }
 
     @Test
     public void testFailureInDepender() throws Exception
     {
-        final RuntimeException theException = new RuntimeException();
-        final AtomicBoolean dependeeRan = new AtomicBoolean(false);
+       
+      final AtomicBoolean dependeeRan = new AtomicBoolean(false);
 
         final Capture<FlowCallback> dependeeCallback = new Capture<FlowCallback>();
         dependeeFlow.execute(EasyMock.capture(dependeeCallback));
@@ -224,7 +238,7 @@ public class MultipleDependencyExecutableFlowTest
                 return null;
             }
         }).once();
-        EasyMock.expect(dependerFlow.getException()).andReturn(theException).once();
+        EasyMock.expect(dependerFlow.getExceptions()).andReturn(theExceptions).once();
 
         EasyMock.replay(dependerFlow, dependeeFlow);
 
@@ -242,7 +256,7 @@ public class MultipleDependencyExecutableFlowTest
         Assert.assertTrue("Internal flow executes never ran.", dependeeRan.get());
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
-        Assert.assertEquals(theException, flow.getException());
+        Assert.assertEquals(theExceptions, flow.getExceptions());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan) {
@@ -255,7 +269,7 @@ public class MultipleDependencyExecutableFlowTest
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
-        Assert.assertEquals(theException, flow.getException());
+        Assert.assertEquals(theExceptions, flow.getExceptions());
 
         EasyMock.verify(dependerFlow, dependeeFlow);
         EasyMock.reset(dependerFlow, dependeeFlow);
@@ -266,7 +280,7 @@ public class MultipleDependencyExecutableFlowTest
 
         Assert.assertTrue("Expected to be able to reset the flow", flow.reset());
         Assert.assertEquals(Status.READY, flow.getStatus());
-        Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(emptyExceptions, flow.getExceptions());
     }
 
     @Test
@@ -321,6 +335,8 @@ public class MultipleDependencyExecutableFlowTest
             }
         }).once();
 
+        EasyMock.expect(dependerFlow.getExceptions()).andReturn(emptyExceptions).times(1);
+        
         EasyMock.replay(dependerFlow, dependeeFlow);
 
         Assert.assertEquals(Status.READY, flow.getStatus());
@@ -340,7 +356,7 @@ public class MultipleDependencyExecutableFlowTest
         Assert.assertTrue("dependeeFlow, upon completion, sends another execute() call to the flow.  " +
                           "The callback from that execute call was apparently not called.",
                           executeCallWhileStateWasRunningHadItsCallbackCalled.get());
-        Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(emptyExceptions, flow.getExceptions());
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(new OneCallFlowCallback(callbackRan) {
@@ -353,7 +369,7 @@ public class MultipleDependencyExecutableFlowTest
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
-        Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(emptyExceptions, flow.getExceptions());
     }
 
     @Test

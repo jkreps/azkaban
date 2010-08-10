@@ -3,13 +3,17 @@ package azkaban.flow;
 import azkaban.app.JobManager;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
+
 import org.easymock.IAnswer;
 import org.easymock.classextension.EasyMock;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,6 +30,18 @@ public class IndividualJobExecutableFlowTest
     private volatile AtomicBoolean assertionViolated;
     private volatile String reason;
 
+    private static Throwable theException;
+    private static Map<String,Throwable> theExceptions;
+    private static Map<String, Throwable> emptyExceptions;
+    
+    @BeforeClass
+    public static void init() throws Exception {
+      theException = new RuntimeException();
+      theExceptions = new HashMap<String,Throwable>();
+      theExceptions.put("blah", theException);
+      emptyExceptions = new HashMap<String, Throwable>();
+    }
+    
     @Before
     public void setUp()
     {
@@ -42,6 +58,7 @@ public class IndividualJobExecutableFlowTest
         EasyMock.verify(jobManager);
     }
 
+    
     @Test
     public void testSanity() throws Throwable
     {
@@ -92,7 +109,7 @@ public class IndividualJobExecutableFlowTest
 
         completionLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
-        Assert.assertEquals(null, executableFlow.getException());
+        Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
 
         EasyMock.verify(mockJob);
 
@@ -100,10 +117,11 @@ public class IndividualJobExecutableFlowTest
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
     }
 
+
     @Test
     public void testFailure() throws Throwable
     {
-        final RuntimeException theException = new RuntimeException("Fail!");
+                
         final CountDownLatch completionLatch = new CountDownLatch(1);
 
         final Job mockJob = EasyMock.createMock(Job.class);
@@ -111,8 +129,9 @@ public class IndividualJobExecutableFlowTest
         final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", overrideProps, jobManager);
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("failure Job").once();
-
+        EasyMock.expect(mockJob.getId()).andReturn("blah").times(2);
+        
+        
         mockJob.run();
         EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
         {
@@ -120,15 +139,15 @@ public class IndividualJobExecutableFlowTest
             public Void answer() throws Throwable
             {
                 Assert.assertEquals(Status.RUNNING, executableFlow.getStatus());
-
                 throw theException;
             }
         }).once();
-
+        
         EasyMock.replay(mockJob, jobManager);
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
-
+        Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
+       
         executableFlow.execute(new FlowCallback()
         {
             @Override
@@ -142,24 +161,26 @@ public class IndividualJobExecutableFlowTest
             public void completed(Status status)
             {
                 completionLatch.countDown();
+                Assert.assertEquals(theExceptions, executableFlow.getExceptions());
                 if (Status.FAILED != status) {
                     assertionViolated.set(true);
                     reason = String.format("In executableFlow Callback: status[%s] != Status.FAILED", status);
                 }
             }
-        });
+        } );
 
         completionLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.FAILED, executableFlow.getStatus());
-        Assert.assertEquals(theException, executableFlow.getException());
+        Assert.assertEquals(theExceptions, executableFlow.getExceptions());
 
         EasyMock.verify(mockJob);
 
         Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
-        Assert.assertEquals(null, executableFlow.getException());
+        Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
     }
 
+    
     @Test
     public void testNoChildren() throws Exception
     {
@@ -170,6 +191,7 @@ public class IndividualJobExecutableFlowTest
         Assert.assertTrue("IndividualJobExecutableFlow objects should not return any children.", executableFlow.getChildren().isEmpty());
     }
 
+    
     @Test
     public void testAllExecuteCallbacksCalledOnSuccess() throws Throwable
     {
@@ -230,7 +252,7 @@ public class IndividualJobExecutableFlowTest
         firstCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
         secondCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
-        Assert.assertEquals(null, executableFlow.getException());
+        Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
 
         EasyMock.verify(mockJob);
 
@@ -241,10 +263,10 @@ public class IndividualJobExecutableFlowTest
 
     }
 
+    
     @Test
     public void testAllExecuteCallbacksCalledOnFailure() throws Throwable
     {
-        final RuntimeException theException = new RuntimeException();
         final CountDownLatch firstCallbackLatch = new CountDownLatch(1);
         final CountDownLatch secondCallbackLatch = new CountDownLatch(1);
 
@@ -253,7 +275,7 @@ public class IndividualJobExecutableFlowTest
         final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", overrideProps, jobManager);
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+        EasyMock.expect(mockJob.getId()).andReturn("blah").times(2);
 
         mockJob.run();
         EasyMock.expectLastCall().andThrow(theException).once();
@@ -293,7 +315,7 @@ public class IndividualJobExecutableFlowTest
         firstCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
         secondCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.FAILED, executableFlow.getStatus());
-        Assert.assertEquals(theException, executableFlow.getException());
+        Assert.assertEquals(theExceptions, executableFlow.getExceptions());
 
         EasyMock.verify(mockJob);
 
@@ -301,10 +323,11 @@ public class IndividualJobExecutableFlowTest
         Assert.assertTrue("Second callback wasn't called?", secondCallbackCalled.get());
         Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
-        Assert.assertEquals(null, executableFlow.getException());
+        Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
 
     }
 
+    
     @Test
     public void testReset() throws Exception
     {
@@ -355,7 +378,7 @@ public class IndividualJobExecutableFlowTest
 
         completionLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
-        Assert.assertEquals(null, executableFlow.getException());
+        Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
 
         EasyMock.verify(mockJob, jobManager);
         EasyMock.reset(mockJob, jobManager);
@@ -406,7 +429,7 @@ public class IndividualJobExecutableFlowTest
 
         completionLatch2.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
-        Assert.assertEquals(null, executableFlow.getException());
+        Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
 
         EasyMock.verify(mockJob);
     }
@@ -542,4 +565,5 @@ public class IndividualJobExecutableFlowTest
 
         Assert.assertTrue("Expected callback to be called once.", runOnce.get());
     }
+    
 }

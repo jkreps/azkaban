@@ -12,14 +12,20 @@
 	<property name="module.dist.base" value="${batch.base.dir}/${dist.dir}/azkaban" />
 	<property name="module.dist.dir.war" value="${batch.base.dir}/${dist.dir}/war" />
 	<property name="module.dist.dir" value="${batch.base.dir}/${dist.dir}/azkaban/jars" />
-	<property name="module.dist.static"
-		value="${batch.base.dir}/${dist.dir}/azkaban/web/static" />
+	<property name="module.dist.static" value="${batch.base.dir}/${dist.dir}/azkaban/web/static" />
 	<property name="module.lib.dir" value="${batch.base.dir}/${lib.dir}" />
 	<property name="module.classes.dir" value="${batch.base.dir}/${dist.dir}/azkaban/classes" />
 	<property name="module.javadoc.dir" value="${batch.base.dir}/${dist.dir}/azkaban/javadoc" />
 	<property name="module.java.dir" value="src/java" />
 
-	<path id="main-classpath">
+	<property name="unit.classes.dir" value="${batch.base.dir}/${dist.dir}/azkaban/unit_classes" />
+	<property name="unit.java.dir" value="src/unit" />
+	<property name="unit.report.dir" value="${batch.base.dir}/${dist.dir}/azkaban/unit_report" />
+	<property name="unit.html.dir" value="${batch.base.dir}/${dist.dir}/azkaban/unit_html" />
+	<property name="unit.jar" value="${module.dist.dir}/${module.dist.name}-${curr.release}-unit.jar" />
+	        
+
+	<path id="main.classpath">
 		<fileset dir="${batch.base.dir}/${lib.dir}">
 			<include name="*.jar" />
 		</fileset>
@@ -29,6 +35,7 @@
 		<pathelement path="${module.classes.dir}" />
 	</path>
 
+		
 	<!--
 		set the build number based on environment variable, otherwise blank
 	-->
@@ -52,9 +59,9 @@
 		</sequential>
 	</macrodef>
 
-	<target name="all" depends="clean, jar, srcjar" description="Builds all.." />
+	<target name="all" depends="clean, jars, srcjar" description="Builds all.." />
 
-	<target name="clean" description="Delete generated files.">
+	<target name="clean" description="Delete generated files." depends="clean_unit" >
 		<delete dir="${module.dist.base}" />
 	</target>
 
@@ -73,14 +80,15 @@
 				<exclude name="**/web.xml" />
 			</fileset>
 		</copy>
+
 		<javac fork="true" destdir="${module.classes.dir}"
 			target="1.6" debug="true" deprecation="false" failonerror="true">
 			<src path="${module.java.dir}" />
-			<classpath refid="main-classpath" />
+			<classpath refid="main.classpath" />
 		</javac>
 	</target>
 
-	<target name="jar" depends="build" description="Build server jar file">
+	<target name="jars" depends="build" description="Build server jar file">
 		<mkdir dir="${module.dist.dir}" />
 		<jar destfile="${module.dist.dir}/${module.dist.name}-${curr.release}.jar">
 			<fileset dir="${module.classes.dir}">
@@ -119,6 +127,52 @@
 		</war>
 	</target>
 
+	<target name="clean_unit" description="Clean unite test class files">
+		<delete dir="${unit.classes.dir}" />
+		<delete dir="${unit.report.dir}" />
+		<delete dir="${unit.html.dir}" />
+		<delete file="${unit.jar}" />
+	</target>
+
+	<target name="build_unit" description="Compile unit test java files">
+		<mkdir dir="${unit.classes.dir}" />
+		<javac fork="true" destdir="${unit.classes.dir}"
+			   target="1.6" debug="true" deprecation="false" failonerror="true">
+			<src path="${unit.java.dir}" />
+			<classpath refid="main.classpath" />
+		</javac>
+		<jar destfile="${unit.jar}" basedir="${unit.classes.dir}"/>
+	</target>
+
+	
+	<target name="unit" depends="jars, clean_unit, build_unit" description="Compile and run unit tests" >
+		<mkdir dir="${unit.report.dir}" />
+		<mkdir dir="${unit.html.dir}" />
+
+		<junit printsummary="yes" showoutput="no" failureProperty="unit.failure" >
+			<sysproperty key="tests.to.run" value="${tests.to.run} "/>
+			<jvmarg value="-Xms256m" />
+			<jvmarg value="-Xmx1g" />
+
+			<classpath refid="main.classpath" />
+			<classpath path="${unit.jar}" />
+
+			<formatter type="xml"  />
+			<batchtest fork="yes" todir="${unit.report.dir}" >
+				<fileset dir="${unit.classes.dir}" >
+					<include name="**/*Test.class" />
+				</fileset>
+			</batchtest>
+		</junit>
+
+		<fail message="Unit test(s) failed!" if="unit.failure" />
+
+		<junitreport todir="${unit.html.dir}" >
+			<fileset dir="${unit.report.dir}" > <include name="TEST-*.xml"/> </fileset>
+			<report todir="${unit.html.dir}" format="frames"/>
+		</junitreport> 
+
+	</target>
 
 	<target name="snapshot"
 		description="Create a release-snapshot zip file with everything pre-built.">

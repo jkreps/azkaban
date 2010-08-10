@@ -39,9 +39,9 @@
 		</sequential>
 	</macrodef>
 
-	<target name="all" depends="clean, jar, srcjar" description="Builds all.." />
+	<target name="all" depends="clean, jars, srcjar" description="Builds all.." />
 
-	<target name="deploy" depends="jar"
+	<target name="deploy" depends="jars"
 		description="build the jar file and copy job confs to dist.">
 		<echo message="Copying jobs/properties file in: ${module.distconf.dir}" />
 		<echo message="building job jar in: ${module.distjar.dir}" />
@@ -54,7 +54,7 @@
 	<target name="redeploy" depends="undeploy, deploy"
 		description="Clean and Build jar files and copy config to dist." />
 
-	<target name="clean" description="Delete generated files.">
+	<target name="clean" description="Delete generated files." depends="clean_unit" >
 		<delete dir="${module.dist.base}" />
 	</target>
 
@@ -77,7 +77,7 @@
 		currently jar/copyconf writes to same directory hence we cant clean
 		them. hack for now
 	-->
-	<target name="jar" depends="build" description="Build server jar file">
+	<target name="jars" depends="build" description="Build server jar file">
 		<mkdir dir="${module.distjar.dir}" />
 		<jar destfile="${module.distjar.dir}/${name}-common-${curr.release}.jar">
 			<fileset dir="${module.classes.dir}">
@@ -107,6 +107,14 @@
 			<doctitle>${display.name}</doctitle>
 			<classpath refid="main-classpath" />
 		</javadoc>
+	</target>
+
+	<target name="unit" description="Build and run unit tests">
+		<echo message="TODO: add unit tests for this package!"/>
+	</target>
+
+	<target name="clean_unit" description="Clean unit tests jars">
+		<echo message="TODO: add unit tests for this package!"/>
 	</target>
 
 </project>

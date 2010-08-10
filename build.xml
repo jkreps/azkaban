@@ -22,17 +22,27 @@
 	<target name="all" depends="clean, jars, war" description="Builds all jars" />
 
 	<target name="clean" description="Delete generated files.">
-		<echo message="Deleting dist directory: ${azkaban.base.dir}/${dist.dir}, ${azkaban.base.dir}/${build.dir}" />
-		<delete dir="${azkaban.base.dir}/${dist.dir}" />
+		<!--echo message="Deleting dist directory: ${azkaban.base.dir}/${dist.dir}, ${azkaban.base.dir}/${build.dir}" />
+		<delete dir="${azkaban.base.dir}/${dist.dir}" /-->
+
+		<echo message="Deleting generated files in azkaban-common" />
+		<subant target="clean">
+			<fileset dir="azkaban-common" includes="build.xml" />
+		</subant>
+
+		<echo message="Deleting generated files in azkaban" />
+		<subant target="clean">
+			<fileset dir="azkaban" includes="build.xml" />
+		</subant>
 	</target>
 
 	<target name="jars" description="Compile main source tree java files">
 		<echo message="building azkaban-common.jar" />
-		<subant target="all">
+		<subant target="jars">
 			<fileset dir="azkaban-common" includes="build.xml" />
 		</subant>
 		<echo message="building azkaban.jar" />
-		<subant target="all">
+		<subant target="jars">
 			<fileset dir="azkaban" includes="build.xml" />
 		</subant>
 	</target>
@@ -51,14 +61,37 @@
         </jar>
     </target>
 
-    <target name="testjobs" depends="jars" description="Compile files for test">
-		<echo message="building test jar" />
+	<target name="unit" 
+			description="Compile and run unit tests"
+			depends="jars" >
+
+		<!--. Run JUnit tests: use -Dtests.to.run=testA,testB,... to run tests selectively"--> 
+		<echo message="building and running unit tests" />
+		<subant target="unit">
+			<fileset dir="azkaban-common" includes="build.xml" />
+		</subant>
+		<subant target="unit">
+			<fileset dir="azkaban" includes="build.xml" />
+		</subant>
+
+	</target>
+
+    <!-- 
+	TODO: fix this part and reenable it 
+    <target name="tests" depends="jars" description="Compile files for tests">
+		<echo message="building test jars" />
 		<subant target="jar">
 			<fileset dir="test" includes="build.xml" />
 		</subant>
-		<zip destfile="${azkaban.base.dir}/${dist.dir}/test/testjobfile.zip" basedir="${azkaban.base.dir}/${dist.dir}/test/jobs">
+		
+		<zip destfile="${azkaban.base.dir}/${dist.dir}/test/testjobfile.zip" basedir="${azkaban.base.dir}/${dist.dir}/test/jobs"> 
 		</zip>
+
+       	<subant target="localtests">
+       		<fileset dir="test" includes="build.xml" />
+       	</subant>
 	</target>
+	-->
 
 	<target name="war" depends="jars" description="creates azkaban war.">
 		<echo message="building azkaban.war" />
@@ -109,5 +142,6 @@
 			</tar>
 		</sequential>
 	</macrodef>
+
 
 </project>
