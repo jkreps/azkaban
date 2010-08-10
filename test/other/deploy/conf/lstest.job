@@ -1,3 +1,0 @@
-type=process
-command=ls -la
-env.testenv=testingEnv

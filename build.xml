@@ -76,22 +76,12 @@
 
 	</target>
 
-    <!-- 
-	TODO: fix this part and reenable it 
-    <target name="tests" depends="jars" description="Compile files for tests">
-		<echo message="building test jars" />
-		<subant target="jar">
+    <target name="build-tests" description="Generate test packages.">
+		<echo message="Create a test package in test/dist/azkaban-tests.zip " />
+		<subant target="build-tests">
 			<fileset dir="test" includes="build.xml" />
 		</subant>
-		
-		<zip destfile="${azkaban.base.dir}/${dist.dir}/test/testjobfile.zip" basedir="${azkaban.base.dir}/${dist.dir}/test/jobs"> 
-		</zip>
-
-       	<subant target="localtests">
-       		<fileset dir="test" includes="build.xml" />
-       	</subant>
 	</target>
-	-->
 
 	<target name="war" depends="jars" description="creates azkaban war.">
 		<echo message="building azkaban.war" />
@@ -142,6 +132,5 @@
 			</tar>
 		</sequential>
 	</macrodef>
-
 
 </project>

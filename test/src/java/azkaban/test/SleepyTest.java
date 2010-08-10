@@ -1,4 +1,4 @@
-package javajob;
+package azkaban.test;
 
 /**
  * A Job that just sleeps for the given amount of time

@@ -5,8 +5,23 @@
 	<!-- set the base directory -->
 	<property name="batch.base.dir" value="${basedir}/.." />
 	<property file="${batch.base.dir}/build.properties" />
-	<property name="module.dist.base" value="${batch.base.dir}/${dist.dir}/test" />
-	<property file="${batch.base.dir}/build.properties" />
+
+	<property name="base.dir" value="." />
+	<property name="dist.base" value="${base.dir}/dist" />
+	<property name="classes.dir" value="${dist.base}/classes" />
+	<property name="java.dir" value="${base.dir}/src/java" />
+	<property name="jar.file" value="${base.dir}/jobs/azkaban-tests.jar" />
+	<property name="zip.file" value="${dist.base}/azkaban-tests.zip" />
+
+	<path id="main-classpath">
+		<fileset dir="${batch.base.dir}/lib">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${batch.base.dir}/${dist.dir}/azkaban-common/jars">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
 
 	<!-- macro to delete and recreate a directory -->
 	<macrodef name="replace-dir">
@@ -19,15 +34,32 @@
 
 	<target name="clean" description="Delete generated files.">
 		<echo message="cleaning all test jobs." />
-		<delete dir="${module.dist.base}" />
+		<delete dir="${dist.base}" />
+		<delete file="${jar.file}" />
 	</target>
 
-	<target name="jar" description="Makes all the small jars.">
+	
+	<target name="jars" description="Makes all test jars.">
 		<echo message="Makes test jar." />
-		<subant target="jar">
-			<fileset dir="." includes="*/build.xml" />
-		</subant>
+
+        <mkdir dir="${classes.dir}" />
+
+        <javac fork="true" destdir="${classes.dir}" target="1.6" debug="true" deprecation="false" failonerror="true">
+            <src path="${java.dir}" />
+            <classpath refid="main-classpath"/>
+        </javac>
+
+        <jar destfile="${jar.file}" >
+             <fileset dir="${classes.dir}" >
+                 <include name="**/*.class" />
+             </fileset>
+        </jar>
+    </target> 
+
+	<target name="build-tests" description="Build test zip file" depends="clean, jars">
+		<zip destfile="${zip.file}" basedir="${base.dir}/jobs"> </zip>
 	</target>
+
 
 	<target name="deploy" description="deploy all modules.">
 		<echo message="Deploying all modules." />
@@ -49,5 +81,6 @@
 			<fileset dir="." includes="*/build.xml" />
 		</subant>
 	</target>
+
 
 </project>

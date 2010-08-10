@@ -1,3 +1,0 @@
-type=java
-java.class=strange.SleepyTest
-jars=testjar.jar
