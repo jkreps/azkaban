@@ -10,7 +10,7 @@
 	<property name="dist.base" value="${base.dir}/dist" />
 	<property name="classes.dir" value="${dist.base}/classes" />
 	<property name="java.dir" value="${base.dir}/src/java" />
-	<property name="jar.file" value="${base.dir}/jobs/azkaban-tests.jar" />
+	<property name="jar.file" value="${dist.base}/azkaban-tests.jar" />
 	<property name="zip.file" value="${dist.base}/azkaban-tests.zip" />
 
 	<path id="main-classpath">
@@ -57,7 +57,7 @@
     </target> 
 
 	<target name="build-tests" description="Build test zip file" depends="clean, jars">
-		<zip destfile="${zip.file}" basedir="${base.dir}/jobs"> </zip>
+		<!--zip destfile="${zip.file}" basedir="${base.dir}/jobs"> </zip-->
 	</target>
 
 

@@ -77,7 +77,7 @@
 	</target>
 
     <target name="build-tests" description="Generate test packages.">
-		<echo message="Create a test package in test/dist/azkaban-tests.zip " />
+		<echo message="Create test jar in test/dist/azkaban-tests.zip " />
 		<subant target="build-tests">
 			<fileset dir="test" includes="build.xml" />
 		</subant>
