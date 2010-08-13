@@ -33,6 +33,7 @@
 			<include name="*.jar" />
 		</fileset>
 		<pathelement path="${module.classes.dir}" />
+		<pathelement path="src/unit/lib/azkaban-tests.jar" />
 	</path>
 
 		

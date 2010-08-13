@@ -1,0 +1,22 @@
+
+Test "command" jobs in azkaban. 
+
+This directory contains three *command* jobs:
+1. lstest runs "ls" command and is expected to suceed;
+2. errtest runs a non-existing command and is expected to fail;
+3. rmtest runs "rm non-existing-file" and is expected to fail.
+
+
+Please do the following initialization. 
+
+1. Open system.properties to update:
+a. mail.host=<your_mail_host> 
+b. server.url=http://<your_hostname>:8082/
+c. job.failure.email=<your_email_address>
+d. job.sucess.email=<your_email_address> 
+
+2. Run azkaban server locally:
+a. go to $ROOT;
+b. run command: bin/azkaban.sh -j test/jobs/command_job 
+
+3. Open http://<your_hostname>:8082/ in your browser  
