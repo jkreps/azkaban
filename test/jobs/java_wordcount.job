@@ -1,0 +1,5 @@
+type=java
+job.class=azkaban.test.WordCountLocal
+method.run=run
+input=wordcount.input
+output=/tmp/dummy

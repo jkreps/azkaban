@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+<configuration>
+  <property>
+    <name>dfs.http.address</name>
+    <value>esv3-devnn01.corp:50070</value>
+  </property>
+  <property>
+    <name>dfs.safemode.extension</name>
+    <value>10000</value>
+  </property>
+
+  <property>
+    <name>dfs.replication</name>
+    <value>3</value>
+  </property>
+
+  <property>
+    <name>dfs.replication.min</name>
+    <value>1</value>
+  </property>
+
+  <property>
+    <name>dfs.replication.max</name>
+    <value>20</value>
+  </property>
+
+  <property>
+    <name>dfs.data.dir</name>
+    <value>/mnt/u001/dfs-data,/mnt/u002/dfs-data,/mnt/u003/dfs-data,/mnt/u004/dfs-data,/mnt/u005/dfs-data,/mnt/u006/dfs-data,/mnt/u007/dfs-data,/mnt/u000/dfs-data</value>
+  </property>
+
+  <property>
+    <name>dfs.name.dir</name>
+    <value>/export/home/hadoop/name-data,/export/content/namedir</value>
+  </property>
+
+<property>
+  <name>dfs.datanode.handler.count</name>
+  <value>8</value>
+</property>
+
+<property>
+  <name>dfs.datanode.du.reserved</name>
+  <value>50240000000</value>
+</property>
+
+<property>
+  <name>dfs.balance.bandwidthPerSec</name>
+  <value>314572800</value>
+</property>
+
+<property>
+  <name>dfs.block.size</name>
+  <value>134217728</value>
+</property>
+
+<property>
+  <name>dfs.hosts</name>
+  <value>/export/home/hadoop/hadoop/conf/dfs.include</value>
+</property>
+
+<property>
+  <name>dfs.hosts.exclude</name>
+  <value>/export/home/hadoop/hadoop/conf/dfs.exclude</value>
+</property>
+
+ <property> 
+   <name>namenode.handler.count</name> 
+   <value>64</value> 
+ </property>
+
+</configuration>

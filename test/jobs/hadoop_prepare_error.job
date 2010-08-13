@@ -1,0 +1,2 @@
+type=command
+command=bash hadoop_prepare.sh wordcount_error.input wordcount_error.output

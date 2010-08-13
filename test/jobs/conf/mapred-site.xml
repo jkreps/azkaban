@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+<configuration>
+
+  <property>
+    <name>mapred.job.priority</name>
+    <value>NORMAL</value>
+  </property>
+
+  <property>
+    <name>mapred.job.tracker</name>
+    <value>esv3-devjt01.corp.linkedin.com:9001</value>
+  </property>
+
+  <property>
+    <name>mapred.local.dir</name>
+    <value>/mnt/u001/mapred,/mnt/u002/mapred,/mnt/u003/mapred,/mnt/u004/mapred,/mnt/u005/mapred,/mnt/u006/mapred,/mnt/u007/mapred,/mnt/u000/mapred</value>
+  </property>
+
+  <property>
+    <name>mapred.child.java.opts</name>
+    <value>-Xmx1024m -Xms512m -server</value>
+  </property>
+
+  <property>
+    <name>mapred.map.tasks</name>
+    <value>140</value>
+    <!-- nodes*mapred.tasktracker.map.tasks.maximum -->
+  </property>
+
+  <property>
+    <name>mapred.reduce.tasks</name>
+    <value>10</value>
+  </property>
+
+<property>
+  <name>mapred.tasktracker.map.tasks.maximum</name>
+  <value>8</value>
+  <final>true</final>
+</property>
+
+<property>
+  <name>mapred.tasktracker.reduce.tasks.maximum</name>
+  <value>6</value>
+  <final>true</final>
+</property>
+
+<property>
+  <name>mapred.reduce.slowstart.completed.maps</name>
+  <value>.55</value>
+  <final>true</final>
+</property>
+
+<property>
+ <name>io.sort.factor</name>
+ <value>100</value>
+</property>
+
+<property>
+ <name>io.sort.mb</name>
+ <value>256</value>
+</property>
+
+<property>
+  <name>io.sort.record.percent</name>
+  <value>.30</value>
+</property>
+
+<property> 
+  <name>mapred.job.tracker.handler.count</name>
+  <value>10</value>
+  <final>true</final>
+</property>
+
+<property> 
+  <name>mapred.reduce.parallel.copies</name> 
+  <value>20</value> 
+  <final>true</final>
+</property>
+
+<property> 
+  <name>tasktracker.http.threads</name>
+  <value>40</value>
+  <final>true</final>
+</property>
+
+<property>
+  <name>mapred.jobtracker.taskScheduler</name>
+  <value>org.apache.hadoop.mapred.FairScheduler</value>
+</property>
+
+<property>
+  <name>mapred.fairscheduler.allocation.file</name>
+  <value>/export/home/hadoop/hadoop/conf/fairshare-pools.xml</value>
+</property>
+
+<property>
+  <name>mapred.fairscheduler.assignmultiple</name>
+  <value>true</value>
+</property>
+
+</configuration>

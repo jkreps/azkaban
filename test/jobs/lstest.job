@@ -1,3 +1,0 @@
-type=command
-command=ls -la
-env.testenv=testingEnv

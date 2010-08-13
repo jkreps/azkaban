@@ -1,0 +1,2 @@
+type=command
+command=bash pig_prepare.sh wordcount.input

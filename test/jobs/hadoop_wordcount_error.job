@@ -1,0 +1,6 @@
+type=java
+job.class=azkaban.test.WordCountGrid
+method.run=run
+input=wordcount_error.input
+output=wordcount_error.output
+dependencies=hadoop_prepare_error

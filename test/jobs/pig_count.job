@@ -1,0 +1,3 @@
+type=pig
+pig.script=pig_count.pig
+dependencies=pig_prepare

@@ -1,3 +1,0 @@
-type=java
-job.class=azkaban.test.SleepyTest
-jars=testjar.jar
