@@ -57,11 +57,11 @@ public class IndividualJobFlow implements Flow
     }
 
     @Override
-    public ExecutableFlow createExecutableFlow(String id, Props overrideProps, Map<String, ExecutableFlow> overrides)
+    public ExecutableFlow createExecutableFlow(String id, Map<String, ExecutableFlow> overrides)
     {
         final ExecutableFlow retVal = overrides.containsKey(getName()) ?
                                       overrides.get(getName()) :
-                                      new IndividualJobExecutableFlow(id, name, overrideProps, jobManager);
+                                      new IndividualJobExecutableFlow(id, name, jobManager);
 
         if (overrides.containsKey(retVal.getName())) {
             throw new RuntimeException(String.format("overrides already has an entry with my key[%s], wtf?", retVal.getName()));

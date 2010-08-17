@@ -71,6 +71,30 @@ public class Verifier
         }
     }
 
+    public static final <T> T getOptionalObject(Map<String, Object> descriptor, String key, Class<T> expectedClass)
+    {
+        Object obj = descriptor.get(key);
+
+        if (obj == null) {
+            return null;
+        }
+
+        if (expectedClass.isAssignableFrom(obj.getClass())) {
+            return expectedClass.cast(obj);
+        }
+        else {
+            throw new RuntimeException(
+                    String.format(
+                            "Key[%s] was a %s, but should have been a %s on descriptor[%s]",
+                            key,
+                            obj.getClass(),
+                            expectedClass,
+                            descriptor
+                    )
+            );
+        }
+    }
+
     public static final <T> T getVerifiedObject(List<Object> descriptor, int index, Class<T> expectedClass)
     {
         if (index < 0) {

@@ -16,21 +16,16 @@
 
 package azkaban.flow;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicReference;
-
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobManager;
 import azkaban.app.JobWrappingFactory;
 import azkaban.common.utils.Props;
-import azkaban.serialization.ExecutableFlowSerializer;
-import azkaban.serialization.de.ExecutableFlowDeserializer;
+import azkaban.serialization.FlowExecutionSerializer;
+import azkaban.serialization.de.FlowExecutionDeserializer;
+
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -41,8 +36,8 @@ public class RefreshableFlowManager implements FlowManager
     
     private final JobManager jobManager;
     private final JobWrappingFactory jobFactory;
-    private final ExecutableFlowSerializer serializer;
-    private final ExecutableFlowDeserializer deserializer;
+    private final FlowExecutionSerializer serializer;
+    private final FlowExecutionDeserializer deserializer;
     private final File storageDirectory;
 
     private final AtomicReference<ImmutableFlowManager> delegateManager;
@@ -50,8 +45,8 @@ public class RefreshableFlowManager implements FlowManager
     public RefreshableFlowManager(
             JobManager jobManager,
             JobWrappingFactory jobFactory,
-            ExecutableFlowSerializer serializer,
-            ExecutableFlowDeserializer deserializer,
+            FlowExecutionSerializer serializer,
+            FlowExecutionDeserializer deserializer,
             File storageDirectory,
             long lastId
     )
@@ -97,9 +92,9 @@ public class RefreshableFlowManager implements FlowManager
     }
 
     @Override
-    public ExecutableFlow createNewExecutableFlow(String name, Props overrideProps)
+    public ExecutableFlow createNewExecutableFlow(String name)
     {
-        return delegateManager.get().createNewExecutableFlow(name, overrideProps);
+        return delegateManager.get().createNewExecutableFlow(name);
     }
 
     @Override
@@ -117,13 +112,13 @@ public class RefreshableFlowManager implements FlowManager
     }
 
     @Override
-    public ExecutableFlow saveExecutableFlow(ExecutableFlow flow)
+    public FlowExecutionHolder saveExecutableFlow(FlowExecutionHolder holder)
     {
-        return delegateManager.get().saveExecutableFlow(flow);
+        return delegateManager.get().saveExecutableFlow(holder);
     }
 
     @Override
-    public ExecutableFlow loadExecutableFlow(long id)
+    public FlowExecutionHolder loadExecutableFlow(long id)
     {
         return delegateManager.get().loadExecutableFlow(id);
     }

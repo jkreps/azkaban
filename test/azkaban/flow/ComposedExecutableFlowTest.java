@@ -1,5 +1,6 @@
 package azkaban.flow;
 
+import azkaban.common.utils.Props;
 import org.easymock.Capture;
 import org.easymock.IAnswer;
 import org.easymock.classextension.EasyMock;
@@ -16,6 +17,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ComposedExecutableFlowTest
 {
+    private volatile Props props;
+
     private volatile ExecutableFlow dependerFlow;
     private volatile ExecutableFlow dependeeFlow;
     private ComposedExecutableFlow flow;
@@ -23,12 +26,13 @@ public class ComposedExecutableFlowTest
     @Before
     public void setUp() throws Exception
     {
+        props = EasyMock.createStrictMock(Props.class);
         dependerFlow = EasyMock.createStrictMock(ExecutableFlow.class);
         dependeeFlow = EasyMock.createStrictMock(ExecutableFlow.class);
 
         EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.READY).once();
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.READY).once();
-        EasyMock.replay(dependerFlow, dependeeFlow);
+        EasyMock.replay(dependerFlow, dependeeFlow, props);
 
         flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
 
@@ -41,6 +45,7 @@ public class ComposedExecutableFlowTest
     {
         EasyMock.verify(dependerFlow);
         EasyMock.verify(dependeeFlow);
+        EasyMock.verify(props);
     }
 
     @Test
@@ -49,7 +54,7 @@ public class ComposedExecutableFlowTest
         final AtomicBoolean dependeeRan = new AtomicBoolean(false);
 
         final Capture<FlowCallback> dependeeCallback = new Capture<FlowCallback>();
-        dependeeFlow.execute(EasyMock.capture(dependeeCallback));
+        dependeeFlow.execute(EasyMock.eq(props), EasyMock.capture(dependeeCallback));
         EasyMock.expectLastCall().andAnswer(new IAnswer<Object>()
         {
             @Override
@@ -65,7 +70,7 @@ public class ComposedExecutableFlowTest
         }).once();
 
         final Capture<FlowCallback> dependerCallback = new Capture<FlowCallback>();
-        dependerFlow.execute(EasyMock.capture(dependerCallback));
+        dependerFlow.execute(EasyMock.eq(props), EasyMock.capture(dependerCallback));
         EasyMock.expectLastCall().andAnswer(new IAnswer<Object>()
         {
             @Override
@@ -80,18 +85,23 @@ public class ComposedExecutableFlowTest
             }
         }).once();
 
-        EasyMock.replay(dependerFlow, dependeeFlow);
+        EasyMock.reset(props);
+        EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
+
+        EasyMock.replay(dependerFlow, dependeeFlow, props);
 
         Assert.assertEquals(Status.READY, flow.getStatus());
 
         AtomicBoolean callbackRan = new AtomicBoolean(false);
-        flow.execute(new OneCallFlowCallback(callbackRan) {
-            @Override
-            protected void theCallback(Status status)
-            {
-                Assert.assertEquals(Status.SUCCEEDED, status);
-            }
-        });
+        flow.execute(
+                props,
+                new OneCallFlowCallback(callbackRan) {
+                    @Override
+                    protected void theCallback(Status status)
+                    {
+                        Assert.assertEquals(Status.SUCCEEDED, status);
+                    }
+                });
 
         Assert.assertTrue("Internal flow executes never ran.", dependeeRan.get());
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
@@ -99,17 +109,47 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(null, flow.getException());
 
         callbackRan = new AtomicBoolean(false);
-        flow.execute(new OneCallFlowCallback(callbackRan) {
-            @Override
-            protected void theCallback(Status status)
-            {
-                Assert.assertEquals(Status.SUCCEEDED, status);
-            }
-        });
+        flow.execute(
+                props,
+                new OneCallFlowCallback(callbackRan) {
+                    @Override
+                    protected void theCallback(Status status)
+                    {
+                        Assert.assertEquals(Status.SUCCEEDED, status);
+                    }
+                });
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
         Assert.assertEquals(null, flow.getException());
+
+        EasyMock.verify(props);
+        EasyMock.reset(props);
+
+        EasyMock.expect(props.equalsProps(props)).andReturn(false).once();
+
+        EasyMock.replay(props);
+
+        boolean exceptionThrown = false;
+        try {
+            flow.execute(
+                    props,
+                    new FlowCallback() {
+                        @Override
+                        public void progressMade() {
+                        }
+
+                        @Override
+                        public void completed(Status status) {
+                        }
+                    }
+            );
+        }
+        catch (IllegalArgumentException e) {
+            exceptionThrown = true;
+        }
+
+        Assert.assertTrue("Expected an IllegalArgumentException to be thrown because props weren't the same.", exceptionThrown);
     }
 
     @Test
@@ -119,7 +159,7 @@ public class ComposedExecutableFlowTest
         final AtomicBoolean dependeeRan = new AtomicBoolean(false);
 
         final Capture<FlowCallback> dependeeCallback = new Capture<FlowCallback>();
-        dependeeFlow.execute(EasyMock.capture(dependeeCallback));
+        dependeeFlow.execute(EasyMock.eq(props), EasyMock.capture(dependeeCallback));
         EasyMock.expectLastCall().andAnswer(new IAnswer<Object>()
         {
             @Override
@@ -135,18 +175,23 @@ public class ComposedExecutableFlowTest
         }).once();
         EasyMock.expect(dependeeFlow.getException()).andReturn(theException).once();
 
-        EasyMock.replay(dependerFlow, dependeeFlow);
+        EasyMock.reset(props);
+        EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
+
+        EasyMock.replay(dependerFlow, dependeeFlow, props);
 
         Assert.assertEquals(Status.READY, flow.getStatus());
 
         AtomicBoolean callbackRan = new AtomicBoolean(false);
-        flow.execute(new OneCallFlowCallback(callbackRan) {
-            @Override
-            protected void theCallback(Status status)
-            {
-                Assert.assertEquals(Status.FAILED, status);
-            }
-        });
+        flow.execute(
+                props,
+                new OneCallFlowCallback(callbackRan) {
+                    @Override
+                    protected void theCallback(Status status)
+                    {
+                        Assert.assertEquals(Status.FAILED, status);
+                    }
+                });
 
         Assert.assertTrue("Internal flow executes never ran.", dependeeRan.get());
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
@@ -154,13 +199,15 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(theException, flow.getException());
 
         callbackRan = new AtomicBoolean(false);
-        flow.execute(new OneCallFlowCallback(callbackRan) {
-            @Override
-            protected void theCallback(Status status)
-            {
-                Assert.assertEquals(Status.FAILED, status);
-            }
-        });
+        flow.execute(
+                props,
+                new OneCallFlowCallback(callbackRan) {
+                    @Override
+                    protected void theCallback(Status status)
+                    {
+                        Assert.assertEquals(Status.FAILED, status);
+                    }
+                });
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
@@ -185,7 +232,7 @@ public class ComposedExecutableFlowTest
         final AtomicBoolean dependeeRan = new AtomicBoolean(false);
 
         final Capture<FlowCallback> dependeeCallback = new Capture<FlowCallback>();
-        dependeeFlow.execute(EasyMock.capture(dependeeCallback));
+        dependeeFlow.execute(EasyMock.eq(props), EasyMock.capture(dependeeCallback));
         EasyMock.expectLastCall().andAnswer(new IAnswer<Object>()
         {
             @Override
@@ -201,7 +248,7 @@ public class ComposedExecutableFlowTest
         }).once();
 
         final Capture<FlowCallback> dependerCallback = new Capture<FlowCallback>();
-        dependerFlow.execute(EasyMock.capture(dependerCallback));
+        dependerFlow.execute(EasyMock.eq(props), EasyMock.capture(dependerCallback));
         EasyMock.expectLastCall().andAnswer(new IAnswer<Object>()
         {
             @Override
@@ -217,18 +264,23 @@ public class ComposedExecutableFlowTest
         }).once();
         EasyMock.expect(dependerFlow.getException()).andReturn(theException).once();
 
-        EasyMock.replay(dependerFlow, dependeeFlow);
+        EasyMock.reset(props);
+        EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
+
+        EasyMock.replay(dependerFlow, dependeeFlow, props);
 
         Assert.assertEquals(Status.READY, flow.getStatus());
 
         AtomicBoolean callbackRan = new AtomicBoolean(false);
-        flow.execute(new OneCallFlowCallback(callbackRan) {
-            @Override
-            protected void theCallback(Status status)
-            {
-                Assert.assertEquals(Status.FAILED, status);
-            }
-        });
+        flow.execute(
+                props,
+                new OneCallFlowCallback(callbackRan) {
+                    @Override
+                    protected void theCallback(Status status)
+                    {
+                        Assert.assertEquals(Status.FAILED, status);
+                    }
+                });
 
         Assert.assertTrue("Internal flow executes never ran.", dependeeRan.get());
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
@@ -236,13 +288,15 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(theException, flow.getException());
 
         callbackRan = new AtomicBoolean(false);
-        flow.execute(new OneCallFlowCallback(callbackRan) {
-            @Override
-            protected void theCallback(Status status)
-            {
-                Assert.assertEquals(Status.FAILED, status);
-            }
-        });
+        flow.execute(
+                props,
+                new OneCallFlowCallback(callbackRan) {
+                    @Override
+                    protected void theCallback(Status status)
+                    {
+                        Assert.assertEquals(Status.FAILED, status);
+                    }
+                });
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.FAILED, flow.getStatus());
@@ -267,7 +321,7 @@ public class ComposedExecutableFlowTest
         final AtomicBoolean executeCallWhileStateWasRunningHadItsCallbackCalled = new AtomicBoolean(false);
 
         final Capture<FlowCallback> dependeeCallback = new Capture<FlowCallback>();
-        dependeeFlow.execute(EasyMock.capture(dependeeCallback));
+        dependeeFlow.execute(EasyMock.eq(props), EasyMock.capture(dependeeCallback));
         EasyMock.expectLastCall().andAnswer(new IAnswer<Object>()
         {
             @Override
@@ -276,13 +330,15 @@ public class ComposedExecutableFlowTest
                 Assert.assertTrue("Dependee already ran!?", dependeeRan.compareAndSet(false, true));
                 Assert.assertEquals(Status.RUNNING, flow.getStatus());
 
-                flow.execute(new OneCallFlowCallback(executeCallWhileStateWasRunningHadItsCallbackCalled)
-                {
-                    @Override
-                    protected void theCallback(Status status)
-                    {
-                    }
-                });
+                flow.execute(
+                        props,
+                        new OneCallFlowCallback(executeCallWhileStateWasRunningHadItsCallbackCalled)
+                        {
+                            @Override
+                            protected void theCallback(Status status)
+                            {
+                            }
+                        });
 
                 dependeeCallback.getValue().completed(Status.SUCCEEDED);
 
@@ -293,7 +349,7 @@ public class ComposedExecutableFlowTest
         }).once();
 
         final Capture<FlowCallback> dependerCallback = new Capture<FlowCallback>();
-        dependerFlow.execute(EasyMock.capture(dependerCallback));
+        dependerFlow.execute(EasyMock.eq(props), EasyMock.capture(dependerCallback));
         EasyMock.expectLastCall().andAnswer(new IAnswer<Object>()
         {
             @Override
@@ -310,18 +366,23 @@ public class ComposedExecutableFlowTest
             }
         }).once();
 
-        EasyMock.replay(dependerFlow, dependeeFlow);
+        EasyMock.reset(props);
+        EasyMock.expect(props.equalsProps(props)).andReturn(true).times(2);
+
+        EasyMock.replay(dependerFlow, dependeeFlow, props);
 
         Assert.assertEquals(Status.READY, flow.getStatus());
 
         AtomicBoolean callbackRan = new AtomicBoolean(false);
-        flow.execute(new OneCallFlowCallback(callbackRan) {
-            @Override
-            protected void theCallback(Status status)
-            {
-                Assert.assertEquals(Status.SUCCEEDED, status);
-            }
-        });
+        flow.execute(
+                props,
+                new OneCallFlowCallback(callbackRan) {
+                    @Override
+                    protected void theCallback(Status status)
+                    {
+                        Assert.assertEquals(Status.SUCCEEDED, status);
+                    }
+                });
 
         Assert.assertTrue("Internal flow executes never ran.", dependeeRan.get());
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
@@ -332,13 +393,15 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(null, flow.getException());
 
         callbackRan = new AtomicBoolean(false);
-        flow.execute(new OneCallFlowCallback(callbackRan) {
-            @Override
-            protected void theCallback(Status status)
-            {
-                Assert.assertEquals(Status.SUCCEEDED, status);
-            }
-        });
+        flow.execute(
+                props,
+                new OneCallFlowCallback(callbackRan) {
+                    @Override
+                    protected void theCallback(Status status)
+                    {
+                        Assert.assertEquals(Status.SUCCEEDED, status);
+                    }
+                });
 
         Assert.assertTrue("Callback didn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
@@ -365,6 +428,7 @@ public class ComposedExecutableFlowTest
         EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.FAILED).once();
         EasyMock.expect(dependeeFlow.getStartTime()).andReturn(expectedStartTime).once();
         EasyMock.expect(dependeeFlow.getEndTime()).andReturn(expectedEndTime);
+        EasyMock.expect(dependeeFlow.getParentProps()).andReturn(props);
         EasyMock.replay(dependeeFlow, dependerFlow);
 
         flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
@@ -373,6 +437,7 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
         Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(props, flow.getParentProps());
 
         EasyMock.verify(dependerFlow);
         EasyMock.reset(dependerFlow);
@@ -395,6 +460,7 @@ public class ComposedExecutableFlowTest
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.FAILED).once();
         EasyMock.expect(dependeeFlow.getStartTime()).andReturn(expectedStartTime).times(2);
         EasyMock.expect(dependerFlow.getEndTime()).andReturn(expectedEndTime);
+        EasyMock.expect(dependerFlow.getParentProps()).andReturn(props);
         EasyMock.replay(dependeeFlow, dependerFlow);
 
         flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
@@ -403,6 +469,7 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
         Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(props, flow.getParentProps());
 
         EasyMock.verify(dependerFlow);
         EasyMock.reset(dependerFlow);
@@ -425,6 +492,7 @@ public class ComposedExecutableFlowTest
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.FAILED).once();
         EasyMock.expect(dependeeFlow.getStartTime()).andReturn(expectedStartTime).times(2);
         EasyMock.expect(dependerFlow.getEndTime()).andReturn(expectedEndTime);
+        EasyMock.expect(dependerFlow.getParentProps()).andReturn(props);
         EasyMock.replay(dependeeFlow, dependerFlow);
 
         flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
@@ -433,6 +501,7 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(expectedEndTime, flow.getEndTime());
         Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(props, flow.getParentProps());
 
         EasyMock.verify(dependerFlow);
         EasyMock.reset(dependerFlow);
@@ -454,6 +523,7 @@ public class ComposedExecutableFlowTest
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.READY).once();
         EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.SUCCEEDED).once();
         EasyMock.expect(dependeeFlow.getStartTime()).andReturn(expectedStartTime).times(1);
+        EasyMock.expect(dependeeFlow.getParentProps()).andReturn(props);
         EasyMock.replay(dependeeFlow, dependerFlow);
 
         flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
@@ -462,6 +532,7 @@ public class ComposedExecutableFlowTest
         Assert.assertEquals(expectedStartTime, flow.getStartTime());
         Assert.assertEquals(null, flow.getEndTime());
         Assert.assertEquals(null, flow.getException());
+        Assert.assertEquals(props, flow.getParentProps());
 
         EasyMock.verify(dependerFlow);
         EasyMock.reset(dependerFlow);
@@ -483,14 +554,15 @@ public class ComposedExecutableFlowTest
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.READY).once();
         EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.RUNNING).once();
         EasyMock.expect(dependeeFlow.getStartTime()).andReturn(expectedStartTime).times(1);
+        EasyMock.expect(dependeeFlow.getParentProps()).andReturn(props).times(1);
 
         Capture<FlowCallback> dependeeFlowCallback = new Capture<FlowCallback>();
-        dependeeFlow.execute(EasyMock.capture(dependeeFlowCallback));
+        dependeeFlow.execute(EasyMock.eq(props), EasyMock.capture(dependeeFlowCallback));
 
         Capture<FlowCallback> dependerFlowCallback = new Capture<FlowCallback>();
-        dependerFlow.execute(EasyMock.capture(dependerFlowCallback));
+        dependerFlow.execute(EasyMock.eq(props), EasyMock.capture(dependerFlowCallback));
 
-        EasyMock.replay(dependeeFlow, dependerFlow);
+        EasyMock.replay(dependerFlow, dependeeFlow);
 
         flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
 
@@ -535,11 +607,16 @@ public class ComposedExecutableFlowTest
 
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.RUNNING).once();
         EasyMock.expect(dependeeFlow.getStartTime()).andReturn(expectedStartTime).times(2);
+        EasyMock.expect(dependerFlow.getParentProps()).andReturn(props).once();
+        EasyMock.expect(dependeeFlow.getParentProps()).andReturn(props).once();
 
         Capture<FlowCallback> dependerFlowCallback = new Capture<FlowCallback>();
-        dependerFlow.execute(EasyMock.capture(dependerFlowCallback));
+        dependerFlow.execute(EasyMock.eq(props), EasyMock.capture(dependerFlowCallback));
 
-        EasyMock.replay(dependeeFlow, dependerFlow);
+        EasyMock.reset(props);
+        EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
+
+        EasyMock.replay(dependerFlow, dependeeFlow, props);
 
         flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
 

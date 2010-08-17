@@ -16,6 +16,7 @@
 
 package azkaban.flow;
 
+import azkaban.common.utils.Props;
 import org.joda.time.DateTime;
 
 import java.util.List;
@@ -51,9 +52,9 @@ public class MultipleDependencyExecutableFlow implements ExecutableFlow
     }
 
     @Override
-    public void execute(FlowCallback callback)
+    public void execute(Props parentProperties, FlowCallback callback)
     {
-        actualFlow.execute(callback);
+        actualFlow.execute(parentProperties, callback);
     }
 
     @Override
@@ -72,7 +73,6 @@ public class MultipleDependencyExecutableFlow implements ExecutableFlow
     public boolean reset()
     {
         final boolean actualFlowReset = actualFlow.reset();
-        final boolean groupFlowReset = true;
 
         for (ExecutableFlow flow : actualFlow.getChildren()) {
             flow.reset();
@@ -109,6 +109,12 @@ public class MultipleDependencyExecutableFlow implements ExecutableFlow
     public DateTime getEndTime()
     {
         return actualFlow.getEndTime();
+    }
+
+    @Override
+    public Props getParentProps()
+    {
+        return actualFlow.getParentProps();
     }
 
     @Override

@@ -20,10 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -31,6 +28,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import azkaban.flow.*;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
@@ -47,10 +45,6 @@ import org.joda.time.format.PeriodFormat;
 
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
-import azkaban.flow.ExecutableFlow;
-import azkaban.flow.FlowCallback;
-import azkaban.flow.FlowManager;
-import azkaban.flow.Status;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -195,10 +189,12 @@ public class Scheduler
     /**
      * Schedule this flow to run one time at the specified date
      *
-     * @param flow The ExecutableFlow to run
+     * @param holder The execution of the flow to run
      */
-    public ScheduledFuture<?> scheduleNow(ExecutableFlow flow)
+    public ScheduledFuture<?> scheduleNow(FlowExecutionHolder holder)
     {
+        ExecutableFlow flow = holder.getFlow();
+        
         logger.info("Scheduling job '" + flow.getName() + "' for now");
 
         ScheduledJob oldScheduledJob = _scheduled.get(flow.getName());
@@ -212,7 +208,7 @@ public class Scheduler
         // mark the job as scheduled
         _scheduled.put(flow.getName(), schedJob);
 
-        return _executor.schedule(new ScheduledFlow(flow, schedJob), 1, TimeUnit.MILLISECONDS);
+        return _executor.schedule(new ScheduledFlow(holder, schedJob), 1, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -584,8 +580,8 @@ public class Scheduler
                 emailList = desc.getEmailNotificationList();
 
                 final List<String> finalEmailList = emailList;
-                
-                final ExecutableFlow flowToRun = allKnownFlows.createNewExecutableFlow(_scheduledJob.getId(), new Props());
+
+                final ExecutableFlow flowToRun = allKnownFlows.createNewExecutableFlow(_scheduledJob.getId());
 
                 if (_ignoreDep) {
                     for (ExecutableFlow subFlow : flowToRun.getChildren()) {
@@ -595,68 +591,72 @@ public class Scheduler
 
                 senderAddress = desc.getSenderEmail();
                 final String senderEmail = senderAddress;
-                
+
+                final Props parentProps = produceParentProperties(flowToRun);
+
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
                 _scheduledJob.setStarted(new DateTime());
                 _executing.put(flowToRun.getName(), new ScheduledJobAndInstance(flowToRun, _scheduledJob));
-                flowToRun.execute(new FlowCallback()
-                {
-                    @Override
-                    public void progressMade()
-                    {
-                        allKnownFlows.saveExecutableFlow(flowToRun);
-                    }
-
-                    @Override
-                    public void completed(Status status)
-                    {
-                        _scheduledJob.setEnded(new DateTime());
-
-                        try {
-                            allKnownFlows.saveExecutableFlow(flowToRun);
-                            switch (status) {
-                                case SUCCEEDED:
-                                    sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
-                                    break;
-                                case FAILED:
-                                    sendErrorEmail(_scheduledJob, flowToRun.getException(), senderEmail, finalEmailList);
-                                    break;
-                                default:
-                                    sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
+                flowToRun.execute(
+                        parentProps,
+                        new FlowCallback()
+                        {
+                            @Override
+                            public void progressMade()
+                            {
+                                allKnownFlows.saveExecutableFlow(new FlowExecutionHolder(flowToRun, parentProps));
                             }
-                        }
-                        catch (RuntimeException e) {
-                            logger.warn("Exception caught while saving flow/sending emails", e);
-                            throw e;
-                        }
-                        finally {
-                            // mark the job as completed
-                            _executing.remove(_scheduledJob.getId());
-                            _completed.put(_scheduledJob.getId(), _scheduledJob);
 
-                            // if this is a recurring job, schedule the next execution as well
-                            if (_scheduledJob.isRecurring() && !_scheduledJob.isInvalid()) {
-                                DateTime nextRun = _scheduledJob.getScheduledExecution().plus(_scheduledJob.getPeriod());
-                                // This call will also save state.
-                                schedule(_scheduledJob.getId(),
-                                         nextRun,
-                                         _scheduledJob.getPeriod(),
-                                         _ignoreDep);
-                            }
-                            else {
+                            @Override
+                            public void completed(Status status)
+                            {
+                                _scheduledJob.setEnded(new DateTime());
+
                                 try {
-                                    saveSchedule();
+                                    allKnownFlows.saveExecutableFlow(new FlowExecutionHolder(flowToRun, parentProps));
+                                    switch (status) {
+                                        case SUCCEEDED:
+                                            sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
+                                            break;
+                                        case FAILED:
+                                            sendErrorEmail(_scheduledJob, flowToRun.getException(), senderEmail, finalEmailList);
+                                            break;
+                                        default:
+                                            sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
+                                    }
                                 }
-                                catch (IOException e) {
-                                    logger.warn("Error trying to update schedule.");
+                                catch (RuntimeException e) {
+                                    logger.warn("Exception caught while saving flow/sending emails", e);
+                                    throw e;
+                                }
+                                finally {
+                                    // mark the job as completed
+                                    _executing.remove(_scheduledJob.getId());
+                                    _completed.put(_scheduledJob.getId(), _scheduledJob);
+
+                                    // if this is a recurring job, schedule the next execution as well
+                                    if (_scheduledJob.isRecurring() && !_scheduledJob.isInvalid()) {
+                                        DateTime nextRun = _scheduledJob.getScheduledExecution().plus(_scheduledJob.getPeriod());
+                                        // This call will also save state.
+                                        schedule(_scheduledJob.getId(),
+                                                 nextRun,
+                                                 _scheduledJob.getPeriod(),
+                                                 _ignoreDep);
+                                    }
+                                    else {
+                                        try {
+                                            saveSchedule();
+                                        }
+                                        catch (IOException e) {
+                                            logger.warn("Error trying to update schedule.");
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    }
-                });
+                        });
 
-                allKnownFlows.saveExecutableFlow(flowToRun);
+                allKnownFlows.saveExecutableFlow(new FlowExecutionHolder(flowToRun, parentProps));
             }
             catch (Throwable t) {
                 if (emailList != null) {
@@ -669,80 +669,86 @@ public class Scheduler
         }
     }
 
-        /**
+    /**
      * A runnable adapter for a Job
      */
     private class ScheduledFlow implements Runnable
     {
-        private final ExecutableFlow _flow;
         private final ScheduledJob _scheduledJob;
+        private final FlowExecutionHolder holder;
 
 
         private ScheduledFlow(
-                ExecutableFlow flow,
+                FlowExecutionHolder holder,
                 ScheduledJob scheduledJob
         )
         {
-            this._flow = flow;
+            this.holder = holder;
             this._scheduledJob = scheduledJob;
         }
 
         public void run()
         {
-            logger.info("Starting run of " + _flow.getName());
+            final ExecutableFlow flow = holder.getFlow(); 
+            logger.info("Starting run of " + flow.getName());
 
             List<String> emailList = null;
             String senderAddress = null;
             try {
-                emailList = _jobManager.getJobDescriptor(_flow.getName()).getEmailNotificationList();
+                emailList = _jobManager.getJobDescriptor(flow.getName()).getEmailNotificationList();
                 final List<String> finalEmailList = emailList;
 
-                senderAddress = _jobManager.getJobDescriptor(_flow.getName()).getSenderEmail();
+                senderAddress = _jobManager.getJobDescriptor(flow.getName()).getSenderEmail();
                 final String senderEmail = senderAddress;
-                
+
+                Props parentProps = produceParentProperties(flow);
+
+
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
                 _scheduledJob.setStarted(new DateTime());
-                _executing.put(_flow.getName(), new ScheduledJobAndInstance(_flow, _scheduledJob));
-                _flow.execute(new FlowCallback()
-                {
-                    @Override
-                    public void progressMade()
-                    {
-                        allKnownFlows.saveExecutableFlow(_flow);
-                    }
-
-                    @Override
-                    public void completed(Status status)
-                    {
-                        _scheduledJob.setEnded(new DateTime());
-
-                        try {
-                            allKnownFlows.saveExecutableFlow(_flow);
-                            switch (status) {
-                                case SUCCEEDED:
-                                    sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
-                                    break;
-                                case FAILED:
-                                    sendErrorEmail(_scheduledJob, _flow.getException(), senderEmail, finalEmailList);
-                                    break;
-                                default:
-                                    sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
+                _executing.put(flow.getName(), new ScheduledJobAndInstance(flow, _scheduledJob));
+                flow.execute(
+                        holder.getParentProps(),
+                        new FlowCallback()
+                        {
+                            @Override
+                            public void progressMade()
+                            {
+                                allKnownFlows.saveExecutableFlow(holder);
                             }
-                        }
-                        catch (RuntimeException e) {
-                            logger.warn("Exception caught while saving flow/sending emails", e);
-                            throw e;
-                        }
-                        finally {
-                            // mark the job as completed
-                            _executing.remove(_scheduledJob.getId());
-                            _completed.put(_scheduledJob.getId(), _scheduledJob);
-                        }
-                    }
-                });
 
-                allKnownFlows.saveExecutableFlow(_flow);
+                            @Override
+                            public void completed(Status status)
+                            {
+                                _scheduledJob.setEnded(new DateTime());
+
+                                try {
+                                    allKnownFlows.saveExecutableFlow(holder);
+                                    switch (status) {
+                                        case SUCCEEDED:
+                                            sendSuccessEmail(_scheduledJob, _scheduledJob.getExecutionDuration(), senderEmail, finalEmailList);
+                                            break;
+                                        case FAILED:
+                                            sendErrorEmail(_scheduledJob, flow.getException(), senderEmail, finalEmailList);
+                                            break;
+                                        default:
+                                            sendErrorEmail(_scheduledJob, new RuntimeException(String.format("Got an unknown status[%s]", status)), senderEmail, finalEmailList);
+                                    }
+                                }
+                                catch (RuntimeException e) {
+                                    logger.warn("Exception caught while saving flow/sending emails", e);
+                                    throw e;
+                                }
+                                finally {
+                                    // mark the job as completed
+                                    _executing.remove(_scheduledJob.getId());
+                                    _completed.put(_scheduledJob.getId(), _scheduledJob);
+                                }
+                            }
+                        });
+
+                allKnownFlows.saveExecutableFlow(holder);
             }
             catch (Throwable t) {
                 if (emailList != null) {
@@ -753,5 +759,25 @@ public class Scheduler
                 logger.warn(String.format("An exception almost made it back to the ScheduledThreadPool from job[%s]", _scheduledJob), t);
             }
         }
+    }
+    
+    private Props produceParentProperties(final ExecutableFlow flow) {
+        Props parentProps = new Props();
+
+        parentProps.put("azkaban.flow.id", flow.getId());
+        parentProps.put("azkaban.flow.uuid", UUID.randomUUID().toString());
+
+        DateTime loadTime = new DateTime();
+
+        parentProps.put("azkaban.flow.start.timestamp", loadTime.toString());
+        parentProps.put("azkaban.flow.start.year", loadTime.toString("yyyy"));
+        parentProps.put("azkaban.flow.start.month", loadTime.toString("MM"));
+        parentProps.put("azkaban.flow.start.day", loadTime.toString("dd"));
+        parentProps.put("azkaban.flow.start.hour", loadTime.toString("HH"));
+        parentProps.put("azkaban.flow.start.minute", loadTime.toString("mm"));
+        parentProps.put("azkaban.flow.start.seconds", loadTime.toString("ss"));
+        parentProps.put("azkaban.flow.start.milliseconds", loadTime.toString("SSS"));
+        parentProps.put("azkaban.flow.start.timezone", loadTime.toString("ZZZZ"));
+        return parentProps;
     }
 }

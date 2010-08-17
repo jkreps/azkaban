@@ -16,6 +16,7 @@
 
 package azkaban.flow;
 
+import azkaban.common.utils.Props;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
     private volatile Status jobState;
     private volatile Throwable exception;
     private volatile List<FlowCallback> callbacksToCall = new ArrayList<FlowCallback>();
+    private volatile Props parentProps;
 
 
     public ComposedExecutableFlow(String id, ExecutableFlow depender, ExecutableFlow dependee)
@@ -60,18 +62,21 @@ public class ComposedExecutableFlow implements ExecutableFlow
                         jobState = Status.RUNNING;
                         startTime = dependee.getStartTime();
                         endTime = null;
-                        dependee.execute(new DependeeCallback());
+                        parentProps = dependee.getParentProps();
+                        dependee.execute(parentProps, new DependeeCallback());
                         break;
                     case COMPLETED:
                     case SUCCEEDED:
                         jobState = Status.READY;
                         startTime = dependee.getStartTime();
+                        parentProps = dependee.getParentProps();
                         endTime = null;
                         break;
                     case FAILED:
-                        jobState = Status.FAILED;                        
+                        jobState = Status.FAILED;
                         startTime = dependee.getStartTime();
                         endTime = dependee.getEndTime();
+                        parentProps = dependee.getParentProps();
                 }
                 break;
             case RUNNING:
@@ -79,7 +84,11 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 startTime = dependee.getStartTime() == null ? depender.getStartTime() : dependee.getStartTime();
                 endTime = null;
 
-                depender.execute(new DependerCallback());
+                parentProps = depender.getParentProps();
+                if (! parentProps.equalsProps(dependee.getParentProps())) {
+                    throw new IllegalStateException(String.format("Parent props differ for sub flows [%s]", id));
+                }
+                depender.execute(parentProps, new DependerCallback());
 
                 break;
             case COMPLETED:
@@ -88,6 +97,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 jobState = dependerState;
                 startTime = dependee.getStartTime() == null ? depender.getStartTime() : dependee.getStartTime();
                 endTime = depender.getEndTime();
+                parentProps = depender.getParentProps();
         }
     }
 
@@ -104,9 +114,28 @@ public class ComposedExecutableFlow implements ExecutableFlow
     }
 
     @Override
-    public void execute(final FlowCallback callback)
+    public void execute(Props parentProps, final FlowCallback callback)
     {
+        if (parentProps == null) {
+            parentProps = new Props();
+        }
+
         synchronized (sync) {
+            if (this.parentProps == null) {
+                this.parentProps = parentProps;
+            }
+            else if (jobState != Status.COMPLETED && ! this.parentProps.equalsProps(parentProps)) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "%s.execute() called with multiple differing parentProps objects.  " +
+                                "Call reset() before executing again with a different Props object. this.parentProps[%s], parentProps[%s]",
+                                getClass().getSimpleName(),
+                                this.parentProps,
+                                parentProps
+                        )
+                );
+            }
+
             switch (jobState) {
                 case READY:
                     jobState = Status.RUNNING;
@@ -131,7 +160,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
         }
 
         try {
-            dependee.execute(new DependeeCallback());
+            dependee.execute(parentProps, new DependeeCallback());
         }
         catch (RuntimeException e) {
             final List<FlowCallback> callbacks;
@@ -174,6 +203,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                     jobState = Status.READY;
                     retVal = depender.reset();
                     callbacksToCall = new ArrayList<FlowCallback>();
+                    parentProps = null;
                     startTime = null;
                     endTime = null;
                     exception = null;
@@ -192,6 +222,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                     return false;
                 default:
                     jobState = Status.COMPLETED;
+                    parentProps = new Props();
             }
         }
 
@@ -230,6 +261,11 @@ public class ComposedExecutableFlow implements ExecutableFlow
     public DateTime getEndTime()
     {
         return endTime;
+    }
+
+    @Override
+    public Props getParentProps() {
+        return parentProps;
     }
 
     @Override
@@ -326,7 +362,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                         flowCallback.progressMade();
                     }
 
-                    depender.execute(new DependerCallback());
+                    depender.execute(parentProps, new DependerCallback());
                     break;
                 case FAILED:
                     synchronized (sync) {

@@ -40,7 +40,6 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private final String id;
     private final String name;
     private final JobManager jobManager;
-    private final Props overrideProps;
 
     private volatile Status jobState;
     private volatile List<FlowCallback> callbacksToCall;
@@ -48,22 +47,18 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private volatile DateTime endTime;
     private volatile Job job;
     private volatile Throwable exception;
+    private volatile Props parentProps;
 
-    public IndividualJobExecutableFlow(String id, String name, Props overrideProps, JobManager jobManager)
+    public IndividualJobExecutableFlow(String id, String name, JobManager jobManager)
     {
         this.id = id;
         this.name = name;
         this.jobManager = jobManager;
-        this.overrideProps = overrideProps;
 
-        jobState = Status.READY;
-        callbacksToCall = new ArrayList<FlowCallback>();
-        startTime = null;
-        endTime = null;
-        exception = null;
+        resetState();
     }
 
-	@Override
+    @Override
     public String getId()
     {
         return id;
@@ -75,14 +70,33 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         return name;
     }
 
-    public Props getOverrideProps() {
-		return overrideProps;
+    public Props getParentProps() {
+		return parentProps;
 	}
     
     @Override
-    public void execute(FlowCallback callback)
+    public void execute(Props parentProps, FlowCallback callback)
     {
+        if (parentProps == null) {
+            parentProps = new Props();
+        }
+        
         synchronized (sync) {
+            if (this.parentProps == null) {
+                this.parentProps = parentProps;
+            }
+            else if (jobState != Status.COMPLETED && ! this.parentProps.equalsProps(parentProps)) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "%s.execute() called with multiple differing parentProps objects.  " +
+                                "Call reset() before executing again with a different Props object. this.parentProps[%s], parentProps[%s]",
+                                getClass().getSimpleName(),
+                                this.parentProps,
+                                parentProps
+                        )
+                );
+            }
+
             switch (jobState) {
                 case READY:
                     jobState = Status.RUNNING;
@@ -102,7 +116,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
             }
         }
 
-        job = jobManager.loadJob(getName(), overrideProps, true);
+        job = jobManager.loadJob(getName(), this.parentProps, true);
 
         final ClassLoader storeMyClassLoader = Thread.currentThread().getContextClassLoader();
 
@@ -234,11 +248,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                 case RUNNING:
                     return false;
                 default:
-                    jobState = Status.READY;
-                    callbacksToCall = new ArrayList<FlowCallback>();
-                    startTime = null;
-                    endTime = null;
-                    exception = null;
+                    resetState();
             }
         }
 
@@ -254,6 +264,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                     return false;
                 default:
                     jobState = Status.COMPLETED;
+                    parentProps = new Props();
             }
         }
         return true;
@@ -325,5 +336,29 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         this.endTime = endTime;
 
         return this;
+    }
+
+    IndividualJobExecutableFlow setParentProperties(Props parentProps)
+    {
+        synchronized (sync) {
+            if (this.parentProps == null) {
+                this.parentProps = parentProps;
+            }
+            else {
+                throw new IllegalStateException("Attempt to override parent properties.  " +
+                                                "This method should only really be called from deserialization code");
+            }
+        }
+
+        return this;
+    }
+
+    private void resetState() {
+        jobState = Status.READY;
+        callbacksToCall = new ArrayList<FlowCallback>();
+        parentProps = null;
+        startTime = null;
+        endTime = null;
+        exception = null;
     }
 }

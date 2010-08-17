@@ -39,24 +39,23 @@ public class CachingFlowManager implements FlowManager
     private static final Logger log = Logger.getLogger(CachingFlowManager.class);
 
     private final FlowManager baseManager;
-    private final Map<String, ExecutableFlow> flowCache;
+    private final Map<String, FlowExecutionHolder> flowCache;
 
     public CachingFlowManager(FlowManager baseManager, final int cacheSize)
     {
         this.baseManager = baseManager;
 
         this.flowCache = Collections.synchronizedMap(
-                new LinkedHashMap<String, ExecutableFlow>((int) (cacheSize * 1.5), 0.75f, true){
+                new LinkedHashMap<String, FlowExecutionHolder>((int) (cacheSize * 1.5), 0.75f, true){
                     @Override
-                    protected boolean removeEldestEntry(Map.Entry<String, ExecutableFlow> eldest)
+                    protected boolean removeEldestEntry(Map.Entry<String, FlowExecutionHolder> eldest)
                     {
                         final boolean tooManyElements = super.size() > cacheSize;
 
                         if (tooManyElements) {
-                            final Status status = eldest.getValue().getStatus();
-                            final boolean jobNotRunning = status != Status.RUNNING;
+                            final Status status = eldest.getValue().getFlow().getStatus();
 
-                            if (jobNotRunning) {
+                            if (status != Status.RUNNING) {
                                 return true;
                             }
                             else {
@@ -100,13 +99,26 @@ public class CachingFlowManager implements FlowManager
         return baseManager.iterator();
     }
 
-    public ExecutableFlow createNewExecutableFlow(String name, Props overrideProps)
+    public ExecutableFlow createNewExecutableFlow(String name)
     {
-        final ExecutableFlow retVal = baseManager.createNewExecutableFlow(name, overrideProps);
+        final ExecutableFlow retVal = baseManager.createNewExecutableFlow(name);
 
-        addToCache(retVal);
+        return new WrappingExecutableFlow(retVal){
+            @Override
+            public void execute(Props parentProperties, FlowCallback callback) {
 
-        return retVal;
+                if (! flowCache.containsKey(getId())) {
+                    addToCache(
+                            new FlowExecutionHolder(
+                                    retVal,
+                                    parentProperties
+                            )
+                    );
+                }
+
+                super.execute(parentProperties, callback);
+            }
+        };
     }
 
     public long getNextId()
@@ -119,19 +131,19 @@ public class CachingFlowManager implements FlowManager
         return baseManager.getCurrMaxId();
     }
 
-    public ExecutableFlow saveExecutableFlow(ExecutableFlow flow)
+    public FlowExecutionHolder saveExecutableFlow(FlowExecutionHolder flow)
     {
         return baseManager.saveExecutableFlow(flow);
     }
 
-    public ExecutableFlow loadExecutableFlow(long id)
+    public FlowExecutionHolder loadExecutableFlow(long id)
     {
-        final ExecutableFlow executableFlow = flowCache.get(String.valueOf(id));
+        final FlowExecutionHolder executableFlow = flowCache.get(String.valueOf(id));
         if (executableFlow != null) {
             return executableFlow;
         }
 
-        final ExecutableFlow retVal = baseManager.loadExecutableFlow(id);
+        final FlowExecutionHolder retVal = baseManager.loadExecutableFlow(id);
 
         addToCache(retVal);
 
@@ -143,17 +155,17 @@ public class CachingFlowManager implements FlowManager
         baseManager.reload();
     }
 
-    private void addToCache(ExecutableFlow retVal)
+    private void addToCache(FlowExecutionHolder retVal)
     {
-        if (retVal == null) {
+        if (retVal == null || retVal.getFlow() == null) {
             return;
         }
-        
-        if (flowCache.put(retVal.getId(), retVal) != null) {
+
+        if (flowCache.put(retVal.getFlow().getId(), retVal) != null) {
             throw new IllegalStateException(
                     String.format(
                             "Attempted to add object to the cache but the id[%s] already existed.  Flow was [%s]",
-                            retVal.getId(),
+                            retVal.getFlow().getId(),
                             retVal
                     )
             );

@@ -16,6 +16,7 @@
 
 package azkaban.flow;
 
+import azkaban.common.utils.Props;
 import org.joda.time.DateTime;
 
 import java.util.List;
@@ -50,9 +51,10 @@ public interface ExecutableFlow
      * an execute() call.  If the job is already completed when an execute() call is made, the callback should still
      * be called.
      *
+     * @param parentProperties properties that should be used as parent properties by the execution.
      * @param callback the callback to be run upon completion.
      */
-    public void execute(FlowCallback callback);
+    public void execute(Props parentProperties, FlowCallback callback);
 
     /**
      * Cancels a running flow
@@ -115,6 +117,12 @@ public interface ExecutableFlow
      */
     public DateTime getEndTime();
 
+    /**
+     * Gets the parent props used for the execution of this Flow
+     *
+     * @return the parent props, null if state is READY
+     */
+    public Props getParentProps();
 
     /**
      * Gets the exception that caused this Flow to fail, if it has failed

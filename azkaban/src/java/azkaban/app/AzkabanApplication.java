@@ -33,7 +33,9 @@ import azkaban.jobs.PigProcessJob;
 import azkaban.jobs.ProcessJob;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
 import azkaban.serialization.ExecutableFlowSerializer;
+import azkaban.serialization.FlowExecutionSerializer;
 import azkaban.serialization.de.ExecutableFlowDeserializer;
+import azkaban.serialization.de.FlowExecutionDeserializer;
 import azkaban.serialization.de.JobFlowDeserializer;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -149,8 +151,18 @@ public class AzkabanApplication
                 )
         );
 
+        FlowExecutionSerializer flowExecutionSerializer = new FlowExecutionSerializer(flowSerializer);
+        FlowExecutionDeserializer flowExecutionDeserializer = new FlowExecutionDeserializer(flowDeserializer);
+
         _allFlows = new CachingFlowManager(
-                new RefreshableFlowManager(_jobManager, factory, flowSerializer, flowDeserializer, executionsStorageDir, lastExecutionId),
+                new RefreshableFlowManager(
+                        _jobManager,
+                        factory,
+                        flowExecutionSerializer,
+                        flowExecutionDeserializer, 
+                        executionsStorageDir,
+                        lastExecutionId
+                ),
                 defaultProps.getInt("azkaban.flow.cache.size", 1000)
         );
         _jobManager.setFlowManager(_allFlows);

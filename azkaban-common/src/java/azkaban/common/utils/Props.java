@@ -409,6 +409,21 @@ public class Props {
         return _current.equals(p._current) && Objects.equal(this._parent, p._parent);
     }
 
+    public boolean equalsProps(Props p) {
+        if (p == null) {
+            return false;
+        }
+
+        final Set<String> myKeySet = getKeySet();
+        for (String s : myKeySet) {
+            if (! get(s).equals(p.get(s))) {
+                return false;
+            }
+        }
+
+        return myKeySet.size() == p.getKeySet().size();
+    }
+
     @Override
     public int hashCode() {
         int code = this._current.hashCode();

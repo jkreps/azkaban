@@ -18,6 +18,7 @@ package azkaban.web.pages;
 
 import azkaban.common.web.Page;
 import azkaban.flow.ExecutableFlow;
+import azkaban.flow.FlowExecutionHolder;
 import azkaban.flow.FlowManager;
 import azkaban.flow.Flows;
 import azkaban.web.AbstractAzkabanServlet;
@@ -43,14 +44,14 @@ public class ExecutionHistoryServlet extends AbstractAzkabanServlet {
                 try {
                     long id = Long.parseLong(getParam(req, "id"));
 
-                    final ExecutableFlow flow = allFlows.loadExecutableFlow(id);
+                    final FlowExecutionHolder holder = allFlows.loadExecutableFlow(id);
 
-                    if (flow == null) {
+                    if (holder == null) {
                         addMessage(req, String.format("Unknown flow with id[%s]", id));
                     }
                     else {
-                        Flows.resetFailedFlows(flow);
-                        this.getApplication().getScheduler().scheduleNow(flow);
+                        Flows.resetFailedFlows(holder.getFlow());
+                        this.getApplication().getScheduler().scheduleNow(holder);
 
                         addMessage(req, String.format("Flow[%s] restarted.", id));
                     }
@@ -70,7 +71,11 @@ public class ExecutionHistoryServlet extends AbstractAzkabanServlet {
 
         List<ExecutableFlow> execs = new ArrayList<ExecutableFlow>(size);
         for (int i = 0; i < size; ++i) {
-            ExecutableFlow flow = allFlows.loadExecutableFlow(currMaxId - i);
+            final FlowExecutionHolder holder = allFlows.loadExecutableFlow(currMaxId - i);
+            ExecutableFlow flow = null;
+            if (holder != null) {
+                flow = holder.getFlow();
+            }
 
             if (flow != null) {
                 execs.add(flow);
