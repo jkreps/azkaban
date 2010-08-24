@@ -35,7 +35,6 @@ public class RefreshableFlowManager implements FlowManager
     private final Object idSync = new Object();
     
     private final JobManager jobManager;
-    private final JobWrappingFactory jobFactory;
     private final FlowExecutionSerializer serializer;
     private final FlowExecutionDeserializer deserializer;
     private final File storageDirectory;
@@ -44,7 +43,6 @@ public class RefreshableFlowManager implements FlowManager
 
     public RefreshableFlowManager(
             JobManager jobManager,
-            JobWrappingFactory jobFactory,
             FlowExecutionSerializer serializer,
             FlowExecutionDeserializer deserializer,
             File storageDirectory,
@@ -52,7 +50,6 @@ public class RefreshableFlowManager implements FlowManager
     )
     {
         this.jobManager = jobManager;
-        this.jobFactory = jobFactory;
         this.serializer = serializer;
         this.deserializer = deserializer;
         this.storageDirectory = storageDirectory;
@@ -136,7 +133,7 @@ public class RefreshableFlowManager implements FlowManager
         for (JobDescriptor rootDescriptor : jobManager.getRootJobDescriptors(jobManager.loadJobDescriptors())) {
             if (rootDescriptor.getId() != null) {
                 // This call of magical wonderment ends up pushing all Flow objects in the dependency graph for the root into flowMap
-                Flows.buildLegacyFlow(jobFactory, jobManager, flowMap, rootDescriptor);
+                Flows.buildLegacyFlow(jobManager, flowMap, rootDescriptor);
                 rootFlows.add(rootDescriptor.getId());
             }
         }

@@ -143,7 +143,6 @@ public class CommandLineJobRunner {
 
 
         FlowManager allFlows = new RefreshableFlowManager(jobManager,
-                                                          factory,
                                                           flowExecutionSerializer,
                                                           flowExecutionDeserializer,
                                                           executionsStorageFile,

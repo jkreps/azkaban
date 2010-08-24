@@ -157,7 +157,6 @@ public class AzkabanApplication
         _allFlows = new CachingFlowManager(
                 new RefreshableFlowManager(
                         _jobManager,
-                        factory,
                         flowExecutionSerializer,
                         flowExecutionDeserializer, 
                         executionsStorageDir,

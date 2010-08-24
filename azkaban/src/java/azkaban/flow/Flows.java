@@ -34,7 +34,6 @@ import com.google.common.collect.Lists;
 public class Flows
 {
     public static Flow buildLegacyFlow(
-            final JobWrappingFactory jobFactory,
             final JobManager jobManager,
             final Map<String, Flow> alreadyBuiltFlows,
             final JobDescriptor rootDescriptor
@@ -48,28 +47,30 @@ public class Flows
         final Flow retVal;
         if (rootDescriptor.hasDependencies()) {
             Set<JobDescriptor> dependencies = rootDescriptor.getDependencies();
-            List<Flow> dependencyFlows =
-                    Lists.newArrayList(
-                            Iterables.transform(
-                                    dependencies,
-                                    new Function<JobDescriptor, Flow>()
-                                    {
-                                        @Override
-                                        public Flow apply(JobDescriptor jobDescriptor)
-                                        {
-                                            return buildLegacyFlow(jobFactory, jobManager, alreadyBuiltFlows, jobDescriptor);
-                                        }
-                                    }
-                            )
-                    );
+            Flow[] depFlows = new Flow[dependencies.size()];
 
-            retVal = new MultipleDependencyFlow(
-                    new IndividualJobFlow(
-                            rootDescriptor.getId(),
-                            jobManager
-                            ),
-                    dependencyFlows.toArray(new Flow[dependencyFlows.size()])
-            );
+            int index = 0;
+            for (JobDescriptor jobDescriptor : dependencies) {
+                depFlows[index] = buildLegacyFlow(jobManager, alreadyBuiltFlows, jobDescriptor);
+                ++index;
+            }
+
+            if ("propertyPusher".equals(rootDescriptor.getJobType())) {
+                retVal = new PropertyPushingFlow(
+                        rootDescriptor.getId(),
+                        rootDescriptor.getProps().local(),
+                        depFlows
+                );
+            }
+            else {
+                retVal = new MultipleDependencyFlow(
+                        new IndividualJobFlow(
+                                rootDescriptor.getId(),
+                                jobManager
+                        ),
+                        depFlows
+                );
+            }
         }
         else {
             retVal = new IndividualJobFlow(
