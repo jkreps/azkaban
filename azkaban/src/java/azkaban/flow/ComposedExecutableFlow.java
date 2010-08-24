@@ -18,6 +18,8 @@ package azkaban.flow;
 
 import org.joda.time.DateTime;
 
+import azkaban.common.utils.Props;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,12 +34,15 @@ public class ComposedExecutableFlow implements ExecutableFlow
     private final String id;
     private final ExecutableFlow depender;
     private final ExecutableFlow dependee;
+    private Props flowInputGeneratedProperties;
 
     private volatile DateTime startTime;
     private volatile DateTime endTime;
     private volatile Status jobState;
     private volatile Throwable exception;
     private volatile List<FlowCallback> callbacksToCall = new ArrayList<FlowCallback>();
+    private volatile Props flowOutputGeneratedProperties;
+    private volatile Props intermediateFlowOutputProperties;
 
 
     public ComposedExecutableFlow(String id, ExecutableFlow depender, ExecutableFlow dependee)
@@ -60,7 +65,8 @@ public class ComposedExecutableFlow implements ExecutableFlow
                         jobState = Status.RUNNING;
                         startTime = dependee.getStartTime();
                         endTime = null;
-                        dependee.execute(new DependeeCallback());
+                        // Like GroupedExecutableFlow, seems to only be installing the callback.
+                        dependee.execute(new DependeeCallback(), new Props());
                         break;
                     case COMPLETED:
                     case SUCCEEDED:
@@ -79,7 +85,8 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 startTime = dependee.getStartTime() == null ? depender.getStartTime() : dependee.getStartTime();
                 endTime = null;
 
-                depender.execute(new DependerCallback());
+                // Like GroupedExecutableFlow, seems to only be installing the callback.
+                depender.execute(new DependerCallback(), new Props());
 
                 break;
             case COMPLETED:
@@ -102,9 +109,14 @@ public class ComposedExecutableFlow implements ExecutableFlow
     {
         return depender.getName();
     }
+    
+    @Override
+    public Props getFlowGeneratedProperties() {
+        return flowOutputGeneratedProperties;
+    }
 
     @Override
-    public void execute(final FlowCallback callback)
+    public void execute(final FlowCallback callback, Props flowInputGeneratedProperties)
     {
         synchronized (sync) {
             switch (jobState) {
@@ -125,13 +137,19 @@ public class ComposedExecutableFlow implements ExecutableFlow
                     return;
             }
         }
-
+        
+        // Get the output properties from dependent jobs.
+        // Clone them so we don't mess up storage up the line.
+        this.flowInputGeneratedProperties = (flowInputGeneratedProperties == null ? 
+                                                null :
+                                                Props.clone(flowInputGeneratedProperties)); 
+        
         if (startTime == null) {
             startTime = new DateTime();
         }
 
         try {
-            dependee.execute(new DependeeCallback());
+            dependee.execute(new DependeeCallback(), flowInputGeneratedProperties);
         }
         catch (RuntimeException e) {
             final List<FlowCallback> callbacks;
@@ -288,6 +306,16 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 jobState = status;
                 if (status == Status.FAILED) {
                     exception = depender.getException();
+                } else {
+                    
+                    // Aggregate all output from dependee
+                    flowOutputGeneratedProperties = new Props();
+                    if (intermediateFlowOutputProperties != null) {
+                        flowOutputGeneratedProperties.putAll(intermediateFlowOutputProperties);                  
+                    }
+                    flowOutputGeneratedProperties.putAll(depender.getFlowGeneratedProperties());
+                    flowOutputGeneratedProperties.logProperties(
+                            "Output properties for depender " + getName());
                 }
                 callbackList = callbacksToCall;
             }
@@ -325,8 +353,19 @@ public class ComposedExecutableFlow implements ExecutableFlow
                     for (FlowCallback flowCallback : callbackList) {
                         flowCallback.progressMade();
                     }
+                    
+                    
+                    // Aggregate all output from dependee
+                    intermediateFlowOutputProperties = new Props();
+                    if (flowInputGeneratedProperties != null) {
+                        intermediateFlowOutputProperties.putAll(flowInputGeneratedProperties);                  
+                    }
+                    intermediateFlowOutputProperties.putAll(dependee.getFlowGeneratedProperties());
+                    intermediateFlowOutputProperties.logProperties(
+                            "Intermediate Output properties for dependee " + getName());
 
-                    depender.execute(new DependerCallback());
+                    depender.execute(new DependerCallback(), intermediateFlowOutputProperties);
+                    
                     break;
                 case FAILED:
                     synchronized (sync) {

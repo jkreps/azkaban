@@ -18,6 +18,7 @@ package azkaban.jobs;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
@@ -49,12 +50,18 @@ public class ProcessJob extends AbstractJob implements Job {
     public static final String JOB_PROP_ENV = "JOB_PROP_FILE";
     public static final String JOB_NAME_ENV = "JOB_NAME";
     public static final int CLEAN_UP_TIME_MS = 1000;
+    
+    public static final String JOB_OUTPUT_PROP_FILE = "JOB_OUTPUT_PROP_FILE";
+
 
     private final String _jobPath;
     private final String _name;
+    private final JobDescriptor _descriptor;
     private volatile Props _props;
     private volatile Process _process;
     private volatile boolean _isComplete;
+    
+    private volatile Props generatedPropeties;
 
     public ProcessJob(JobDescriptor descriptor) {
         super(descriptor.getId());
@@ -62,11 +69,20 @@ public class ProcessJob extends AbstractJob implements Job {
         this._isComplete = false;
         this._jobPath = descriptor.getFullPath();
         this._name = descriptor.getId();
+        this._descriptor = descriptor;
+    }
+    
+    public void run() {
+        run(null);
+    }
+    
+    public Props getJobGeneratedProperties() {
+        return generatedPropeties;
     }
 
-    public void run() {
-    	_props = PropsUtils.resolveProps(_props);
-    	
+    public void run(Props inputGeneratedProperties) {
+        _props = PropsUtils.resolveProps(_props, inputGeneratedProperties);
+        
         // Sets a list of all the commands that need to be run.
         List<String> commands = getCommandList();
         info(commands.size() + " commands to execute.");
@@ -74,12 +90,15 @@ public class ProcessJob extends AbstractJob implements Job {
         Map<String, String> env = getEnvironmentVariables();
 
         String cwd = getWorkingDirectory();
-        // Create process file
-        File file = createFlattenedPropsFile(cwd, _props, _name);
+        // Create properties file with additionally all input generated properties.
+        File file = createFlattenedPropsFile(cwd, _props, inputGeneratedProperties, _name);
         System.out.println("Temp file created " + file.getAbsolutePath());
 
         env.put(JOB_PROP_ENV, file.getAbsolutePath());
         env.put(JOB_NAME_ENV, _name);
+        
+        File outputFile = this.createOutputPropsFile(_name, cwd);
+        env.put(JOB_OUTPUT_PROP_FILE, outputFile.getAbsolutePath());
 
         // For each of the jobs, set up a process and run them.
         for(String command: commands) {
@@ -129,21 +148,50 @@ public class ProcessJob extends AbstractJob implements Job {
             } catch(InterruptedException e) {
             }
         }
-
+        
+        // Get the output properties from this job.
+        generatedPropeties = loadOutputFileProps(_descriptor, outputFile);
+        
+        outputFile.delete();
         file.delete();
     }
 
-    private File createFlattenedPropsFile(String workingDir, final Props props, final String id) {
-        final File directory = new File(workingDir);
-        final File tempFile;
+    private File createFlattenedPropsFile(String workingDir, 
+                                          final Props props,
+                                          Props inputGeneratedProperties,
+                                          String id) {
+        File directory = new File(workingDir);
+        File tempFile = null;
         try {
             tempFile = File.createTempFile(id + "_", "_tmp", directory);
-            props.storeFlattened(tempFile);
+            // Use desc as the parent
+            Props inputProps = new Props(props, inputGeneratedProperties); 
+            inputProps.storeFlattened(tempFile);
         } catch(IOException e) {
             throw new RuntimeException("Failed to create temp property file ", e);
         }
 
         return tempFile;
+    }
+    
+    private File createOutputPropsFile(String id, String workingDir) {
+        File directory = new File(workingDir);
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile(id + "_output_", "_tmp", directory);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create temp output property file ", e);
+        }
+        return tempFile;
+    }
+    
+    private Props loadOutputFileProps(JobDescriptor desc, File outputPropertiesFile) {
+        try {
+            Props outputProps = new Props(null, new FileInputStream(outputPropertiesFile));
+            return outputProps;
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to gather output properties into: " + desc.getFullPath());
+        }
     }
 
     protected List<String> getCommandList() {
@@ -286,6 +334,10 @@ public class ProcessJob extends AbstractJob implements Job {
 
     public String getJobName() {
         return _name;
+    }
+
+    public JobDescriptor getJobDescriptor() {
+        return _descriptor;
     }
 
     /**

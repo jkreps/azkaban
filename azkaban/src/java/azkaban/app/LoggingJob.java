@@ -45,15 +45,27 @@ public class LoggingJob extends DelegatingJob {
 
     private final Logger _logger;
     private final String _logDir;
+    
+    private Props jobGeneratedProperties;
 
     public LoggingJob(String logDir, Job innerJob, String loggerName) {
         super(innerJob);
         this._logDir = Utils.nonNull(logDir);
         this._logger = Logger.getLogger(loggerName);
     }
+    
+    @Override
+    public void run() throws Exception {
+        run(null);
+    }
+    
+    @Override
+    public Props getJobGeneratedProperties() {
+        return jobGeneratedProperties;
+    }
 
     @Override
-    public void run() {
+    public void run(Props jobInputOutputProperties) {
         String jobName = getInnerJob().getId();
         Utils.makePaths(new File(_logDir));
         File jobLogDir = new File(_logDir + File.separator + jobName);
@@ -74,8 +86,9 @@ public class LoggingJob extends DelegatingJob {
         boolean jobNotStaleException = false;
         long start = System.currentTimeMillis();
         try {
-            getInnerJob().run();
+            getInnerJob().run(jobInputOutputProperties);
             succeeded = true;
+            jobGeneratedProperties = getInnerJob().getJobGeneratedProperties();
         } catch(Throwable t) {
             _logger.error("Fatal error occurred while running job '" + jobName + "':", t);
             throw new RuntimeException(t);

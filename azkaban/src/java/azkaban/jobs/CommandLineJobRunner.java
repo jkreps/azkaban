@@ -190,7 +190,7 @@ public class CommandLineJobRunner {
 
                         countDown.countDown();
                     }
-                });
+                }, null);
             } catch(Exception e) {
                 System.out.println("Failed to run job '" + jobName + "':");
                 e.printStackTrace();

@@ -197,11 +197,21 @@ public class JobManager {
         File[] files = jobDir.listFiles();
         if(files != null) {
             for(File execDir: files) {
+                // Sometimes there are os or other maintenance files that should be skipped.
+                if (!execDir.isDirectory() || execDir.getName().startsWith(".")) {
+                    continue;
+                }
                 File runProps = new File(execDir, "run.properties");
                 DateTime start = null;
                 DateTime end = null;
                 boolean succeeded = false;
-                DateTime dirDate = JOB_EXEC_DATE_FORMAT.parseDateTime(execDir.getName());
+                DateTime dirDate = null;
+                try {
+                    dirDate = JOB_EXEC_DATE_FORMAT.parseDateTime(execDir.getName());
+                } catch (Exception e) {
+                    logger.info("Ignoring unknown directory found in logs:" + execDir.getAbsolutePath(), e);
+                    continue;
+                }
                 if(runProps.canRead()) {
                     Props props = new Props(null, runProps.getAbsolutePath());
                     start = new DateTime(props.getLong("start"));

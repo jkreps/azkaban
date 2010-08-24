@@ -654,7 +654,7 @@ public class Scheduler
                             }
                         }
                     }
-                });
+                }, null);
 
                 allKnownFlows.saveExecutableFlow(flowToRun);
             }
@@ -740,7 +740,7 @@ public class Scheduler
                             _completed.put(_scheduledJob.getId(), _scheduledJob);
                         }
                     }
-                });
+                }, null);
 
                 allKnownFlows.saveExecutableFlow(_flow);
             }

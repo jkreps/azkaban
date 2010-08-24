@@ -110,7 +110,7 @@ public class PropsUtils {
     
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([a-zA-Z_.0-9]+)\\}");
     
-    public static Props resolveProps(Props props) {
+    public static Props resolveProps(Props props, Props inputGeneratedProps) {
     	Props resolvedProps = new Props();
 
     	for(String key : props.getKeySet()) {
@@ -127,9 +127,15 @@ public class PropsUtils {
 	            }
 	
 	            String replacement = props.get(variableName);
-	            if(replacement == null)
-	                throw new UndefinedPropertyException("Could not find variable substitution for variable '"
-	                                                     + variableName + "' in key '" + key + "'.");
+	            if(replacement == null) {
+	                if (inputGeneratedProps != null) {
+	                    replacement = inputGeneratedProps.get(variableName);
+	                }
+	                if (replacement == null) {
+	                  throw new UndefinedPropertyException("Could not find variable substitution for variable '"
+	                                                       + variableName + "' in key '" + key + "'.");
+	                }
+	            }
 	
 	            replacement = replacement.replaceAll("\\\\", "\\\\\\\\");
 	            replacement = replacement.replaceAll("\\$", "\\\\\\$");

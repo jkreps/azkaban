@@ -58,4 +58,17 @@ public interface Job {
      * @throws Exception If getting progress fails
      */
     public double getProgress() throws Exception;
+    
+    /**
+     * Run the job given a set of properties generated from other jobs.
+     * @param generatedInputProperties
+     * @throws Exception
+     */
+    public void run(Props generatedInputProperties) throws Exception;
+    
+    /**
+     * Get the generated properties from this job.
+     * @return
+     */
+    public Props getJobGeneratedProperties();
 }

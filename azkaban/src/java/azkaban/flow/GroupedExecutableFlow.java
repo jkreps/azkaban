@@ -16,6 +16,8 @@
 
 package azkaban.flow;
 
+import azkaban.common.utils.Props;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import org.apache.commons.lang.StringUtils;
@@ -36,6 +38,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
     private final String id;
     private final ExecutableFlow[] flows;
     private final ExecutableFlow[] sortedFlows;
+    private Props flowInputGeneratedProperties;
 
     private volatile Status jobState;
     private volatile List<FlowCallback> callbacksToCall;
@@ -43,6 +46,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
     private volatile DateTime endTime;
     private volatile GroupedExecutableFlow.GroupedFlowCallback theGroupCallback;
     private volatile Throwable exception;
+    private volatile Props flowOutputGeneratedProperties;
 
     public GroupedExecutableFlow(String id, ExecutableFlow... flows)
     {
@@ -119,8 +123,13 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 endTime = null;
 
                 // Make sure everything is initialized before leaking the pointer to "this".
+                // TODO(pazel): This seems to be a case, where the grouped tasks are already running,
+                //              and seems to be a case where we need a callback only.  So, there should
+                //              not be a need for generatedParams to input here.  HOWEVER, we should double
+                //              check on this, and see is this is alright.  Also need to understand 
+                //              comment prior to this TODO
                 for (ExecutableFlow runningFlow : runningFlows) {
-                    runningFlow.execute(theGroupCallback);
+                    runningFlow.execute(theGroupCallback, new Props());
                 }
         }
     }
@@ -146,9 +155,14 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 " + "
         );
     }
+    
+    @Override
+    public Props getFlowGeneratedProperties() {
+        return flowOutputGeneratedProperties;
+    }
 
     @Override
-    public void execute(final FlowCallback callback)
+    public void execute(final FlowCallback callback, Props flowInputOutputProperties)
     {
         synchronized (sync) {
             switch (jobState) {
@@ -168,6 +182,12 @@ public class GroupedExecutableFlow implements ExecutableFlow
                     return;
             }
         }
+        
+        // Get the output properties from dependent jobs.
+        // Clone them so we don't mess up storage up the line.
+        this.flowInputGeneratedProperties = flowInputOutputProperties == null ? 
+                                             null :
+                                             Props.clone(flowInputOutputProperties);
 
         if (startTime == null) {
             startTime = new DateTime();
@@ -176,7 +196,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
         for (ExecutableFlow flow : flows) {
             if (jobState != Status.FAILED) {
                 try {
-                    flow.execute(theGroupCallback);
+                    flow.execute(theGroupCallback, this.flowInputGeneratedProperties);
                 }
                 catch (RuntimeException e) {
                     final List<FlowCallback> callbacks;
@@ -223,6 +243,16 @@ public class GroupedExecutableFlow implements ExecutableFlow
 
             if (allComplete) {
                 jobState = Status.SUCCEEDED;
+                
+                // Aggregate all output from the jobs
+                flowOutputGeneratedProperties = new Props();
+                if (flowInputGeneratedProperties != null) {
+                    flowOutputGeneratedProperties.putAll(flowInputGeneratedProperties);                  
+                }
+                for (ExecutableFlow flow : flows) {
+                    flowOutputGeneratedProperties.putAll(flow.getFlowGeneratedProperties());
+                }
+                flowOutputGeneratedProperties.logProperties("Output properties for " + getName());
             }
         }
     }

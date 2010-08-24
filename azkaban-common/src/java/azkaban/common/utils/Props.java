@@ -39,6 +39,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 import com.google.common.base.Objects;
 
 /**
@@ -50,6 +52,7 @@ import com.google.common.base.Objects;
  * 
  */
 public class Props {
+    private static Logger logger = Logger.getLogger(Props.class);
 
     private final Map<String, String> _current;
     private final Props _parent;
@@ -554,15 +557,40 @@ public class Props {
     }
     
     public Set<String> getKeySet() {
-    	HashSet<String> keySet = new HashSet<String>();
-    	
-    	keySet.addAll(localKeySet());
-    	
-     	if(_parent != null) {
-    		keySet.addAll(_parent.getKeySet());
-    	}
-    	
-    	return keySet;
+        HashSet<String> keySet = new HashSet<String>();
+        
+        keySet.addAll(localKeySet());
+        
+         if(_parent != null) {
+         keySet.addAll(_parent.getKeySet());
+        }
+        
+        return keySet;
+    }
+    
+    public void logProperties(String comment) {
+        logger.info(comment);
+        
+        for(Props curr = this; curr != null; curr = curr.getParent())
+            for(String key: curr.localKeySet())
+                logger.info("  key=" + key + " value=" + curr.get(key));
+    }
+    
+    public static Props clone(Props p) {
+      return copyNext(p);
+    }
+    
+    private static Props copyNext(Props source) {
+        Props priorNodeCopy = null;
+        if (source.getParent() != null) {
+            priorNodeCopy = copyNext(source.getParent());
+        }
+        Props dest = new Props(priorNodeCopy);
+        for(String key: source.localKeySet()) {
+            dest.put(key, source.get(key));
+        }
+
+        return dest;
     }
 
 }
