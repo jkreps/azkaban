@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import azkaban.app.JobManager;
@@ -33,7 +34,7 @@ import azkaban.common.utils.Props;
  */
 public class IndividualJobExecutableFlow implements ExecutableFlow
 {
-
+    private static final Logger logger = Logger.getLogger(IndividualJobExecutableFlow.class);
     private static final AtomicLong threadCounter = new AtomicLong(0);
 
     private final Object sync = new Object();
@@ -102,12 +103,30 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
             }
         }
 
-        job = jobManager.loadJob(getName(), overrideProps, true);
-
-        final ClassLoader storeMyClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            job = jobManager.loadJob(getName(), overrideProps, true);
+        }
+        catch (Exception e) {
+            logger.warn(
+                    String.format("Exception thrown while creating job[%s]", getName()),
+                    e
+            );
+            job = null;
+        }
 
         if (job == null) {
-            throw new RuntimeException("Cannot run a null job.  Probably an issue with the JobFactory?");
+            logger.warn(
+                    String.format("Job[%s] doesn't exist, but was supposed to run.  Perhaps someone changed the flow?", getName())
+            );
+
+            final List<FlowCallback> callbackList;
+
+            synchronized (sync) {
+                jobState = Status.FAILED;
+                callbackList = callbacksToCall; // Get the reference before leaving the synchronized
+            }
+            callCallbacks(callbackList, jobState);
+            return;
         }
 
         Thread theThread = new Thread(
@@ -137,38 +156,6 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                             callbackList = callbacksToCall; // Get the reference before leaving the synchronized
                         }
                         callCallbacks(callbackList, jobState);
-                    }
-
-                    private void callCallbacks(final List<FlowCallback> callbackList, final Status status)
-                    {
-                        if (endTime == null) {
-                            endTime = new DateTime();
-                        }
-
-                        Thread callbackThread = new Thread(
-                                new Runnable()
-                                {
-                                    @Override
-                                    public void run()
-                                    {
-                                        for (FlowCallback callback : callbackList) {
-                                            try {
-                                                callback.completed(status);
-                                            }
-                                            catch (RuntimeException t) {
-                                                // TODO: Figure out how to use the logger to log that a callback threw an exception.
-                                            }
-                                        }
-                                    }
-                                },
-                                String.format("%s-callback", Thread.currentThread().getName())
-                        );
-
-                        // Use the primary Azkaban classloader for callbacks
-                        // This is only needed for JavaJobs, but won't hurt other instances, so do for everything
-                        callbackThread.setContextClassLoader(storeMyClassLoader);
-
-                        callbackThread.start();
                     }
                 },
                 String.format("%s thread-%s", job.getId(), threadCounter.getAndIncrement())
@@ -325,5 +312,36 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         this.endTime = endTime;
 
         return this;
+    }
+
+    private void callCallbacks(final List<FlowCallback> callbackList, final Status status)
+    {
+        if (endTime == null) {
+            endTime = new DateTime();
+        }
+
+        Thread callbackThread = new Thread(
+                new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        for (FlowCallback callback : callbackList) {
+                            try {
+                                callback.completed(status);
+                            }
+                            catch (RuntimeException t) {
+                                logger.error(
+                                        String.format("Exception thrown while calling callback. job[%s]", getName()),
+                                        t
+                                );
+                            }
+                        }
+                    }
+                },
+                String.format("%s-callback", Thread.currentThread().getName())
+        );
+
+        callbackThread.start();
     }
 }
