@@ -21,12 +21,15 @@ import org.apache.log4j.Logger;
 import azkaban.common.jobs.DelegatingJob;
 import azkaban.common.jobs.Job;
 import azkaban.common.jobs.JobFailedException;
+import azkaban.common.utils.Props;
 
 public class RetryingJob extends DelegatingJob {
 
     private final Logger _logger;
     private final int _retries;
     private final long _retryBackoff;
+    
+    private Props generatedProperties;
 
     public RetryingJob(Job innerJob, int retries, long retryBackoff) {
         super(innerJob);
@@ -34,9 +37,19 @@ public class RetryingJob extends DelegatingJob {
         _retries = retries;
         _retryBackoff = retryBackoff;
     }
-
+    
     @Override
     public void run() {
+        run(null);
+    }
+    
+    @Override
+    public Props getJobGeneratedProperties() {
+        return generatedProperties;
+    }
+
+    @Override
+    public void run(Props jobInputOutputProperties) {
         for(int tries = 0; tries <= _retries; tries++) {
             // helpful logging info
             if(tries > 0) {
@@ -54,7 +67,8 @@ public class RetryingJob extends DelegatingJob {
             }
 
             try {
-                getInnerJob().run();
+                getInnerJob().run(jobInputOutputProperties);
+                generatedProperties = getInnerJob().getJobGeneratedProperties();
                 return;
             } catch(Exception e) {
                 _logger.error("Job '" + getInnerJob().getId() + " failed attempt " + (tries + 1), e);

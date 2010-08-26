@@ -42,6 +42,8 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private final String name;
     private final JobManager jobManager;
     private final Props overrideProps;
+    
+    private Props flowInputGeneratedProperties;
 
     private volatile Status jobState;
     private volatile List<FlowCallback> callbacksToCall;
@@ -49,6 +51,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private volatile DateTime endTime;
     private volatile Job job;
     private volatile Throwable exception;
+    private volatile Props flowOutputGeneratedProperties;
 
     public IndividualJobExecutableFlow(String id, String name, Props overrideProps, JobManager jobManager)
     {
@@ -64,7 +67,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         exception = null;
     }
 
-	@Override
+    @Override
     public String getId()
     {
         return id;
@@ -75,13 +78,18 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     {
         return name;
     }
-
-    public Props getOverrideProps() {
-		return overrideProps;
-	}
     
     @Override
-    public void execute(FlowCallback callback)
+    public Props getFlowGeneratedProperties() {
+        return flowOutputGeneratedProperties;
+    }
+    
+    public Props getOverrideProps() {
+        return overrideProps;
+    }
+
+    @Override
+    public void execute(FlowCallback callback, Props flowGeneratedProperties)
     {
         synchronized (sync) {
             switch (jobState) {
@@ -103,7 +111,15 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
             }
         }
 
+        // Get the output properties from dependent jobs.
+        // Clone them so we don't mess up storage up the line.
+        this.flowInputGeneratedProperties = (flowGeneratedProperties == null ? 
+                                                null :
+                                                Props.clone(flowGeneratedProperties)); 
+        
         try {
+            // Only one thread should ever be able to get to this point because of management of jobState
+            // Thus, this should only ever get called once before the job finishes (at which point it could be reset)
             job = jobManager.loadJob(getName(), overrideProps, true);
         }
         catch (Exception e) {
@@ -138,7 +154,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                         final List<FlowCallback> callbackList;
 
                         try {
-                            job.run();
+                            job.run(flowInputGeneratedProperties);
                         }
                         catch (Exception e) {
                             synchronized (sync) {
@@ -150,11 +166,26 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
 
                             throw new RuntimeException(e);
                         }
-
+ 
                         synchronized (sync) {
                             jobState = Status.SUCCEEDED;
                             callbackList = callbacksToCall; // Get the reference before leaving the synchronized
                         }
+                                          
+                        // Retrieve the output properties from the job.
+                        // Consolidate what we receive as input with those for output, so we can
+                        // Pass the aggregate of properties up the line.
+                        // The output should override the input.
+                        // Think of the example A-->B-->C and what A would want from B, C
+                        Props jobGeneratedProps = new Props();
+                        if (flowInputGeneratedProperties != null) {
+                            jobGeneratedProps.putAll(flowInputGeneratedProperties);
+                        }
+                        if (job.getJobGeneratedProperties() != null) {
+                            jobGeneratedProps.putAll(job.getJobGeneratedProperties());   
+                        }
+                        flowOutputGeneratedProperties = jobGeneratedProps;
+                        flowOutputGeneratedProperties.logProperties("Output properties for " + name);
                         callCallbacks(callbackList, jobState);
                     }
                 },

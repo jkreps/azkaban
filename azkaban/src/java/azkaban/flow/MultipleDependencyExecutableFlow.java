@@ -18,6 +18,8 @@ package azkaban.flow;
 
 import org.joda.time.DateTime;
 
+import azkaban.common.utils.Props;
+
 import java.util.List;
 
 /**
@@ -49,11 +51,15 @@ public class MultipleDependencyExecutableFlow implements ExecutableFlow
     {
         return actualFlow.getName();
     }
-
+    
     @Override
-    public void execute(FlowCallback callback)
-    {
-        actualFlow.execute(callback);
+    public void execute(FlowCallback callback, Props flowInputOutputProperties) {
+        actualFlow.execute(callback, flowInputOutputProperties);
+    }
+    
+    @Override
+    public Props getFlowGeneratedProperties() {
+        return actualFlow.getFlowGeneratedProperties();
     }
 
     @Override
