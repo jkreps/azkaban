@@ -309,13 +309,13 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 } else {
                     
                     // Aggregate all output from dependee
-                    flowOutputGeneratedProperties = new Props();
-                    if (intermediateFlowOutputProperties != null) {
-                        flowOutputGeneratedProperties.putAll(intermediateFlowOutputProperties);                  
-                    }
-                    flowOutputGeneratedProperties.putAll(depender.getFlowGeneratedProperties());
+                    flowOutputGeneratedProperties = new Props(
+                            intermediateFlowOutputProperties,
+                            depender.getFlowGeneratedProperties()
+                    );
                     flowOutputGeneratedProperties.logProperties(
-                            "Output properties for depender " + getName());
+                            "Output properties for depender " + getName()
+                    );
                 }
                 callbackList = callbacksToCall;
             }
@@ -356,13 +356,13 @@ public class ComposedExecutableFlow implements ExecutableFlow
                     
                     
                     // Aggregate all output from dependee
-                    intermediateFlowOutputProperties = new Props();
-                    if (flowInputGeneratedProperties != null) {
-                        intermediateFlowOutputProperties.putAll(flowInputGeneratedProperties);                  
-                    }
-                    intermediateFlowOutputProperties.putAll(dependee.getFlowGeneratedProperties());
+                    intermediateFlowOutputProperties = new Props(
+                            flowInputGeneratedProperties,
+                            dependee.getFlowGeneratedProperties()
+                    );
                     intermediateFlowOutputProperties.logProperties(
-                            "Intermediate Output properties for dependee " + getName());
+                            "Intermediate Output properties for dependee " + getName()
+                    );
 
                     depender.execute(new DependerCallback(), intermediateFlowOutputProperties);
                     

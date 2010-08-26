@@ -1,12 +1,12 @@
 /*
  * Copyright 2010 LinkedIn, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -30,7 +30,7 @@ public class PropsUtils {
     /**
      * Load job schedules from the given directories ] * @param dir The
      * directory to look in
-     * 
+     *
      * @param suffixes File suffixes to load
      * @return The loaded set of schedules
      */
@@ -40,7 +40,7 @@ public class PropsUtils {
 
     /**
      * Load job schedules from the given directories
-     * 
+     *
      * @param parent The parent properties for these properties
      * @param dir The directory to look in
      * @param suffixes File suffixes to load
@@ -65,7 +65,7 @@ public class PropsUtils {
 
     /**
      * Load job schedules from the given directories
-     * 
+     *
      * @param dirs The directories to check for properties
      * @param suffixes The suffixes to load
      * @return The properties
@@ -80,7 +80,7 @@ public class PropsUtils {
 
     /**
      * Load properties from the given path
-     * 
+     *
      * @param jobPath The path to load from
      * @param props The parent properties for loaded properties
      * @param suffixes The suffixes of files to load
@@ -107,10 +107,10 @@ public class PropsUtils {
                 return true;
         return false;
     }
-    
+
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([a-zA-Z_.0-9]+)\\}");
-    
-    public static Props resolveProps(Props props, Props inputGeneratedProps) {
+
+    public static Props resolveProps(Props props) {
     	Props resolvedProps = new Props();
 
     	for(String key : props.getKeySet()) {
@@ -119,30 +119,24 @@ public class PropsUtils {
 	        Matcher matcher = VARIABLE_PATTERN.matcher(value);
 	        while(matcher.find()) {
 	            String variableName = matcher.group(1);
-	
+
 	            if (variableName.equals(key)) {
 	                throw new IllegalArgumentException(
 	                        String.format("Circular property definition starting from property[%s]", key)
 	                );
 	            }
-	
+
 	            String replacement = props.get(variableName);
-	            if(replacement == null) {
-	                if (inputGeneratedProps != null) {
-	                    replacement = inputGeneratedProps.get(variableName);
-	                }
-	                if (replacement == null) {
-	                  throw new UndefinedPropertyException("Could not find variable substitution for variable '"
-	                                                       + variableName + "' in key '" + key + "'.");
-	                }
-	            }
-	
+	            if(replacement == null)
+	                throw new UndefinedPropertyException("Could not find variable substitution for variable '"
+	                                                     + variableName + "' in key '" + key + "'.");
+
 	            replacement = replacement.replaceAll("\\\\", "\\\\\\\\");
 	            replacement = replacement.replaceAll("\\$", "\\\\\\$");
-	
+
 	            matcher.appendReplacement(replaced, replacement);
 	            matcher.appendTail(replaced);
-	
+
 	            value = replaced.toString();
 	            replaced = new StringBuffer();
 	            matcher = VARIABLE_PATTERN.matcher(value);
@@ -150,7 +144,7 @@ public class PropsUtils {
 	        matcher.appendTail(replaced);
 	        resolvedProps.put(key, replaced.toString());
     	}
-    	
+
     	return resolvedProps;
     }
 }

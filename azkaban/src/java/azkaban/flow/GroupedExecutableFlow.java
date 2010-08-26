@@ -123,11 +123,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 endTime = null;
 
                 // Make sure everything is initialized before leaking the pointer to "this".
-                // TODO(pazel): This seems to be a case, where the grouped tasks are already running,
-                //              and seems to be a case where we need a callback only.  So, there should
-                //              not be a need for generatedParams to input here.  HOWEVER, we should double
-                //              check on this, and see is this is alright.  Also need to understand 
-                //              comment prior to this TODO
+                // This is just installing the callback in an already running flow.
                 for (ExecutableFlow runningFlow : runningFlows) {
                     runningFlow.execute(theGroupCallback, new Props());
                 }
@@ -245,13 +241,17 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 jobState = Status.SUCCEEDED;
                 
                 // Aggregate all output from the jobs
-                flowOutputGeneratedProperties = new Props();
                 if (flowInputGeneratedProperties != null) {
-                    flowOutputGeneratedProperties.putAll(flowInputGeneratedProperties);                  
+                    flowOutputGeneratedProperties = flowInputGeneratedProperties;
                 }
+                else {
+                    flowOutputGeneratedProperties = new Props();
+                }
+
                 for (ExecutableFlow flow : flows) {
-                    flowOutputGeneratedProperties.putAll(flow.getFlowGeneratedProperties());
+                    flowOutputGeneratedProperties = new Props(flowOutputGeneratedProperties, flow.getFlowGeneratedProperties());
                 }
+
                 flowOutputGeneratedProperties.logProperties("Output properties for " + getName());
             }
         }

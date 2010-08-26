@@ -1,12 +1,12 @@
 /*
  * Copyright 2010 LinkedIn, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -35,9 +35,9 @@ import azkaban.common.utils.Utils;
 /**
  * A wrapper for a job that attaches a Log4J appender to write to the logs
  * directory in the particular format expected
- * 
+ *
  * @author jkreps
- * 
+ *
  */
 public class LoggingJob extends DelegatingJob {
 
@@ -45,27 +45,15 @@ public class LoggingJob extends DelegatingJob {
 
     private final Logger _logger;
     private final String _logDir;
-    
-    private Props jobGeneratedProperties;
 
     public LoggingJob(String logDir, Job innerJob, String loggerName) {
         super(innerJob);
         this._logDir = Utils.nonNull(logDir);
         this._logger = Logger.getLogger(loggerName);
     }
-    
-    @Override
-    public void run() throws Exception {
-        run(null);
-    }
-    
-    @Override
-    public Props getJobGeneratedProperties() {
-        return jobGeneratedProperties;
-    }
 
     @Override
-    public void run(Props jobInputOutputProperties) {
+    public void run() {
         String jobName = getInnerJob().getId();
         Utils.makePaths(new File(_logDir));
         File jobLogDir = new File(_logDir + File.separator + jobName);
@@ -86,9 +74,8 @@ public class LoggingJob extends DelegatingJob {
         boolean jobNotStaleException = false;
         long start = System.currentTimeMillis();
         try {
-            getInnerJob().run(jobInputOutputProperties);
+            getInnerJob().run();
             succeeded = true;
-            jobGeneratedProperties = getInnerJob().getJobGeneratedProperties();
         } catch(Throwable t) {
             _logger.error("Fatal error occurred while running job '" + jobName + "':", t);
             throw new RuntimeException(t);
@@ -110,5 +97,4 @@ public class LoggingJob extends DelegatingJob {
                 _logger.removeAppender(jobAppender);
         }
     }
-
 }

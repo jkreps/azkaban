@@ -1,12 +1,12 @@
 /*
  * Copyright 2010 LinkedIn, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -21,15 +21,12 @@ import org.apache.log4j.Logger;
 import azkaban.common.jobs.DelegatingJob;
 import azkaban.common.jobs.Job;
 import azkaban.common.jobs.JobFailedException;
-import azkaban.common.utils.Props;
 
 public class RetryingJob extends DelegatingJob {
 
     private final Logger _logger;
     private final int _retries;
     private final long _retryBackoff;
-    
-    private Props generatedProperties;
 
     public RetryingJob(Job innerJob, int retries, long retryBackoff) {
         super(innerJob);
@@ -37,19 +34,9 @@ public class RetryingJob extends DelegatingJob {
         _retries = retries;
         _retryBackoff = retryBackoff;
     }
-    
-    @Override
-    public void run() {
-        run(null);
-    }
-    
-    @Override
-    public Props getJobGeneratedProperties() {
-        return generatedProperties;
-    }
 
     @Override
-    public void run(Props jobInputOutputProperties) {
+    public void run() {
         for(int tries = 0; tries <= _retries; tries++) {
             // helpful logging info
             if(tries > 0) {
@@ -67,8 +54,7 @@ public class RetryingJob extends DelegatingJob {
             }
 
             try {
-                getInnerJob().run(jobInputOutputProperties);
-                generatedProperties = getInnerJob().getJobGeneratedProperties();
+                getInnerJob().run();
                 return;
             } catch(Exception e) {
                 _logger.error("Job '" + getInnerJob().getId() + " failed attempt " + (tries + 1), e);

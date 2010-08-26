@@ -570,10 +570,10 @@ public class Props {
     
     public void logProperties(String comment) {
         logger.info(comment);
-        
-        for(Props curr = this; curr != null; curr = curr.getParent())
-            for(String key: curr.localKeySet())
-                logger.info("  key=" + key + " value=" + curr.get(key));
+
+        for (String key : getKeySet()) {
+            logger.info("  key=" + key + " value=" + get(key));
+        }
     }
     
     public static Props clone(Props p) {

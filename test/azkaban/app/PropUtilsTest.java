@@ -29,8 +29,10 @@ public class PropUtilsTest {
         inputProps.put("firstName", "Francesco");
         inputProps.put("fillIn", "the guilty party is ${firstName} ${lastName}");
         genProps.put("lastName", "Estaban");
+
+        Props theProps = new Props(inputProps, genProps);
         
-        outputProps = PropsUtils.resolveProps(inputProps, genProps);       
+        outputProps = PropsUtils.resolveProps(theProps);
         String answer = outputProps.get("fillIn");
         System.out.println(answer);
         

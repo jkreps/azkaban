@@ -43,8 +43,6 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private final JobManager jobManager;
     private final Props overrideProps;
     
-    private Props flowInputGeneratedProperties;
-
     private volatile Status jobState;
     private volatile List<FlowCallback> callbacksToCall;
     private volatile DateTime startTime;
@@ -113,14 +111,14 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
 
         // Get the output properties from dependent jobs.
         // Clone them so we don't mess up storage up the line.
-        this.flowInputGeneratedProperties = (flowGeneratedProperties == null ? 
-                                                null :
-                                                Props.clone(flowGeneratedProperties)); 
+        final Props flowInputGeneratedProperties = (flowGeneratedProperties == null ?
+                                                    null :
+                                                    Props.clone(flowGeneratedProperties));
         
         try {
             // Only one thread should ever be able to get to this point because of management of jobState
             // Thus, this should only ever get called once before the job finishes (at which point it could be reset)
-            job = jobManager.loadJob(getName(), overrideProps, true);
+            job = jobManager.loadJob(getName(), new Props(overrideProps, flowInputGeneratedProperties), true);
         }
         catch (Exception e) {
             logger.warn(
@@ -154,7 +152,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                         final List<FlowCallback> callbackList;
 
                         try {
-                            job.run(flowInputGeneratedProperties);
+                            job.run();
                         }
                         catch (Exception e) {
                             synchronized (sync) {

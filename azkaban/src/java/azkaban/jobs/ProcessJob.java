@@ -16,10 +16,23 @@
 
 package azkaban.jobs;
 
+import azkaban.app.JobDescriptor;
+import azkaban.app.PropsUtils;
+import azkaban.common.jobs.AbstractJob;
+import azkaban.common.jobs.Job;
+import azkaban.common.utils.Props;
+import azkaban.util.JSONToJava;
+import org.apache.commons.fileupload.util.Streams;
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Level;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -27,14 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.log4j.Level;
-
-import azkaban.app.JobDescriptor;
-import azkaban.app.PropsUtils;
-import azkaban.common.jobs.AbstractJob;
-import azkaban.common.jobs.Job;
-import azkaban.common.utils.Props;
 
 /**
  * A job that runs a simple unix command
@@ -53,6 +58,7 @@ public class ProcessJob extends AbstractJob implements Job {
     
     public static final String JOB_OUTPUT_PROP_FILE = "JOB_OUTPUT_PROP_FILE";
 
+    private final JSONToJava jsonToJava = new JSONToJava();
 
     private final String _jobPath;
     private final String _name;
@@ -72,16 +78,12 @@ public class ProcessJob extends AbstractJob implements Job {
         this._descriptor = descriptor;
     }
     
-    public void run() {
-        run(null);
-    }
-    
     public Props getJobGeneratedProperties() {
         return generatedPropeties;
     }
 
-    public void run(Props inputGeneratedProperties) {
-        _props = PropsUtils.resolveProps(_props, inputGeneratedProperties);
+    public void run() {
+        _props = PropsUtils.resolveProps(_props);
         
         // Sets a list of all the commands that need to be run.
         List<String> commands = getCommandList();
@@ -91,7 +93,7 @@ public class ProcessJob extends AbstractJob implements Job {
 
         String cwd = getWorkingDirectory();
         // Create properties file with additionally all input generated properties.
-        File file = createFlattenedPropsFile(cwd, _props, inputGeneratedProperties, _name);
+        File file = createFlattenedPropsFile(cwd, _props, _name);
         System.out.println("Temp file created " + file.getAbsolutePath());
 
         env.put(JOB_PROP_ENV, file.getAbsolutePath());
@@ -158,15 +160,12 @@ public class ProcessJob extends AbstractJob implements Job {
 
     private File createFlattenedPropsFile(String workingDir, 
                                           final Props props,
-                                          Props inputGeneratedProperties,
                                           String id) {
         File directory = new File(workingDir);
         File tempFile = null;
         try {
             tempFile = File.createTempFile(id + "_", "_tmp", directory);
-            // Use desc as the parent
-            Props inputProps = new Props(props, inputGeneratedProperties); 
-            inputProps.storeFlattened(tempFile);
+            props.storeFlattened(tempFile);
         } catch(IOException e) {
             throw new RuntimeException("Failed to create temp property file ", e);
         }
@@ -185,12 +184,27 @@ public class ProcessJob extends AbstractJob implements Job {
         return tempFile;
     }
     
-    private Props loadOutputFileProps(JobDescriptor desc, File outputPropertiesFile) {
+    private Props loadOutputFileProps(JobDescriptor desc, File outputPropertiesFile)
+    {
+        InputStream reader = null;
         try {
-            Props outputProps = new Props(null, new FileInputStream(outputPropertiesFile));
+            reader = new BufferedInputStream(new FileInputStream(outputPropertiesFile));
+
+            Map<String, Object> propMap = jsonToJava.apply(new JSONObject(Streams.asString(reader)));
+
+            Props outputProps = new Props();
+
+            for (Map.Entry<String, Object> entry : propMap.entrySet()) {
+                outputProps.put(entry.getKey(), entry.getValue().toString());
+            }
+
             return outputProps;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException("Unable to gather output properties into: " + desc.getFullPath());
+        }
+        finally {
+            IOUtils.closeQuietly(reader);
         }
     }
 
