@@ -29,7 +29,18 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ * A grouping of executable flows.
  *
+ * For example, if you had two functions f(x) and g(x) that you wanted to execute together, you
+ * could conceivably create a new function h(x) = { f(x); g(x); }.  That is essentially what
+ * this class does with ExecutableFlow objects.
+ *
+ * It will run the sub flows in parallel and aggregate all of their "return properties" into a single
+ * properties object.  It aggregates the properties in the order that the flows are specified on the
+ * constructor, so order does matter if subflows return properties with the same key (last one wins)
+ *
+ * You should never really have to create one of these directly.  Try to use MultipleDependencyExecutableFlow
+ * instead.
  */
 public class GroupedExecutableFlow implements ExecutableFlow
 {

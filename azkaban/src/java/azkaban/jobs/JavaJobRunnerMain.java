@@ -77,9 +77,6 @@ public class JavaJobRunnerMain {
             }
             _logger.info("Class name " + className);
 
-            // Create a holder for generated output properties.
-            Props generatedProperties = new Props(null);
-
             // Create the object.
             _javaObject = getObject(_jobName, className, prop);
             if(_javaObject == null) {

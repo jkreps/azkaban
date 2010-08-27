@@ -24,7 +24,16 @@ import java.util.Map;
 import azkaban.common.utils.Props;
 
 /**
+ * A "composition" of flows.  This is composition in the functional sense.
  *
+ * That is, the composition of two functions f(x) and g(x) is equivalent to f(g(x)).
+ * Similarly, the composition of two ExecutableFlows A and B will result in a dependency
+ * graph A -> B, meaning that B will be executed and complete before A.
+ *
+ * If B fails, A never runs.
+ *
+ * You should never really have to create one of these directly.  Try to use MultipleDependencyFlow
+ * instead.
  */
 public class ComposedFlow implements Flow
 {

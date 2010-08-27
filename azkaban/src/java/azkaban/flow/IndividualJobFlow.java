@@ -25,7 +25,7 @@ import azkaban.common.utils.Props;
 
 
 /**
- *
+ * A flow wrapper the name of a Job object
  */
 public class IndividualJobFlow implements Flow
 {

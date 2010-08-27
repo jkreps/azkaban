@@ -30,7 +30,8 @@ import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 
 /**
- *
+ * An implemention of the ExecutableFlow interface that just
+ * wraps a single Job.
  */
 public class IndividualJobExecutableFlow implements ExecutableFlow
 {

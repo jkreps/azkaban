@@ -28,7 +28,14 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ * A grouping of flows.
  *
+ * For example, if you had two functions f(x) and g(x) that you wanted to execute together, you
+ * could conceivably create a new function h(x) = { f(x); g(x); }.  That is essentially what
+ * this class does with ExecutableFlow objects.
+ *
+ * You should never really have to create one of these directly.  Try to use MultipleDependencyFlow
+ * instead.
  */
 public class GroupedFlow implements Flow
 {

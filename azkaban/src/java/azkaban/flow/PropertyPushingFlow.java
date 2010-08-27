@@ -5,6 +5,14 @@ import azkaban.common.utils.Props;
 import java.util.*;
 
 /**
+ * A flow that pushes properties down into its subflows.
+ *
+ * This acts as a method of allowing for parameterized flows.  You
+ * can create a workflow that is set up to do various tasks and have
+ * it paramaterized by some properties.
+ *
+ * Just set up your workflow such that this job is in front of the 
+ * parameterized flow and provide the Props that you want passed down
  */
 public class PropertyPushingFlow implements Flow
 {

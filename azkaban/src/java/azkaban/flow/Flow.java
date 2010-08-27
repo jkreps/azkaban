@@ -22,6 +22,16 @@ import java.util.Map;
 import azkaban.common.utils.Props;
 
 /**
+ * An immutable class that represents a given workflow.
+ *
+ * This class primarily exists to allow for a separation between the definition
+ * of a workflow and the execution of that same workflow.  A Flow object can be
+ * seen as a factory of "workflow execution" objects, represented by the class
+ * ExecutableFlow.
+ *
+ * In order to support restart, however, Flows should not be used as factories directly
+ * but should instead be used through a FlowManager instance that will do the requisite
+ * id bookkeeping to allow for restarts. 
  */
 public interface Flow {
 

@@ -22,7 +22,21 @@ import org.joda.time.DateTime;
 import java.util.List;
 
 /**
+ * A flow that provides an API for creating a dependency graph.
  *
+ * The class takes a minimum of two ExecutableFlow objects on the constructor and builds
+ * a dependency relationship between them.  The first ExecutableFlow object will not run
+ * until all of the other flows (second, third, ...) have succeeded.  If any of the
+ * dependee flows fails, the depender flow will not run.
+ *
+ * That is, if you have flows A, B and C, and you want A to run only after B and C have
+ * completed, simply constructor a
+ *
+ * new MultipleDependencyExecutableFlow("some_id", A, B, C);
+ *
+ * This class makes use of ComposedExecutableFlow and GroupedExecutableFlow under the covers
+ * to ensure this behavior, but it exposes a more stream-lined "view" of the dependency graph that
+ * makes it easier to reason about traversals of the resultant DAG.
  */
 public class MultipleDependencyExecutableFlow implements ExecutableFlow
 {

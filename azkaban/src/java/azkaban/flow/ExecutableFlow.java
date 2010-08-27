@@ -128,7 +128,10 @@ public interface ExecutableFlow
      * Gets the return props from the execution of this Flow
      *
      * The return props are the props that this execution wants to
-     * provide to any other up-stream executions.
+     * provide to any other up-stream executions.  They are called
+     * "return props" in following with the function metaphor, the
+     * flow is essentially a function and it is "returning" this set
+     * of properties to whatever told it to call.
      *
      * @return the parent props, null if state is READY
      */
