@@ -95,10 +95,20 @@ public class JavaJobRunnerMain {
             _isFinished = true;
 
             // Get the generated properties and store them to disk, to be read by ProcessJob.
-            Props outputGendProps = (Props)_javaObject.getClass().
-                                     getMethod(GET_GENERATED_PROPERTIES_METHOD, new Class<?> [] {}).
-                                     invoke(_javaObject, new Object[] {});
-            outputGeneratedProperties(outputGendProps);
+            try {
+                final Method generatedPropertiesMethod = _javaObject.getClass().getMethod(GET_GENERATED_PROPERTIES_METHOD, new Class<?>[]{});
+                Props outputGendProps = (Props) generatedPropertiesMethod.invoke(_javaObject, new Object[] {});
+                outputGeneratedProperties(outputGendProps);
+            } catch (NoSuchMethodException e) {
+                _logger.info(
+                        String.format(
+                                "Apparently there isn't a method[%s] on object[%s], using empty Props object instead.",
+                                GET_GENERATED_PROPERTIES_METHOD,
+                                _javaObject
+                        )
+                );
+                outputGeneratedProperties(new Props());
+            }
         } catch (Exception e) {
             _isFinished = true;
             throw e;
