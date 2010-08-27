@@ -46,6 +46,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
     private volatile Throwable exception;
     private volatile Props parentProps;
     private volatile Props returnProps;
+    private final String name;
 
     public GroupedExecutableFlow(String id, ExecutableFlow... flows)
     {
@@ -60,6 +61,12 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 return o1.getName().compareTo(o2.getName());
             }
         });
+
+        String[] names = new String[flows.length];
+        for (int i = 0; i < flows.length; i++) {
+            names[i] = flows[i].getName();
+        }
+        name = StringUtils.join(names, " + ");
 
         jobState = Status.READY;
         updateState();
@@ -141,17 +148,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
     @Override
     public String getName()
     {
-        return StringUtils.join(
-                Iterables.transform(Arrays.asList(flows), new Function<ExecutableFlow, String>()
-                {
-                    @Override
-                    public String apply(ExecutableFlow flow)
-                    {
-                        return flow.getName();
-                    }
-                }).iterator(),
-                " + "
-        );
+        return name;
     }
     
     @Override

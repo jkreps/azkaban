@@ -66,6 +66,9 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
+        final Props returnProps = new Props();
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(returnProps).once();
+
         EasyMock.replay(mockJob, jobManager);
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
@@ -96,6 +99,7 @@ public class IndividualJobExecutableFlowTest
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
         Assert.assertEquals(null, executableFlow.getException());
         Assert.assertEquals(overrideProps, executableFlow.getParentProps());
+        Assert.assertEquals(returnProps, executableFlow.getReturnProps());
 
         Props otherProps = new Props();
         otherProps.put("billy", "blank");
@@ -124,6 +128,8 @@ public class IndividualJobExecutableFlowTest
         Assert.assertTrue("Expected an IllegalArgumentException to be thrown because props weren't the same.", exceptionThrown);
         Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
+        Assert.assertEquals(null, executableFlow.getReturnProps());
+        Assert.assertEquals(null, executableFlow.getParentProps());
     }
 
     @Test
@@ -223,6 +229,9 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
+        final Props returnProps = new Props();
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(returnProps).once();
+
         EasyMock.replay(mockJob, jobManager);
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
@@ -263,6 +272,8 @@ public class IndividualJobExecutableFlowTest
         secondCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
         Assert.assertEquals(null, executableFlow.getException());
+        Assert.assertEquals(overrideProps, executableFlow.getParentProps());
+        Assert.assertEquals(returnProps, executableFlow.getReturnProps());
 
         EasyMock.verify(mockJob);
 
@@ -270,7 +281,8 @@ public class IndividualJobExecutableFlowTest
         Assert.assertTrue("Second callback wasn't called?", secondCallbackCalled.get());
         Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
-
+        Assert.assertEquals(null, executableFlow.getParentProps());
+        Assert.assertEquals(null, executableFlow.getReturnProps());
     }
 
     @Test
@@ -350,8 +362,12 @@ public class IndividualJobExecutableFlowTest
         final Props overrideProps = new Props();
         final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
 
+        final Props firstProps = new Props();
+        final Props secondProps = new Props();
+
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
         EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(firstProps).once();
 
         mockJob.run();
         EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
@@ -394,6 +410,7 @@ public class IndividualJobExecutableFlowTest
         completionLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
         Assert.assertEquals(null, executableFlow.getException());
+        Assert.assertEquals(firstProps, executableFlow.getReturnProps());
 
         EasyMock.verify(mockJob, jobManager);
         EasyMock.reset(mockJob, jobManager);
@@ -402,9 +419,12 @@ public class IndividualJobExecutableFlowTest
 
         Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
+        Assert.assertEquals(null, executableFlow.getParentProps());
+        Assert.assertEquals(null, executableFlow.getReturnProps());
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
         EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(secondProps).once();
 
         mockJob.run();
         EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
@@ -447,6 +467,8 @@ public class IndividualJobExecutableFlowTest
         completionLatch2.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
         Assert.assertEquals(null, executableFlow.getException());
+        Assert.assertEquals(overrideProps, executableFlow.getParentProps());
+        Assert.assertEquals(secondProps, executableFlow.getReturnProps());
 
         EasyMock.verify(mockJob);
     }
@@ -477,6 +499,8 @@ public class IndividualJobExecutableFlowTest
                 return null;
             }
         }).once();
+
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(new Props()).once();
 
         EasyMock.replay(mockJob, jobManager);
 
@@ -536,6 +560,8 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(new Props()).once();
+        
         EasyMock.replay(mockJob, jobManager);
 
         new Thread(new Runnable()
@@ -585,5 +611,6 @@ public class IndividualJobExecutableFlowTest
                 });
 
         Assert.assertTrue("Expected callback to be called once.", runOnce.get());
+        Assert.assertEquals(0, executableFlow.getReturnProps().size());
     }
 }

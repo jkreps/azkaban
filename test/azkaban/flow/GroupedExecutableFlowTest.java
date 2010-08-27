@@ -41,9 +41,13 @@ public class GroupedExecutableFlowTest
 
         EasyMock.expect(mockFlow1.getStartTime()).andReturn(null).once();
         EasyMock.expect(mockFlow2.getStartTime()).andReturn(null).once();
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
+        Assert.assertEquals("1 + 2", flow.getName());
 
         EasyMock.verify(mockFlow1, mockFlow2, props);
         EasyMock.reset(mockFlow1, mockFlow2, props);
@@ -79,7 +83,12 @@ public class GroupedExecutableFlowTest
             }
         }).once();
 
+        Props mockFlow1Props = new Props();
+        mockFlow1Props.put("1", "1");
+        mockFlow1Props.put("2", "1");
+
         EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).times(2);
+        EasyMock.expect(mockFlow1.getReturnProps()).andReturn(mockFlow1Props).once();
 
         /**** Setup mockFlow2 ****/
         final Capture<FlowCallback> flow2Callback = new Capture<FlowCallback>();
@@ -113,6 +122,11 @@ public class GroupedExecutableFlowTest
                 return null;
             }
         }).times(2);
+
+        Props mockFlow2Props = new Props();
+        mockFlow2Props.put("2", "2");
+        mockFlow2Props.put("3", "2");
+        EasyMock.expect(mockFlow2.getReturnProps()).andReturn(mockFlow2Props).once();
 
         EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
 
@@ -151,6 +165,12 @@ public class GroupedExecutableFlowTest
         Assert.assertTrue("Callback wasn't run.", callbackRan.get());
         Assert.assertEquals(Status.SUCCEEDED, flow.getStatus());
         Assert.assertEquals(null, flow.getException());
+
+        Props retProps = flow.getReturnProps();
+        Assert.assertEquals(3, retProps.size());
+        Assert.assertEquals("1", retProps.get("1"));
+        Assert.assertEquals("2", retProps.get("2"));
+        Assert.assertEquals("2", retProps.get("3"));
 
         EasyMock.verify(props);
         EasyMock.reset(props);
@@ -403,6 +423,9 @@ public class GroupedExecutableFlowTest
             }
         }).times(2);
 
+        EasyMock.expect(mockFlow1.getReturnProps()).andReturn(new Props()).once();
+        EasyMock.expect(mockFlow2.getReturnProps()).andReturn(new Props()).once();
+        
         EasyMock.expect(props.equalsProps(props)).andReturn(true).times(2);
 
         EasyMock.replay(mockFlow1, mockFlow2, props);
@@ -506,7 +529,10 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow2.getStartTime()).andReturn(null).once();
 
         EasyMock.expect(mockFlow1.getParentProps()).andReturn(props).once();
-        
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
+
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
@@ -533,7 +559,10 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow2.getStartTime()).andReturn(expectedStartTime).once();
 
         EasyMock.expect(mockFlow2.getParentProps()).andReturn(props).once();
-        
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
+
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
@@ -567,6 +596,12 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow1.getParentProps()).andReturn(props).once();
         EasyMock.expect(mockFlow2.getParentProps()).andReturn(props).once();
         EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
+
+        EasyMock.expect(mockFlow1.getReturnProps()).andReturn(new Props()).once();
+        EasyMock.expect(mockFlow2.getReturnProps()).andReturn(new Props()).once();
 
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
@@ -602,6 +637,12 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow2.getParentProps()).andReturn(props).once();
         EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
 
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
+
+        EasyMock.expect(mockFlow1.getReturnProps()).andReturn(new Props()).once();
+        EasyMock.expect(mockFlow2.getReturnProps()).andReturn(new Props()).once();
+
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
@@ -635,6 +676,12 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow1.getParentProps()).andReturn(props).once();
         EasyMock.expect(mockFlow2.getParentProps()).andReturn(props).once();
         EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
+
+        EasyMock.expect(mockFlow1.getReturnProps()).andReturn(new Props()).once();
+        EasyMock.expect(mockFlow2.getReturnProps()).andReturn(new Props()).once();
 
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
@@ -671,6 +718,12 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow2.getParentProps()).andReturn(props).once();
         EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
 
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
+
+        EasyMock.expect(mockFlow1.getReturnProps()).andReturn(new Props()).once();
+        EasyMock.expect(mockFlow2.getReturnProps()).andReturn(new Props()).once();
+
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
@@ -703,6 +756,9 @@ public class GroupedExecutableFlowTest
 
         EasyMock.expect(mockFlow1.getParentProps()).andReturn(props).once();
 
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
+
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
@@ -732,6 +788,9 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow2.getEndTime()).andReturn(null).once();
 
         EasyMock.expect(mockFlow1.getParentProps()).andReturn(props).once();
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
 
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
@@ -766,6 +825,9 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow2.getParentProps()).andReturn(props).once();
         EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
 
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
+
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
@@ -798,6 +860,9 @@ public class GroupedExecutableFlowTest
 
         EasyMock.expect(mockFlow2.getParentProps()).andReturn(props).once();
 
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
+
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
@@ -827,6 +892,9 @@ public class GroupedExecutableFlowTest
         mockFlow1.execute(EasyMock.eq(props), EasyMock.capture(callbackCapture));
 
         EasyMock.expect(mockFlow1.getParentProps()).andReturn(props).once();
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
 
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
@@ -869,6 +937,9 @@ public class GroupedExecutableFlowTest
 
         Capture<FlowCallback> callbackCapture = new Capture<FlowCallback>();
         mockFlow2.execute(EasyMock.eq(props), EasyMock.capture(callbackCapture));
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
 
         EasyMock.expect(mockFlow2.getParentProps()).andReturn(props).once();
 
@@ -920,7 +991,10 @@ public class GroupedExecutableFlowTest
         EasyMock.expect(mockFlow1.getParentProps()).andReturn(props).once();
         EasyMock.expect(mockFlow2.getParentProps()).andReturn(props).once();
         EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
-        
+
+        EasyMock.expect(mockFlow1.getName()).andReturn("1").once();
+        EasyMock.expect(mockFlow2.getName()).andReturn("2").once();
+
         EasyMock.replay(mockFlow1, mockFlow2, props);
 
         flow = new GroupedExecutableFlow("blah", mockFlow1, mockFlow2);
@@ -952,6 +1026,9 @@ public class GroupedExecutableFlowTest
 
         EasyMock.expect(mockFlow1.getStatus()).andReturn(Status.SUCCEEDED).once();
         EasyMock.expect(mockFlow2.getStatus()).andReturn(Status.SUCCEEDED).once();
+
+        EasyMock.expect(mockFlow1.getReturnProps()).andReturn(new Props()).once();
+        EasyMock.expect(mockFlow2.getReturnProps()).andReturn(new Props()).once();
 
         EasyMock.replay(mockFlow1, mockFlow2, props);
 

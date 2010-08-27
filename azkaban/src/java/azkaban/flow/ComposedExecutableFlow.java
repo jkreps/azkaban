@@ -40,7 +40,6 @@ public class ComposedExecutableFlow implements ExecutableFlow
     private volatile Throwable exception;
     private volatile List<FlowCallback> callbacksToCall = new ArrayList<FlowCallback>();
     private volatile Props parentProps;
-    private volatile Props returnProps;
 
 
     public ComposedExecutableFlow(String id, ExecutableFlow depender, ExecutableFlow dependee)
@@ -271,7 +270,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
 
     @Override
     public Props getReturnProps() {
-        return returnProps;
+        return depender.getReturnProps();
     }
 
     @Override
@@ -330,10 +329,6 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 jobState = status;
                 if (status == Status.FAILED) {
                     exception = depender.getException();
-                    returnProps = new Props();
-                }
-                else {
-                    returnProps = depender.getReturnProps();
                 }
                 callbackList = callbacksToCall;
             }
@@ -379,7 +374,6 @@ public class ComposedExecutableFlow implements ExecutableFlow
                         jobState = status;
                         exception = dependee.getException();
                         callbackList = callbacksToCall;
-                        returnProps = new Props();
                     }
 
                     callCallbacks(callbackList, status);

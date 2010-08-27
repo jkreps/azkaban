@@ -33,6 +33,8 @@ public class MultipleDependencyExecutableFlowTest
 
         EasyMock.expect(dependeeFlow.getStartTime()).andReturn(null).once();
 
+        EasyMock.expect(dependeeFlow.getName()).andReturn("1").once();
+
         EasyMock.replay(dependerFlow, dependeeFlow, props);
 
         flow = new MultipleDependencyExecutableFlow("blah", dependerFlow, dependeeFlow);
@@ -71,9 +73,10 @@ public class MultipleDependencyExecutableFlowTest
         }).once();
 
         EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.SUCCEEDED).once();
+        EasyMock.expect(dependeeFlow.getReturnProps()).andReturn(new Props()).once();
 
         final Capture<FlowCallback> dependerCallback = new Capture<FlowCallback>();
-        dependerFlow.execute(EasyMock.eq(props), EasyMock.capture(dependerCallback));
+        dependerFlow.execute(EasyMock.isA(Props.class), EasyMock.capture(dependerCallback));
         EasyMock.expectLastCall().andAnswer(new IAnswer<Object>()
         {
             @Override
@@ -255,9 +258,10 @@ public class MultipleDependencyExecutableFlowTest
         }).once();
 
         EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.SUCCEEDED).once();
+        EasyMock.expect(dependeeFlow.getReturnProps()).andReturn(new Props()).once();
 
         final Capture<FlowCallback> dependerCallback = new Capture<FlowCallback>();
-        dependerFlow.execute(EasyMock.eq(props), EasyMock.capture(dependerCallback));
+        dependerFlow.execute(EasyMock.isA(Props.class), EasyMock.capture(dependerCallback));
         EasyMock.expectLastCall().andAnswer(new IAnswer<Object>()
         {
             @Override
@@ -359,9 +363,10 @@ public class MultipleDependencyExecutableFlowTest
         }).once();
 
         EasyMock.expect(dependeeFlow.getStatus()).andReturn(Status.SUCCEEDED).once();
+        EasyMock.expect(dependeeFlow.getReturnProps()).andReturn(new Props()).once();
 
         final Capture<FlowCallback> dependerCallback = new Capture<FlowCallback>();
-        dependerFlow.execute(EasyMock.eq(props), EasyMock.capture(dependerCallback));
+        dependerFlow.execute(EasyMock.isA(Props.class), EasyMock.capture(dependerCallback));
         EasyMock.expectLastCall().andAnswer(new IAnswer<Object>()
         {
             @Override

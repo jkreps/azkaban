@@ -37,6 +37,8 @@ public class PropertyPushingExecutableFlowTest
 
         EasyMock.expect(childFlow.getStatus()).andReturn(Status.READY).times(3);
         EasyMock.expect(childFlow.getStartTime()).andReturn(null).once();
+        EasyMock.expect(childFlow.getName()).andReturn("Something").once();
+
         EasyMock.replay(childFlow);
 
         flow = new PropertyPushingExecutableFlow("blah", "test", props, childFlow);
@@ -63,7 +65,11 @@ public class PropertyPushingExecutableFlowTest
         callback.completed(Status.SUCCEEDED);
         EasyMock.expectLastCall();
 
+        final Props someProps = new Props();
+        someProps.put("a", "b");
+
         EasyMock.expect(childFlow.getStatus()).andReturn(Status.SUCCEEDED);
+        EasyMock.expect(childFlow.getReturnProps()).andReturn(someProps).once();
 
         EasyMock.replay(childFlow, callback);
 
@@ -75,6 +81,8 @@ public class PropertyPushingExecutableFlowTest
         Assert.assertEquals(2, cappedProps.size());
         Assert.assertEquals("blank", cappedProps.get("billy"));
         Assert.assertEquals("jesse", cappedProps.get("sally"));
+        Assert.assertEquals(someProps.size(), flow.getReturnProps().size());
+        Assert.assertEquals(someProps.get("a"), flow.getReturnProps().get("a"));
 
     }
 
