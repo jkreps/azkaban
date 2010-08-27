@@ -58,4 +58,10 @@ public interface Job {
      * @throws Exception If getting progress fails
      */
     public double getProgress() throws Exception;
+    
+    /**
+     * Get the generated properties from this job.
+     * @return
+     */
+    public Props getJobGeneratedProperties();
 }

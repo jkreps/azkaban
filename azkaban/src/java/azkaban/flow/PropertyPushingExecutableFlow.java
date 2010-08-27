@@ -88,6 +88,11 @@ public class PropertyPushingExecutableFlow implements ExecutableFlow
     }
 
     @Override
+    public Props getReturnProps() {
+        return subFlow.getReturnProps();
+    }
+
+    @Override
     public Throwable getException() {
         return subFlow.getException();
     }

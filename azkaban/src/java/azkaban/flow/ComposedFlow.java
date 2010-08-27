@@ -64,8 +64,11 @@ public class ComposedFlow implements Flow
 
         final ExecutableFlow dependerFlow = overrides.containsKey(depender.getName()) ?
                                             overrides.get(depender.getName()) :
-                                            // TODO why are we not using overides here? not sure.. :/
-                                            depender.createExecutableFlow(id, new HashMap<String, ExecutableFlow>());
+                                            depender.createExecutableFlow(id, overrides);
+
+        // Remove the depender from the overrides because the ComposedExecutableFlow will take its place.
+        // The put() below will have the same effect, but I added this to be explicit.
+        overrides.remove(depender.getName());
 
         final ComposedExecutableFlow retVal = new ComposedExecutableFlow(id, dependerFlow, dependeeFlow);
 

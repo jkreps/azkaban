@@ -71,8 +71,8 @@ public class CommandLineJobRunner {
         OptionParser parser = new OptionParser();
         OptionSpec<String> overrideOpt = parser.acceptsAll(asList("o", "override"),
                                                            "An override property to be used instead of what is in the job")
-                .withRequiredArg()
-                .describedAs("key=val");
+                                               .withRequiredArg()
+                                               .describedAs("key=val");
         String ignoreDepsOpt = "ignore-deps";
         parser.accepts(ignoreDepsOpt, "Run only the specified job, ignoring dependencies");
         AzkabanCommandLine cl = new AzkabanCommandLine(parser, args);

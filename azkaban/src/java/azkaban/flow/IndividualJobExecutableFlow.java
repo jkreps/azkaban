@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import azkaban.app.JobManager;
@@ -33,7 +34,7 @@ import azkaban.common.utils.Props;
  */
 public class IndividualJobExecutableFlow implements ExecutableFlow
 {
-
+    private static final Logger logger = Logger.getLogger(IndividualJobExecutableFlow.class);
     private static final AtomicLong threadCounter = new AtomicLong(0);
 
     private final Object sync = new Object();
@@ -48,6 +49,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
     private volatile Job job;
     private volatile Throwable exception;
     private volatile Props parentProps;
+    private volatile Props returnProps;
 
     public IndividualJobExecutableFlow(String id, String name, JobManager jobManager)
     {
@@ -70,10 +72,16 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         return name;
     }
 
+    @Override
     public Props getParentProps() {
 		return parentProps;
 	}
-    
+
+    @Override
+    public Props getReturnProps() {
+        return returnProps;
+    }
+
     @Override
     public void execute(Props parentProps, FlowCallback callback)
     {
@@ -116,12 +124,32 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
             }
         }
 
-        job = jobManager.loadJob(getName(), this.parentProps, true);
-
-        final ClassLoader storeMyClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            // Only one thread should ever be able to get to this point because of management of jobState
+            // Thus, this should only ever get called once before the job finishes (at which point it could be reset)
+            job = jobManager.loadJob(getName(), parentProps, true);
+        }
+        catch (Exception e) {
+            logger.warn(
+                    String.format("Exception thrown while creating job[%s]", getName()),
+                    e
+            );
+            job = null;
+        }
 
         if (job == null) {
-            throw new RuntimeException("Cannot run a null job.  Probably an issue with the JobFactory?");
+            logger.warn(
+                    String.format("Job[%s] doesn't exist, but was supposed to run.  Perhaps someone changed the flow?", getName())
+            );
+
+            final List<FlowCallback> callbackList;
+
+            synchronized (sync) {
+                jobState = Status.FAILED;
+                callbackList = callbacksToCall; // Get the reference before leaving the synchronized
+            }
+            callCallbacks(callbackList, jobState);
+            return;
         }
 
         Thread theThread = new Thread(
@@ -138,6 +166,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                         catch (Exception e) {
                             synchronized (sync) {
                                 jobState = Status.FAILED;
+                                returnProps = new Props();   
                                 exception = e;
                                 callbackList = callbacksToCall; // Get the reference before leaving the synchronized
                             }
@@ -145,44 +174,16 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
 
                             throw new RuntimeException(e);
                         }
-
+ 
                         synchronized (sync) {
                             jobState = Status.SUCCEEDED;
+                            returnProps = job.getJobGeneratedProperties();
                             callbackList = callbacksToCall; // Get the reference before leaving the synchronized
                         }
+
+                        returnProps.logProperties(String.format("Return props for job[%s]", getName()));
+
                         callCallbacks(callbackList, jobState);
-                    }
-
-                    private void callCallbacks(final List<FlowCallback> callbackList, final Status status)
-                    {
-                        if (endTime == null) {
-                            endTime = new DateTime();
-                        }
-
-                        Thread callbackThread = new Thread(
-                                new Runnable()
-                                {
-                                    @Override
-                                    public void run()
-                                    {
-                                        for (FlowCallback callback : callbackList) {
-                                            try {
-                                                callback.completed(status);
-                                            }
-                                            catch (RuntimeException t) {
-                                                // TODO: Figure out how to use the logger to log that a callback threw an exception.
-                                            }
-                                        }
-                                    }
-                                },
-                                String.format("%s-callback", Thread.currentThread().getName())
-                        );
-
-                        // Use the primary Azkaban classloader for callbacks
-                        // This is only needed for JavaJobs, but won't hurt other instances, so do for everything
-                        callbackThread.setContextClassLoader(storeMyClassLoader);
-
-                        callbackThread.start();
                     }
                 },
                 String.format("%s thread-%s", job.getId(), threadCounter.getAndIncrement())
@@ -215,6 +216,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                     jobState = Status.FAILED;
                     callbacks = callbacksToCall;
                     callbacksToCall = new ArrayList<FlowCallback>();
+                    returnProps = new Props();
             }
         }
 
@@ -265,6 +267,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                 default:
                     jobState = Status.COMPLETED;
                     parentProps = new Props();
+                    returnProps = new Props();
             }
         }
         return true;
@@ -338,6 +341,37 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         return this;
     }
 
+    private void callCallbacks(final List<FlowCallback> callbackList, final Status status)
+    {
+        if (endTime == null) {
+            endTime = new DateTime();
+        }
+
+        Thread callbackThread = new Thread(
+                new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        for (FlowCallback callback : callbackList) {
+                            try {
+                                callback.completed(status);
+                            }
+                            catch (RuntimeException t) {
+                                logger.error(
+                                        String.format("Exception thrown while calling callback. job[%s]", getName()),
+                                        t
+                                );
+                            }
+                        }
+                    }
+                },
+                String.format("%s-callback", Thread.currentThread().getName())
+        );
+
+        callbackThread.start();
+    }
+
     IndividualJobExecutableFlow setParentProperties(Props parentProps)
     {
         synchronized (sync) {
@@ -357,6 +391,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         jobState = Status.READY;
         callbacksToCall = new ArrayList<FlowCallback>();
         parentProps = null;
+        returnProps = null;
         startTime = null;
         endTime = null;
         exception = null;

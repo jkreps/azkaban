@@ -45,6 +45,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
     private volatile GroupedExecutableFlow.GroupedFlowCallback theGroupCallback;
     private volatile Throwable exception;
     private volatile Props parentProps;
+    private volatile Props returnProps;
 
     public GroupedExecutableFlow(String id, ExecutableFlow... flows)
     {
@@ -82,7 +83,6 @@ public class GroupedExecutableFlow implements ExecutableFlow
                     if (subFlowEndTime != null && subFlowEndTime.isAfter(theEndTime)) {
                         theEndTime = subFlowEndTime;
                     }
-
                 }
 
                 setAndVerifyParentProps();
@@ -125,6 +125,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 endTime = null;
 
                 // Make sure everything is initialized before leaking the pointer to "this".
+                // This is just installing the callback in an already running flow.
                 for (ExecutableFlow runningFlow : runningFlows) {
                     runningFlow.execute(parentProps, theGroupCallback);
                 }
@@ -151,6 +152,11 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 }).iterator(),
                 " + "
         );
+    }
+    
+    @Override
+    public Props getReturnProps() {
+        return returnProps;
     }
 
     @Override
@@ -237,6 +243,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 switch (flow.getStatus()) {
                     case FAILED:
                         jobState = Status.FAILED;
+                        returnProps = new Props();
                         return;
                     case COMPLETED:
                     case SUCCEEDED:
@@ -248,6 +255,14 @@ public class GroupedExecutableFlow implements ExecutableFlow
 
             if (allComplete) {
                 jobState = Status.SUCCEEDED;
+
+                returnProps = new Props();
+
+                for (ExecutableFlow flow : flows) {
+                    returnProps = new Props(returnProps, flow.getReturnProps());
+                }
+
+                returnProps.logProperties("Output properties for " + getName());
             }
         }
     }
@@ -270,6 +285,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                     callbacksToCall = new ArrayList<FlowCallback>();
                     theGroupCallback = new GroupedFlowCallback();
                     parentProps = null;
+                    returnProps = null;
                     startTime = null;
                     endTime = null;
                     exception = null;
@@ -289,6 +305,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 default:
                     jobState = Status.COMPLETED;
                     parentProps = new Props();
+                    returnProps = new Props();
             }
         }
 

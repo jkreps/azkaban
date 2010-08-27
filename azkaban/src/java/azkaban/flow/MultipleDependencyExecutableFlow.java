@@ -118,6 +118,11 @@ public class MultipleDependencyExecutableFlow implements ExecutableFlow
     }
 
     @Override
+    public Props getReturnProps() {
+        return actualFlow.getReturnProps();
+    }
+
+    @Override
     public Throwable getException()
     {
         return actualFlow.getException();

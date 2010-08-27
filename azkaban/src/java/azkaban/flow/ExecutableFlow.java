@@ -42,7 +42,7 @@ public interface ExecutableFlow
      * @return name of this stage of the flow.
      */
     public String getName();
-
+    
     /**
      * Executes the flow.  This call should not block.  Instead, when execution is complete,
      * it should call the callback() method on the callback.
@@ -123,6 +123,16 @@ public interface ExecutableFlow
      * @return the parent props, null if state is READY
      */
     public Props getParentProps();
+
+    /**
+     * Gets the return props from the execution of this Flow
+     *
+     * The return props are the props that this execution wants to
+     * provide to any other up-stream executions.
+     *
+     * @return the parent props, null if state is READY
+     */
+    public Props getReturnProps();
 
     /**
      * Gets the exception that caused this Flow to fail, if it has failed
