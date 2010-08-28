@@ -32,12 +32,9 @@ import java.util.*;
  */
 public class ExecutableFlowDeserializer implements Function<Map<String, Object>, ExecutableFlow>
 {
-    private final Function<Map<String, Object>, ExecutableFlow> jobDeserializer;
+    private volatile Function<Map<String, Object>, ExecutableFlow> jobDeserializer;
 
-    public ExecutableFlowDeserializer(
-            Function<Map<String, Object>, ExecutableFlow> jobDeserializer
-    )
-    {
+    public void setJobDeserializer(Function<Map<String, Object>, ExecutableFlow> jobDeserializer) {
         this.jobDeserializer = jobDeserializer;
     }
 

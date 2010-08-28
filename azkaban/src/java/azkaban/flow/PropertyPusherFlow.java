@@ -14,13 +14,13 @@ import java.util.*;
  * Just set up your workflow such that this job is in front of the 
  * parameterized flow and provide the Props that you want passed down
  */
-public class PropertyPushingFlow implements Flow
+public class PropertyPusherFlow implements Flow
 {
     private final String name;
     private final Props props;
     private final Flow[] children;
 
-    public PropertyPushingFlow(String name, Props props, Flow... children)
+    public PropertyPusherFlow(String name, Props props, Flow... children)
     {
         this.name = name;
         this.props = props;
@@ -58,7 +58,7 @@ public class PropertyPushingFlow implements Flow
             }
         }
 
-        final PropertyPushingExecutableFlow retVal = new PropertyPushingExecutableFlow(id, name, props, executableFlows);
+        final PropertyPusherExecutableFlow retVal = new PropertyPusherExecutableFlow(id, name, props, executableFlows);
 
         overrides.put(retVal.getId(), retVal);
 

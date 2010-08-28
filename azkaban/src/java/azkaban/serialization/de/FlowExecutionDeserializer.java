@@ -8,6 +8,9 @@ import com.google.common.base.Function;
 import java.util.Map;
 
 /**
+ * Deserializes a "flow execution" object.  I.e., one of the JSONObjects
+ * in the json files in the execution history directory.
+ *
  */
 public class FlowExecutionDeserializer implements Function<Map<String, Object>, FlowExecutionHolder>
 {

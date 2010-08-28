@@ -15,13 +15,13 @@ import java.util.List;
  * Just set up your workflow such that this job is in front of (depends on)
  * the parameterized flow and provide the Props that you want passed down
  */
-public class PropertyPushingExecutableFlow extends WrappingExecutableFlow
+public class PropertyPusherExecutableFlow extends WrappingExecutableFlow
 {
     private final String id;
     private final String name;
     private final Props props;
 
-    public PropertyPushingExecutableFlow(
+    public PropertyPusherExecutableFlow(
             String id,
             String name,
             Props props,
@@ -47,5 +47,9 @@ public class PropertyPushingExecutableFlow extends WrappingExecutableFlow
     @Override
     public void execute(Props parentProperties, FlowCallback callback) {
         super.execute(new Props(parentProperties, props), callback);
+    }
+
+    public Props getProps() {
+        return props;
     }
 }

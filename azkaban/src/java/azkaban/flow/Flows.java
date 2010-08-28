@@ -16,17 +16,11 @@
 
 package azkaban.flow;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobManager;
-import azkaban.app.JobWrappingFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 /**
  *
@@ -56,7 +50,7 @@ public class Flows
             }
 
             if ("propertyPusher".equals(rootDescriptor.getJobType())) {
-                retVal = new PropertyPushingFlow(
+                retVal = new PropertyPusherFlow(
                         rootDescriptor.getId(),
                         rootDescriptor.getProps().local(),
                         depFlows

@@ -10,12 +10,12 @@ import org.junit.Test;
 
 /**
  */
-public class PropertyPushingExecutableFlowTest
+public class PropertyPusherExecutableFlowTest
 {
     ExecutableFlow childFlow;
     FlowCallback callback;
 
-    PropertyPushingExecutableFlow flow;
+    PropertyPusherExecutableFlow flow;
 
     @Before
     public void setUp()
@@ -41,7 +41,7 @@ public class PropertyPushingExecutableFlowTest
 
         EasyMock.replay(childFlow);
 
-        flow = new PropertyPushingExecutableFlow("blah", "test", props, childFlow);
+        flow = new PropertyPusherExecutableFlow("blah", "test", props, childFlow);
 
         EasyMock.verify(childFlow);
         EasyMock.reset(childFlow);
