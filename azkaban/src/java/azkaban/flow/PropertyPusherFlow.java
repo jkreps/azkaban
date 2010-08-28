@@ -1,6 +1,7 @@
 package azkaban.flow;
 
 import azkaban.common.utils.Props;
+import com.google.common.collect.Sets;
 
 import java.util.*;
 
@@ -16,6 +17,11 @@ import java.util.*;
  */
 public class PropertyPusherFlow implements Flow
 {
+    private static final Set<String> blacklistedKeySet = Sets.newHashSet(
+            "type",
+            "dependencies"
+    );
+
     private final String name;
     private final Props props;
     private final Flow[] children;
@@ -23,8 +29,15 @@ public class PropertyPusherFlow implements Flow
     public PropertyPusherFlow(String name, Props props, Flow... children)
     {
         this.name = name;
-        this.props = props;
+        this.props = new Props();
         this.children = children;
+
+        for (String key : props.getKeySet()) {
+            if (blacklistedKeySet.contains(key)) {
+                continue;
+            }
+            this.props.put(key, props.get(key));
+        }
     }
 
     @Override
