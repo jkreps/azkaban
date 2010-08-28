@@ -131,9 +131,9 @@ public class CachingFlowManager implements FlowManager
         return baseManager.getCurrMaxId();
     }
 
-    public FlowExecutionHolder saveExecutableFlow(FlowExecutionHolder flow)
+    public FlowExecutionHolder saveExecutableFlow(FlowExecutionHolder holder)
     {
-        return baseManager.saveExecutableFlow(flow);
+        return baseManager.saveExecutableFlow(holder);
     }
 
     public FlowExecutionHolder loadExecutableFlow(long id)

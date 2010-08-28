@@ -29,6 +29,7 @@ import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
 import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
 import azkaban.jobs.JavaJob;
 import azkaban.jobs.JavaProcessJob;
+import azkaban.jobs.NoopJob;
 import azkaban.jobs.PigProcessJob;
 import azkaban.jobs.ProcessJob;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
@@ -109,10 +110,13 @@ public class AzkabanApplication
                 new ReadWriteLockManager(),
                 _logsDir.getAbsolutePath(),
                 "java",
-                ImmutableMap.<String, Class<? extends Job>>of("java", JavaJob.class,
-                                                              "command", ProcessJob.class,
-                                                              "javaprocess", JavaProcessJob.class,
-                                                              "pig", PigProcessJob.class)
+                ImmutableMap.<String, Class<? extends Job>>of(
+                        "java", JavaJob.class,
+                        "command", ProcessJob.class,
+                        "javaprocess", JavaProcessJob.class,
+                        "pig", PigProcessJob.class,
+                        "propertyPusher", NoopJob.class
+                )
         );
 
         _hdfsUrl = defaultProps.getString("hdfs.instance.url", null);

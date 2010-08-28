@@ -397,4 +397,19 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         endTime = null;
         exception = null;
     }
+
+    IndividualJobExecutableFlow setReturnProperties(Props returnProps)
+    {
+        synchronized (sync) {
+            if (this.returnProps == null) {
+                this.returnProps = returnProps;
+            }
+            else {
+                throw new IllegalStateException("Attempt to override return properties.  " +
+                                                "This method should only really be called from deserialization code");
+            }
+        }
+
+        return this;
+    }
 }

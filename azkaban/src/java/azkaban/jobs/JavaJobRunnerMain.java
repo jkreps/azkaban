@@ -135,7 +135,16 @@ public class JavaJobRunnerMain {
         OutputStream writer = null;
         try {
             writer = new BufferedOutputStream(new FileOutputStream(outputFileStr));
-            writer.write(new JSONObject(properties).toString(2).getBytes("UTF8"));
+            // Manually serialize into JSON instead of adding org.json to external classpath
+            writer.write("{\n".getBytes());
+            for (Map.Entry<String, String> entry : properties.entrySet()) {
+                writer.write(String.format(
+                        "  '%s':'%s',\n",
+                        entry.getKey().replace("'", "\\'"),
+                        entry.getValue().replace("'", "\\'")
+                ).getBytes());
+            }
+            writer.write("}".getBytes());
         }
         catch (Exception e) {
             new RuntimeException("Unable to store output properties to: " + outputFileStr);

@@ -6,6 +6,8 @@ import org.joda.time.DateTime;
 import java.util.List;
 
 /**
+ * A convenience class to make it easier to inject behavior
+ * into a single method call for an ExecutableFlow.
  */
 public class WrappingExecutableFlow implements ExecutableFlow
 {
@@ -83,5 +85,10 @@ public class WrappingExecutableFlow implements ExecutableFlow
     @Override
     public Throwable getException() {
         return delegateFlow.getException();
+    }
+
+    public ExecutableFlow getDelegateFlow()
+    {
+        return delegateFlow;
     }
 }

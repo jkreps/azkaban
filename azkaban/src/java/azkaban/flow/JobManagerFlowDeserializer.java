@@ -53,6 +53,7 @@ public class JobManagerFlowDeserializer implements Function<Map<String, Object>,
         DateTime startTime = Verifier.getOptionalDateTime(descriptor, "startTime");
         DateTime endTime = Verifier.getOptionalDateTime(descriptor, "endTime");
         Map<String, String> parentPropsMap = Verifier.getOptionalObject(descriptor, "overrideProps", Map.class);
+        Map<String, String> returnPropsMap = Verifier.getOptionalObject(descriptor, "returnProps", Map.class);
 
         final IndividualJobExecutableFlow retVal = new IndividualJobExecutableFlow(
                 id,
@@ -76,6 +77,13 @@ public class JobManagerFlowDeserializer implements Function<Map<String, Object>,
             parentProps.putAll(parentPropsMap);
 
             retVal.setParentProperties(parentProps);
+        }
+
+        if (returnPropsMap != null) {
+            Props parentProps = new Props();
+            parentProps.putAll(parentPropsMap);
+
+            retVal.setReturnProperties(parentProps);
         }
 
         return retVal;

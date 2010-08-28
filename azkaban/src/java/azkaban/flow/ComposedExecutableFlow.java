@@ -93,11 +93,9 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 startTime = dependee.getStartTime() == null ? depender.getStartTime() : dependee.getStartTime();
                 endTime = null;
 
-                parentProps = depender.getParentProps();
-                if (! parentProps.equalsProps(dependee.getParentProps())) {
-                    throw new IllegalStateException(String.format("Parent props differ for sub flows [%s]", id));
-                }
-                depender.execute(parentProps, new DependerCallback());
+                parentProps = dependee.getParentProps();
+
+                depender.execute(new Props(parentProps, dependee.getReturnProps()), new DependerCallback());
 
                 break;
             case COMPLETED:
@@ -106,7 +104,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
                 jobState = dependerState;
                 startTime = dependee.getStartTime() == null ? depender.getStartTime() : dependee.getStartTime();
                 endTime = depender.getEndTime();
-                parentProps = depender.getParentProps();
+                parentProps = dependee.getParentProps();
         }
     }
 

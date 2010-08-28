@@ -478,7 +478,7 @@ public class ComposedExecutableFlowTest
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.FAILED).once();
         EasyMock.expect(dependeeFlow.getStartTime()).andReturn(expectedStartTime).times(2);
         EasyMock.expect(dependerFlow.getEndTime()).andReturn(expectedEndTime);
-        EasyMock.expect(dependerFlow.getParentProps()).andReturn(props);
+        EasyMock.expect(dependeeFlow.getParentProps()).andReturn(props);
         EasyMock.replay(dependeeFlow, dependerFlow);
 
         flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
@@ -510,7 +510,7 @@ public class ComposedExecutableFlowTest
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.FAILED).once();
         EasyMock.expect(dependeeFlow.getStartTime()).andReturn(expectedStartTime).times(2);
         EasyMock.expect(dependerFlow.getEndTime()).andReturn(expectedEndTime);
-        EasyMock.expect(dependerFlow.getParentProps()).andReturn(props);
+        EasyMock.expect(dependeeFlow.getParentProps()).andReturn(props);
         EasyMock.replay(dependeeFlow, dependerFlow);
 
         flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
@@ -626,16 +626,13 @@ public class ComposedExecutableFlowTest
 
         EasyMock.expect(dependerFlow.getStatus()).andReturn(Status.RUNNING).once();
         EasyMock.expect(dependeeFlow.getStartTime()).andReturn(expectedStartTime).times(2);
-        EasyMock.expect(dependerFlow.getParentProps()).andReturn(props).once();
         EasyMock.expect(dependeeFlow.getParentProps()).andReturn(props).once();
+        EasyMock.expect(dependeeFlow.getReturnProps()).andReturn(new Props()).once();
 
         Capture<FlowCallback> dependerFlowCallback = new Capture<FlowCallback>();
-        dependerFlow.execute(EasyMock.eq(props), EasyMock.capture(dependerFlowCallback));
+        dependerFlow.execute(EasyMock.isA(Props.class), EasyMock.capture(dependerFlowCallback));
 
-        EasyMock.reset(props);
-        EasyMock.expect(props.equalsProps(props)).andReturn(true).once();
-
-        EasyMock.replay(dependerFlow, dependeeFlow, props);
+        EasyMock.replay(dependerFlow, dependeeFlow);
 
         flow = new ComposedExecutableFlow("blah", dependerFlow, dependeeFlow);
 

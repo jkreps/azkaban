@@ -50,8 +50,8 @@ public class PropertyPushingFlow implements Flow
         for (int i = 0; i < children.length; ++i) {
             final Flow child = children[i];
 
-            if (overrides.containsKey(child.getName())) {
-                executableFlows[i] = overrides.get(child.getName());
+            if (overridesForSubFlow.containsKey(child.getName())) {
+                executableFlows[i] = overridesForSubFlow.get(child.getName());
             }
             else {
                 executableFlows[i] = child.createExecutableFlow(id, overridesForSubFlow);
