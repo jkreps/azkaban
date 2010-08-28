@@ -33,6 +33,7 @@ import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
 import azkaban.serialization.ExecutableFlowSerializer;
 import azkaban.serialization.FlowExecutionSerializer;
+import azkaban.serialization.de.DefaultExecutableFlowDeserializer;
 import azkaban.serialization.de.ExecutableFlowDeserializer;
 import azkaban.serialization.de.FlowExecutionDeserializer;
 import azkaban.serialization.de.JobFlowDeserializer;
@@ -132,12 +133,7 @@ public class CommandLineJobRunner {
         }
 
         final ExecutableFlowSerializer flowSerializer = new DefaultExecutableFlowSerializer();
-        final ExecutableFlowDeserializer flowDeserializer = new ExecutableFlowDeserializer(
-                new JobFlowDeserializer(
-                        ImmutableMap.<String, Function<Map<String, Object>, ExecutableFlow>>of(
-                                "jobManagerLoaded", new JobManagerFlowDeserializer(jobManager, factory))
-                )
-        );
+        final ExecutableFlowDeserializer flowDeserializer = new DefaultExecutableFlowDeserializer(jobManager, factory);
         FlowExecutionSerializer flowExecutionSerializer = new FlowExecutionSerializer(flowSerializer);
         FlowExecutionDeserializer flowExecutionDeserializer = new FlowExecutionDeserializer(flowDeserializer);
 
