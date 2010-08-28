@@ -34,7 +34,8 @@ public class DefaultExecutableFlowSerializer extends ExecutableFlowSerializer
                         IndividualJobExecutableFlow.class, new IndividualJobEFSerializer(),
                         GroupedExecutableFlow.class, new GroupedEFSerializer(this),
                         ComposedExecutableFlow.class, new ComposedEFSerializer(this),
-                        MultipleDependencyExecutableFlow.class, new MultipleDependencyEFSerializer(this)
+                        MultipleDependencyExecutableFlow.class, new MultipleDependencyEFSerializer(this),
+                        PropertyPusherExecutableFlow.class, new PropertyPusherEFSerializer(this)
                 );
 
         setSerializers(subSerializers);
