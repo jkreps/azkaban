@@ -27,7 +27,7 @@ public class FlowExecutionSerializer implements Function<FlowExecutionHolder, Ma
         Map<String, Object> retVal = new LinkedHashMap<String, Object>();
 
         final Map<String, String> propsToPut;
-        if (flowExecutionHolder.getParentProps() == null) {
+        if (flowExecutionHolder.getParentProps() != null) {
             propsToPut = flowExecutionHolder.getParentProps().getMapByPrefix("");
         } else {
             propsToPut = Collections.emptyMap();

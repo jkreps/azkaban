@@ -701,9 +701,6 @@ public class Scheduler
                 senderAddress = _jobManager.getJobDescriptor(flow.getName()).getSenderEmail();
                 final String senderEmail = senderAddress;
 
-                Props parentProps = produceParentProperties(flow);
-
-
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
                 _scheduledJob.setStarted(new DateTime());
