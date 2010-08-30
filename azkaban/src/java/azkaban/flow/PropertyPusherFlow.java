@@ -19,7 +19,8 @@ public class PropertyPusherFlow implements Flow
 {
     private static final Set<String> blacklistedKeySet = Sets.newHashSet(
             "type",
-            "dependencies"
+            "dependencies",
+            "prop-dependency"
     );
 
     private final String name;
