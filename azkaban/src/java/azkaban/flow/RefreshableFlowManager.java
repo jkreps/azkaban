@@ -130,10 +130,11 @@ public class RefreshableFlowManager implements FlowManager
     {
         Map<String, Flow> flowMap = new HashMap<String, Flow>();
         Set<String> rootFlows = new TreeSet<String>();
-        for (JobDescriptor rootDescriptor : jobManager.getRootJobDescriptors(jobManager.loadJobDescriptors())) {
+        final Map<String, JobDescriptor> allJobDescriptors = jobManager.loadJobDescriptors();
+        for (JobDescriptor rootDescriptor : jobManager.getRootJobDescriptors(allJobDescriptors)) {
             if (rootDescriptor.getId() != null) {
                 // This call of magical wonderment ends up pushing all Flow objects in the dependency graph for the root into flowMap
-                Flows.buildLegacyFlow(jobManager, flowMap, rootDescriptor);
+                Flows.buildLegacyFlow(jobManager, flowMap, rootDescriptor, allJobDescriptors);
                 rootFlows.add(rootDescriptor.getId());
             }
         }

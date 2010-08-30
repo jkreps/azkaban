@@ -23,12 +23,15 @@ public class PropertyPusherFlow implements Flow
     );
 
     private final String name;
+    private final Flow propertyFlow;
     private final Props props;
     private final Flow[] children;
+    private final List<Flow> allChildren;
 
-    public PropertyPusherFlow(String name, Props props, Flow... children)
+    public PropertyPusherFlow(String name, Flow propertyFlow, Flow... children)
     {
         this.name = name;
+        this.propertyFlow = propertyFlow;
         this.props = new Props();
         this.children = children;
 
@@ -38,6 +41,20 @@ public class PropertyPusherFlow implements Flow
             }
             this.props.put(key, props.get(key));
         }
+
+        Flow[] sortedChildren = Arrays.copyOf(children, children.length);
+        Arrays.sort(sortedChildren, new Comparator<Flow>()
+        {
+            @Override
+            public int compare(Flow o1, Flow o2)
+            {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+
+        allChildren = new ArrayList<Flow>();
+        allChildren.add(propertyFlow);
+        allChildren.addAll(Arrays.asList(sortedChildren));
     }
 
     @Override
@@ -52,12 +69,14 @@ public class PropertyPusherFlow implements Flow
 
     @Override
     public List<Flow> getChildren() {
-        return Arrays.asList(children);
+        return allChildren;
     }
 
     @Override
     public ExecutableFlow createExecutableFlow(String id, Map<String, ExecutableFlow> overrides) {
         ExecutableFlow[] executableFlows = new ExecutableFlow[children.length];
+
+        ExecutableFlow propertyExecutableFlow = propertyFlow.createExecutableFlow(id, overrides);
 
         Map<String, ExecutableFlow> overridesForSubFlow = new HashMap<String, ExecutableFlow>();
         for (int i = 0; i < children.length; ++i) {
@@ -71,7 +90,7 @@ public class PropertyPusherFlow implements Flow
             }
         }
 
-        final PropertyPusherExecutableFlow retVal = new PropertyPusherExecutableFlow(id, name, props, executableFlows);
+        final PropertyPusherExecutableFlow retVal = new PropertyPusherExecutableFlow(id, name, propertyExecutableFlow, executableFlows);
 
         overrides.put(retVal.getId(), retVal);
 

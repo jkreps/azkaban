@@ -32,8 +32,8 @@ public class PropertyPusherEFSerializer implements Function<ExecutableFlow, Map<
         thisDescriptor.put("type", "propertyPusher");
         thisDescriptor.put("id", flow.getId());
         thisDescriptor.put("name", flow.getName());
-        thisDescriptor.put("props", flow.getProps().getMapByPrefix(""));
-        thisDescriptor.put("subFlow", globalSerializer.apply(flow.getDelegateFlow()));
+        thisDescriptor.put("propGenFlow", globalSerializer.apply(flow.getPropertyGeneratingFlow()));
+        thisDescriptor.put("subFlow", globalSerializer.apply(flow.getSubFlow()));
 
 
         retVal.put("jobs", ImmutableMap.of(flow.getName(), thisDescriptor));

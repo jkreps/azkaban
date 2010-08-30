@@ -12,6 +12,7 @@ import org.junit.Test;
  */
 public class PropertyPusherExecutableFlowTest
 {
+    ExecutableFlow propertyFlow;
     ExecutableFlow childFlow;
     FlowCallback callback;
 
@@ -20,8 +21,22 @@ public class PropertyPusherExecutableFlowTest
     @Before
     public void setUp()
     {
+        propertyFlow = EasyMock.createMock(ExecutableFlow.class);
         childFlow = EasyMock.createMock(ExecutableFlow.class);
         callback = EasyMock.createMock(FlowCallback.class);
+
+        EasyMock.expect(childFlow.getStatus()).andReturn(Status.READY).times(3);
+        EasyMock.expect(childFlow.getStartTime()).andReturn(null).once();
+        EasyMock.expect(childFlow.getName()).andReturn("Something").once();
+
+        EasyMock.expect(propertyFlow.getStatus()).andReturn(Status.READY).once();
+
+        EasyMock.replay(childFlow, propertyFlow);
+
+        flow = new PropertyPusherExecutableFlow("blah", "test", propertyFlow, childFlow);
+
+        EasyMock.verify(childFlow, propertyFlow);
+        EasyMock.reset(childFlow, propertyFlow);
     }
 
     @After
@@ -35,32 +50,37 @@ public class PropertyPusherExecutableFlowTest
         Props props = new Props();
         props.put("billy", "blank");
 
-        EasyMock.expect(childFlow.getStatus()).andReturn(Status.READY).times(3);
-        EasyMock.expect(childFlow.getStartTime()).andReturn(null).once();
-        EasyMock.expect(childFlow.getName()).andReturn("Something").once();
-
-        EasyMock.replay(childFlow);
-
-        flow = new PropertyPusherExecutableFlow("blah", "test", props, childFlow);
-
-        EasyMock.verify(childFlow);
-        EasyMock.reset(childFlow);
-
         Capture<Props> propsCap = new Capture<Props>();
-        Capture<FlowCallback> callbackCap = new Capture<FlowCallback>();
-
-        childFlow.execute(EasyMock.capture(propsCap), EasyMock.capture(callbackCap));
-        EasyMock.expectLastCall();
-        EasyMock.replay(childFlow);
+        Capture<FlowCallback> propertyFlowCallbackCap = new Capture<FlowCallback>();
+        Capture<FlowCallback> actualFlowCallbackCap = new Capture<FlowCallback>();
 
         Props otherProps = new Props();
         otherProps.put("sally", "jesse");
         otherProps.put("billy", "bob");  // should be overriden
 
+        propertyFlow.execute(EasyMock.eq(otherProps), EasyMock.capture(propertyFlowCallbackCap));
+        EasyMock.expectLastCall();
+
+        EasyMock.replay(propertyFlow);
+
         flow.execute(otherProps, callback);
 
-        EasyMock.verify(childFlow);
-        EasyMock.reset(childFlow);
+        EasyMock.verify(propertyFlow);
+        EasyMock.reset(propertyFlow);
+
+        EasyMock.expect(propertyFlow.getReturnProps()).andReturn(props).once();
+
+        callback.progressMade();
+        EasyMock.expectLastCall();
+
+        childFlow.execute(EasyMock.capture(propsCap), EasyMock.capture(actualFlowCallbackCap));
+        EasyMock.expectLastCall();
+        EasyMock.replay(childFlow, propertyFlow, callback);
+
+        propertyFlowCallbackCap.getValue().completed(Status.SUCCEEDED);
+
+        EasyMock.verify(childFlow, propertyFlow, callback);
+        EasyMock.reset(childFlow, propertyFlow, callback);
 
         callback.completed(Status.SUCCEEDED);
         EasyMock.expectLastCall();
@@ -73,7 +93,7 @@ public class PropertyPusherExecutableFlowTest
 
         EasyMock.replay(childFlow, callback);
 
-        callbackCap.getValue().completed(Status.SUCCEEDED);
+        actualFlowCallbackCap.getValue().completed(Status.SUCCEEDED);
 
         EasyMock.verify(callback, childFlow);
 

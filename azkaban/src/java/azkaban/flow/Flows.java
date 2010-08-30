@@ -30,7 +30,8 @@ public class Flows
     public static Flow buildLegacyFlow(
             final JobManager jobManager,
             final Map<String, Flow> alreadyBuiltFlows,
-            final JobDescriptor rootDescriptor
+            final JobDescriptor rootDescriptor,
+            final Map<String, JobDescriptor> allJobDescriptors
     )
     {
         //TODO MED: The jobManager isn't really the best Job factory.  It should be revisited, but it works for now.
@@ -45,14 +46,17 @@ public class Flows
 
             int index = 0;
             for (JobDescriptor jobDescriptor : dependencies) {
-                depFlows[index] = buildLegacyFlow(jobManager, alreadyBuiltFlows, jobDescriptor);
+                depFlows[index] = buildLegacyFlow(jobManager, alreadyBuiltFlows, jobDescriptor, allJobDescriptors);
                 ++index;
             }
 
             if ("propertyPusher".equals(rootDescriptor.getJobType())) {
+                String propertyFlowName = rootDescriptor.getProps().getString("prop-dependency");
+                JobDescriptor propertyJobDescriptor = allJobDescriptors.get(propertyFlowName);
+
                 retVal = new PropertyPusherFlow(
                         rootDescriptor.getId(),
-                        rootDescriptor.getProps().local(),
+                        buildLegacyFlow(jobManager, alreadyBuiltFlows, propertyJobDescriptor, allJobDescriptors),
                         depFlows
                 );
             }

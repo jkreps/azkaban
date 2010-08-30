@@ -24,13 +24,14 @@ public class PropertyPusherFlowDeserializer implements Function<Map<String, Obje
 
     @Override
     public ExecutableFlow apply(Map<String, Object> jobDescriptor) {
+        final ExecutableFlow propGenFlow = globalDeserializer.apply(Verifier.getVerifiedObject(jobDescriptor, "propGenFlow", Map.class));
         final ExecutableFlow subFlow = globalDeserializer.apply(Verifier.getVerifiedObject(jobDescriptor, "subFlow", Map.class));
         final List<ExecutableFlow> subFlowChildren = subFlow.getChildren();
 
         return new PropertyPusherExecutableFlow(
                 Verifier.getString(jobDescriptor, "id"),
                 Verifier.getString(jobDescriptor, "name"),
-                new Props(null, Verifier.getVerifiedObject(jobDescriptor, "props", Map.class)),
+                propGenFlow,
                 subFlowChildren.toArray(new ExecutableFlow[subFlowChildren.size()])
         );
     }
