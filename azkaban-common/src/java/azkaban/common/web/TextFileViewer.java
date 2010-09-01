@@ -44,13 +44,14 @@ public class TextFileViewer implements HdfsFileViewer {
     }
 
     public boolean canReadFile(FileSystem fs, Path path) {
-        for(String suffix: acceptedSuffix) {
-            if(path.toString().endsWith(suffix)) {
-                return true;
-            }
-        }
-
-        return false;
+//        for(String suffix: acceptedSuffix) {
+//            if(path.toString().endsWith(suffix)) {
+//                return true;
+//            }
+//        }
+//
+//        return false;
+        return true;
     }
 
     public void displayFile(FileSystem fs,
@@ -66,10 +67,19 @@ public class TextFileViewer implements HdfsFileViewer {
         PrintWriter output = new PrintWriter(outputStream);
         for(int i = 1; i < startLine; i++)
             reader.readLine();
+        
+        final int bufferLimit = 1000000; //only display the first 1M chars. it is used to prevent showing/downloading gb of data
+        int bufferSize = 0;
         for(int i = startLine; i < endLine; i++) {
             String line = reader.readLine();
             if(line == null)
                 break;
+            
+            // bread if reach the buffer limit
+            bufferSize += line.length();
+            if (bufferSize >= bufferLimit)
+                break;
+            
             output.write(line);
             output.write("\n");
         }
