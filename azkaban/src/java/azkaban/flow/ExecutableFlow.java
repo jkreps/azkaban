@@ -16,6 +16,7 @@
 
 package azkaban.flow;
 
+import azkaban.common.utils.Props;
 import org.joda.time.DateTime;
 
 import java.util.List;
@@ -42,7 +43,7 @@ public interface ExecutableFlow
      * @return name of this stage of the flow.
      */
     public String getName();
-
+    
     /**
      * Executes the flow.  This call should not block.  Instead, when execution is complete,
      * it should call the callback() method on the callback.
@@ -51,9 +52,10 @@ public interface ExecutableFlow
      * an execute() call.  If the job is already completed when an execute() call is made, the callback should still
      * be called.
      *
+     * @param parentProperties properties that should be used as parent properties by the execution.
      * @param callback the callback to be run upon completion.
      */
-    public void execute(FlowCallback callback);
+    public void execute(Props parentProperties, FlowCallback callback);
 
     /**
      * Cancels a running flow
@@ -116,6 +118,25 @@ public interface ExecutableFlow
      */
     public DateTime getEndTime();
 
+    /**
+     * Gets the parent props used for the execution of this Flow
+     *
+     * @return the parent props, null if state is READY
+     */
+    public Props getParentProps();
+
+    /**
+     * Gets the return props from the execution of this Flow
+     *
+     * The return props are the props that this execution wants to
+     * provide to any other up-stream executions.  They are called
+     * "return props" in following with the function metaphor, the
+     * flow is essentially a function and it is "returning" this set
+     * of properties to whatever told it to call.
+     *
+     * @return the parent props, null if state is READY
+     */
+    public Props getReturnProps();
 
     /**
      * Gets exceptions that caused this Flow to fail, if it has failed

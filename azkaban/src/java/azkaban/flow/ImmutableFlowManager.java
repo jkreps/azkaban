@@ -21,15 +21,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
+import azkaban.serialization.FlowExecutionSerializer;
+import azkaban.serialization.de.FlowExecutionDeserializer;
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -52,14 +48,14 @@ public class ImmutableFlowManager implements FlowManager
     private final AtomicLong lastId;
 
     private final File storageDirectory;
-    private final ExecutableFlowSerializer serializer;
-    private final ExecutableFlowDeserializer deserializer;
+    private final FlowExecutionSerializer serializer;
+    private final FlowExecutionDeserializer deserializer;
 
     public ImmutableFlowManager(
             Map<String, Flow> flowMap,
             Set<String> rootFlows,
-            ExecutableFlowSerializer serializer,
-            ExecutableFlowDeserializer deserializer,
+            FlowExecutionSerializer serializer,
+            FlowExecutionDeserializer deserializer,
             File storageDirectory,
             long lastId
     )
@@ -105,7 +101,7 @@ public class ImmutableFlowManager implements FlowManager
     }
 
     @Override
-    public ExecutableFlow createNewExecutableFlow(String name, Props overrideProps)
+    public ExecutableFlow createNewExecutableFlow(String name)
     {
         final Flow flow = getFlow(name);
 
@@ -115,22 +111,7 @@ public class ImmutableFlowManager implements FlowManager
         
         String flowId = String.valueOf(getNextId());
         
-        overrideProps.put("azkaban.flow.id", flowId);
-        overrideProps.put("azkaban.flow.uuid", UUID.randomUUID().toString());
-
-        DateTime loadTime = new DateTime();
-
-        overrideProps.put("azkaban.flow.start.timestamp", loadTime.toString());
-        overrideProps.put("azkaban.flow.start.year", loadTime.toString("yyyy"));
-        overrideProps.put("azkaban.flow.start.month", loadTime.toString("MM"));
-        overrideProps.put("azkaban.flow.start.day", loadTime.toString("dd"));
-        overrideProps.put("azkaban.flow.start.hour", loadTime.toString("HH"));
-        overrideProps.put("azkaban.flow.start.minute", loadTime.toString("mm"));
-        overrideProps.put("azkaban.flow.start.seconds", loadTime.toString("ss"));
-        overrideProps.put("azkaban.flow.start.milliseconds", loadTime.toString("SSS"));
-        overrideProps.put("azkaban.flow.start.timezone", loadTime.toString("ZZZZ"));
-
-        return flow.createExecutableFlow(flowId, overrideProps, new HashMap<String, ExecutableFlow>());
+        return flow.createExecutableFlow(flowId, new HashMap<String, ExecutableFlow>());
     }
 
     @Override
@@ -146,12 +127,11 @@ public class ImmutableFlowManager implements FlowManager
     }
 
     @Override
-    public ExecutableFlow saveExecutableFlow(ExecutableFlow flow)
+    public FlowExecutionHolder saveExecutableFlow(FlowExecutionHolder holder)
     {
-        File storageFile = new File(storageDirectory, String.format("%s.json", flow.getId()));
+        File storageFile = new File(storageDirectory, String.format("%s.json", holder.getFlow().getId()));
 
-        Map<String, Object> map = serializer.apply(flow);
-        JSONObject jsonObj = new JSONObject(map);
+        JSONObject jsonObj = new JSONObject(serializer.apply(holder));
 
         BufferedWriter out = null;
         try {
@@ -166,11 +146,11 @@ public class ImmutableFlowManager implements FlowManager
             IOUtils.closeQuietly(out);
         }
 
-        return flow;
+        return holder;
     }
 
     @Override
-    public ExecutableFlow loadExecutableFlow(long id)
+    public FlowExecutionHolder loadExecutableFlow(long id)
     {
         File storageFile = new File(storageDirectory, String.format("%s.json", id));
 

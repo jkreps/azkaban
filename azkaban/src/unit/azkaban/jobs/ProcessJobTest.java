@@ -21,8 +21,9 @@ public class ProcessJobTest
     descriptor = EasyMock.createMock(JobDescriptor.class);
     
     props = new Props();
+    props.put(AbstractProcessJob.WORKING_DIR, ".");
     
-    EasyMock.expect(descriptor.getId()).andReturn("process").times(2);
+    EasyMock.expect(descriptor.getId()).andReturn("process").times(1);
     EasyMock.expect(descriptor.getProps()).andReturn(props).times(1);
     EasyMock.expect(descriptor.getFullPath()).andReturn(".").times(1);
     
@@ -53,7 +54,7 @@ public class ProcessJobTest
       job.run();
     }catch (RuntimeException e) {
       Assert.assertTrue(true);
-      //e.printStackTrace();
+      e.printStackTrace();
     }
   }
     

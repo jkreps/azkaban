@@ -1,0 +1,276 @@
+2010/08/12 12:05:32.997 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/12 12:05:33.129 INFO [AzkabanApp] [] kk thx bye.
+2010/08/12 12:06:12.739 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 12:06:12.741 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/12 12:06:12.748 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Software/hadoop-0.20.2/
+2010/08/12 12:06:12.841 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/12 12:06:12.841 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/12 12:06:12.843 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/12 12:06:12.844 INFO [AzkabanApplication] [] Last known execution id was [8]
+2010/08/12 12:06:12.977 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/12 15:14:10.438 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 15:14:10.439 INFO [AzkabanApp] [] Job directories set to [test/jobs/command_job]
+2010/08/12 15:14:10.446 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/batch/common/hadoop-conf/dev
+2010/08/12 15:14:10.540 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/jobs.schedule
+2010/08/12 15:14:10.540 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/jobs.schedule.backup
+2010/08/12 15:14:10.542 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/executions] for storing executions.
+2010/08/12 15:14:10.543 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 15:14:10.576 WARN [Scheduler] [] No schedule files found looking for /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/jobs.schedule
+2010/08/12 15:14:10.674 WARN [AzkabanApp] [] org.mortbay.util.MultiException[java.net.BindException: Address already in use]
+2010/08/12 15:14:20.443 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/12 15:14:20.561 INFO [AzkabanApp] [] kk thx bye.
+2010/08/12 15:14:23.540 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 15:14:23.541 INFO [AzkabanApp] [] Job directories set to [test/jobs/command_job]
+2010/08/12 15:14:23.548 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/batch/common/hadoop-conf/dev
+2010/08/12 15:14:23.645 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/jobs.schedule
+2010/08/12 15:14:23.645 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/jobs.schedule.backup
+2010/08/12 15:14:23.648 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/executions] for storing executions.
+2010/08/12 15:14:23.648 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 15:14:23.682 WARN [Scheduler] [] No schedule files found looking for /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/jobs.schedule
+2010/08/12 15:14:23.783 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/12 15:14:32.161 INFO [Scheduler] [] Scheduling job 'lstest' for 08-12-2010 15:14:32:094
+2010/08/12 15:15:09.878 INFO [Scheduler] [] Scheduling job 'errtest' for 08-12-2010 15:15:09:878
+2010/08/12 15:26:14.605 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/12 15:26:14.727 INFO [AzkabanApp] [] kk thx bye.
+2010/08/12 15:26:17.297 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 15:26:17.298 INFO [AzkabanApp] [] Job directories set to [test/jobs/command_job]
+2010/08/12 15:26:17.306 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/batch/common/hadoop-conf/dev
+2010/08/12 15:26:17.402 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/jobs.schedule
+2010/08/12 15:26:17.402 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/jobs.schedule.backup
+2010/08/12 15:26:17.405 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/command_job/executions] for storing executions.
+2010/08/12 15:26:17.405 INFO [AzkabanApplication] [] Last known execution id was [2]
+2010/08/12 15:26:17.541 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/12 15:26:28.592 INFO [Scheduler] [] Scheduling job 'rmtest' for 08-12-2010 15:26:28:527
+2010/08/12 15:32:42.774 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/12 15:32:42.880 INFO [AzkabanApp] [] kk thx bye.
+2010/08/12 15:32:48.428 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 15:32:48.429 INFO [AzkabanApp] [] Job directories set to [test/jobs/java_job]
+2010/08/12 15:32:48.437 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/batch/common/hadoop-conf/dev
+2010/08/12 15:32:48.532 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/java_job/jobs.schedule
+2010/08/12 15:32:48.532 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/java_job/jobs.schedule.backup
+2010/08/12 15:32:48.535 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/java_job/executions] for storing executions.
+2010/08/12 15:32:48.535 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 15:32:48.571 WARN [Scheduler] [] No schedule files found looking for /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/java_job/jobs.schedule
+2010/08/12 15:32:48.672 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/12 15:37:07.968 INFO [Scheduler] [] Scheduling job 'sleeptest' for 08-12-2010 15:37:07:967
+2010/08/12 15:37:48.689 INFO [Scheduler] [] Scheduling job 'wordcount' for 08-12-2010 15:37:48:689
+2010/08/12 15:39:06.816 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/12 15:39:06.936 INFO [AzkabanApp] [] kk thx bye.
+2010/08/12 15:39:47.149 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 15:39:47.150 INFO [AzkabanApp] [] Job directories set to [test/jobs/java_job]
+2010/08/12 15:39:47.158 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/batch/common/hadoop-conf/dev
+2010/08/12 15:39:47.251 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/java_job/jobs.schedule
+2010/08/12 15:39:47.251 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/java_job/jobs.schedule.backup
+2010/08/12 15:39:47.254 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/java_job/executions] for storing executions.
+2010/08/12 15:39:47.254 INFO [AzkabanApplication] [] Last known execution id was [2]
+2010/08/12 15:39:47.388 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/12 15:40:20.406 INFO [Scheduler] [] Scheduling job 'wordcount' for 08-12-2010 15:40:20:405
+2010/08/12 15:40:57.852 INFO [Scheduler] [] Scheduling job 'errorjava' for 08-12-2010 15:40:57:852
+2010/08/12 15:46:30.371 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/12 15:46:30.494 INFO [AzkabanApp] [] kk thx bye.
+2010/08/12 15:46:37.796 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 15:46:37.798 INFO [AzkabanApp] [] Job directories set to [test/jobs/hadoop_job]
+2010/08/12 15:46:37.805 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/batch/common/hadoop-conf/dev
+2010/08/12 15:46:37.900 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/hadoop_job/jobs.schedule
+2010/08/12 15:46:37.900 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/hadoop_job/jobs.schedule.backup
+2010/08/12 15:46:37.903 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/hadoop_job/executions] for storing executions.
+2010/08/12 15:46:37.903 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 15:46:37.951 WARN [Scheduler] [] No schedule files found looking for /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/hadoop_job/jobs.schedule
+2010/08/12 15:46:38.051 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/12 15:47:00.345 INFO [Scheduler] [] Scheduling job 'wordcount' for 08-12-2010 15:47:00:279
+2010/08/12 15:48:11.389 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/12 15:48:11.494 INFO [AzkabanApp] [] kk thx bye.
+2010/08/12 15:48:24.953 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 15:48:24.955 INFO [AzkabanApp] [] Job directories set to [test/jobs/hadoop_job]
+2010/08/12 15:48:24.962 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/batch/common/hadoop-conf/dev
+2010/08/12 15:48:25.057 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/hadoop_job/jobs.schedule
+2010/08/12 15:48:25.057 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/hadoop_job/jobs.schedule.backup
+2010/08/12 15:48:25.060 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/hadoop_job/executions] for storing executions.
+2010/08/12 15:48:25.060 INFO [AzkabanApplication] [] Last known execution id was [1]
+2010/08/12 15:48:25.205 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/12 15:48:33.659 INFO [Scheduler] [] Scheduling job 'wordcount' for 08-12-2010 15:48:33:593
+2010/08/12 15:49:50.640 INFO [Scheduler] [] Scheduling job 'wordcount' for now
+2010/08/12 15:49:50.643 INFO [Scheduler] [] Starting run of wordcount
+2010/08/12 15:50:34.627 INFO [Scheduler] [] Scheduling job 'wordcount' for 08-12-2010 15:50:34:627
+2010/08/12 15:53:36.872 INFO [Scheduler] [] Scheduling job 'wordcount' for 08-12-2010 15:53:36:872
+2010/08/12 15:55:48.515 INFO [Scheduler] [] Scheduling job 'wordcount' for 08-12-2010 15:55:48:515
+2010/08/12 15:58:11.071 INFO [Scheduler] [] Scheduling job 'wordcount_error' for 08-12-2010 15:58:11:071
+2010/08/12 15:59:08.599 INFO [Scheduler] [] Scheduling job 'wordcount_error' for 08-12-2010 15:59:08:599
+2010/08/12 16:00:41.857 INFO [Scheduler] [] Scheduling job 'wordcount_error' for 08-12-2010 16:00:41:857
+2010/08/12 16:02:23.213 INFO [Scheduler] [] Scheduling job 'wordcount_error' for 08-12-2010 16:02:23:213
+2010/08/12 16:07:30.539 INFO [Scheduler] [] Scheduling job 'wordcount_error' for 08-12-2010 16:07:30:539
+2010/08/12 16:09:42.606 INFO [Scheduler] [] Scheduling job 'wordcount_error' for 08-12-2010 16:09:42:606
+2010/08/12 16:20:23.616 INFO [Scheduler] [] Scheduling job 'wordcount_error' for 08-12-2010 16:20:23:616
+2010/08/12 18:15:46.758 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/12 18:15:46.862 INFO [AzkabanApp] [] kk thx bye.
+2010/08/12 18:15:52.465 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 18:15:52.467 INFO [AzkabanApp] [] Job directories set to [test/jobs/pig_job]
+2010/08/12 18:15:52.474 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/batch/common/hadoop-conf/dev
+2010/08/12 18:15:52.568 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/pig_job/jobs.schedule
+2010/08/12 18:15:52.568 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/pig_job/jobs.schedule.backup
+2010/08/12 18:15:52.571 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/pig_job/executions] for storing executions.
+2010/08/12 18:15:52.571 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 18:15:52.614 WARN [Scheduler] [] No schedule files found looking for /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/pig_job/jobs.schedule
+2010/08/12 18:15:52.715 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/12 18:16:01.211 INFO [Scheduler] [] Scheduling job 'pig' for 08-12-2010 18:16:01:146
+2010/08/12 18:16:05.097 WARN [Scheduler] [] Exception caught while saving flow/sending emails
+java.lang.NullPointerException
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:609)
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:569)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:105)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:133)
+	at azkaban.app.Mailman.sendEmail(Mailman.java:63)
+	at azkaban.app.Mailman.sendEmailIfPossible(Mailman.java:78)
+	at azkaban.app.Scheduler.sendErrorEmail(Scheduler.java:537)
+	at azkaban.app.Scheduler.access$900(Scheduler.java:68)
+	at azkaban.app.Scheduler$ScheduledRunnable$1.completed(Scheduler.java:718)
+	at azkaban.flow.ComposedExecutableFlow.callCallbacks(ComposedExecutableFlow.java:261)
+	at azkaban.flow.ComposedExecutableFlow.access$700(ComposedExecutableFlow.java:30)
+	at azkaban.flow.ComposedExecutableFlow$DependerCallback.completed(ComposedExecutableFlow.java:295)
+	at azkaban.flow.IndividualJobExecutableFlow$1$1.run(IndividualJobExecutableFlow.java:155)
+	at java.lang.Thread.run(Thread.java:637)
+2010/08/12 18:29:59.524 INFO [Scheduler] [] Scheduling job 'pig' for 08-12-2010 18:29:59:524
+2010/08/12 18:30:03.198 WARN [Scheduler] [] Exception caught while saving flow/sending emails
+java.lang.NullPointerException
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:609)
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:569)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:105)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:133)
+	at azkaban.app.Mailman.sendEmail(Mailman.java:63)
+	at azkaban.app.Mailman.sendEmailIfPossible(Mailman.java:78)
+	at azkaban.app.Scheduler.sendErrorEmail(Scheduler.java:537)
+	at azkaban.app.Scheduler.access$900(Scheduler.java:68)
+	at azkaban.app.Scheduler$ScheduledRunnable$1.completed(Scheduler.java:718)
+	at azkaban.flow.ComposedExecutableFlow.callCallbacks(ComposedExecutableFlow.java:261)
+	at azkaban.flow.ComposedExecutableFlow.access$700(ComposedExecutableFlow.java:30)
+	at azkaban.flow.ComposedExecutableFlow$DependerCallback.completed(ComposedExecutableFlow.java:295)
+	at azkaban.flow.IndividualJobExecutableFlow$1$1.run(IndividualJobExecutableFlow.java:155)
+	at java.lang.Thread.run(Thread.java:637)
+2010/08/12 18:30:37.045 INFO [Scheduler] [] Scheduling job 'pig' for 08-12-2010 18:30:37:045
+2010/08/12 18:30:41.126 WARN [Scheduler] [] Exception caught while saving flow/sending emails
+java.lang.NullPointerException
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:609)
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:569)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:105)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:133)
+	at azkaban.app.Mailman.sendEmail(Mailman.java:63)
+	at azkaban.app.Mailman.sendEmailIfPossible(Mailman.java:78)
+	at azkaban.app.Scheduler.sendErrorEmail(Scheduler.java:537)
+	at azkaban.app.Scheduler.access$900(Scheduler.java:68)
+	at azkaban.app.Scheduler$ScheduledRunnable$1.completed(Scheduler.java:718)
+	at azkaban.flow.ComposedExecutableFlow.callCallbacks(ComposedExecutableFlow.java:261)
+	at azkaban.flow.ComposedExecutableFlow.access$700(ComposedExecutableFlow.java:30)
+	at azkaban.flow.ComposedExecutableFlow$DependerCallback.completed(ComposedExecutableFlow.java:295)
+	at azkaban.flow.IndividualJobExecutableFlow$1$1.run(IndividualJobExecutableFlow.java:155)
+	at java.lang.Thread.run(Thread.java:637)
+2010/08/12 18:31:43.623 INFO [Scheduler] [] Scheduling job 'pig' for 08-12-2010 18:31:43:623
+2010/08/12 18:31:47.228 WARN [Scheduler] [] Exception caught while saving flow/sending emails
+java.lang.NullPointerException
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:609)
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:569)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:105)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:133)
+	at azkaban.app.Mailman.sendEmail(Mailman.java:63)
+	at azkaban.app.Mailman.sendEmailIfPossible(Mailman.java:78)
+	at azkaban.app.Scheduler.sendErrorEmail(Scheduler.java:537)
+	at azkaban.app.Scheduler.access$900(Scheduler.java:68)
+	at azkaban.app.Scheduler$ScheduledRunnable$1.completed(Scheduler.java:718)
+	at azkaban.flow.ComposedExecutableFlow.callCallbacks(ComposedExecutableFlow.java:261)
+	at azkaban.flow.ComposedExecutableFlow.access$700(ComposedExecutableFlow.java:30)
+	at azkaban.flow.ComposedExecutableFlow$DependerCallback.completed(ComposedExecutableFlow.java:295)
+	at azkaban.flow.IndividualJobExecutableFlow$1$1.run(IndividualJobExecutableFlow.java:155)
+	at java.lang.Thread.run(Thread.java:637)
+2010/08/12 18:32:50.034 INFO [Scheduler] [] Scheduling job 'pig' for 08-12-2010 18:32:50:034
+2010/08/12 18:32:53.701 WARN [Scheduler] [] Exception caught while saving flow/sending emails
+java.lang.NullPointerException
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:609)
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:569)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:105)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:133)
+	at azkaban.app.Mailman.sendEmail(Mailman.java:63)
+	at azkaban.app.Mailman.sendEmailIfPossible(Mailman.java:78)
+	at azkaban.app.Scheduler.sendErrorEmail(Scheduler.java:537)
+	at azkaban.app.Scheduler.access$900(Scheduler.java:68)
+	at azkaban.app.Scheduler$ScheduledRunnable$1.completed(Scheduler.java:718)
+	at azkaban.flow.ComposedExecutableFlow.callCallbacks(ComposedExecutableFlow.java:261)
+	at azkaban.flow.ComposedExecutableFlow.access$700(ComposedExecutableFlow.java:30)
+	at azkaban.flow.ComposedExecutableFlow$DependerCallback.completed(ComposedExecutableFlow.java:295)
+	at azkaban.flow.IndividualJobExecutableFlow$1$1.run(IndividualJobExecutableFlow.java:155)
+	at java.lang.Thread.run(Thread.java:637)
+2010/08/12 18:33:33.312 INFO [Scheduler] [] Scheduling job 'pig' for now
+2010/08/12 18:33:33.316 INFO [Scheduler] [] Starting run of pig
+2010/08/12 18:34:37.018 WARN [Scheduler] [] Exception caught while saving flow/sending emails
+java.lang.NullPointerException
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:609)
+	at javax.mail.internet.InternetAddress.parse(InternetAddress.java:569)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:105)
+	at javax.mail.internet.InternetAddress.<init>(InternetAddress.java:133)
+	at azkaban.app.Mailman.sendEmail(Mailman.java:63)
+	at azkaban.app.Mailman.sendEmailIfPossible(Mailman.java:78)
+	at azkaban.app.Scheduler.sendSuccessEmail(Scheduler.java:558)
+	at azkaban.app.Scheduler.access$800(Scheduler.java:68)
+	at azkaban.app.Scheduler$ScheduledFlow$1.completed(Scheduler.java:818)
+	at azkaban.flow.ComposedExecutableFlow.callCallbacks(ComposedExecutableFlow.java:261)
+	at azkaban.flow.ComposedExecutableFlow.access$700(ComposedExecutableFlow.java:30)
+	at azkaban.flow.ComposedExecutableFlow$DependerCallback.completed(ComposedExecutableFlow.java:295)
+	at azkaban.flow.IndividualJobExecutableFlow$1$1.run(IndividualJobExecutableFlow.java:155)
+	at java.lang.Thread.run(Thread.java:637)
+2010/08/12 18:36:19.381 INFO [Scheduler] [] Scheduling job 'pig' for 08-12-2010 18:36:19:381
+2010/08/12 18:37:49.742 WARN [Mailman] [] Error while sending email: No recipient addresses
+2010/08/12 18:38:32.568 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/12 18:38:32.662 INFO [AzkabanApp] [] kk thx bye.
+2010/08/12 19:07:25.017 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 19:07:25.018 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/12 19:07:25.026 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs
+2010/08/12 19:07:25.120 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/12 19:07:25.120 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/12 19:07:25.123 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/12 19:07:25.123 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 19:08:33.803 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 19:08:33.804 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/12 19:08:33.812 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs
+2010/08/12 19:08:33.908 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/12 19:08:33.908 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/12 19:08:33.910 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/12 19:08:33.911 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 19:09:09.824 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 19:09:09.826 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/12 19:09:09.833 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs
+2010/08/12 19:09:09.926 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/12 19:09:09.927 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/12 19:09:09.929 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/12 19:09:09.929 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 19:13:38.187 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 19:13:38.188 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/12 19:13:38.196 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs
+2010/08/12 19:13:38.290 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/12 19:13:38.290 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/12 19:13:38.293 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/12 19:13:38.293 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 19:14:20.368 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 19:14:20.369 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/12 19:14:20.377 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs
+2010/08/12 19:14:20.472 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/12 19:14:20.472 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/12 19:14:20.475 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/12 19:14:20.475 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 19:14:20.533 WARN [Scheduler] [] No schedule files found looking for /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/12 19:14:20.634 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/12 19:16:52.767 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/12 19:16:52.826 INFO [AzkabanApp] [] kk thx bye.
+2010/08/12 19:16:54.631 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/12 19:16:54.632 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/12 19:16:54.640 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs
+2010/08/12 19:16:54.736 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/12 19:16:54.737 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/12 19:16:54.739 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/12 19:16:54.739 INFO [AzkabanApplication] [] Last known execution id was [0]
+2010/08/12 19:16:54.798 WARN [Scheduler] [] No schedule files found looking for /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/12 19:16:54.898 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/12 19:17:12.606 INFO [Scheduler] [] Scheduling job 'command_err' for 08-12-2010 19:17:12:541
+2010/08/12 19:17:45.469 INFO [Scheduler] [] Scheduling job 'command_ls' for 08-12-2010 19:17:45:469
+2010/08/12 19:18:02.028 INFO [Scheduler] [] Scheduling job 'command_rm' for 08-12-2010 19:18:02:028
+2010/08/12 19:18:13.445 INFO [Scheduler] [] Scheduling job 'hadoop_wordcount' for 08-12-2010 19:18:13:445
+2010/08/12 19:21:10.617 INFO [Scheduler] [] Scheduling job 'hadoop_wordcount' for 08-12-2010 19:21:10:617
+2010/08/12 19:23:52.228 INFO [Scheduler] [] Scheduling job 'hadoop_wordcount' for 08-12-2010 19:23:52:228
+2010/08/12 19:26:15.296 INFO [Scheduler] [] Scheduling job 'hadoop_wordcount' for 08-12-2010 19:26:15:296

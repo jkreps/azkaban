@@ -31,7 +31,10 @@ import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
 import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
 import azkaban.serialization.ExecutableFlowSerializer;
+import azkaban.serialization.FlowExecutionSerializer;
+import azkaban.serialization.de.DefaultExecutableFlowDeserializer;
 import azkaban.serialization.de.ExecutableFlowDeserializer;
+import azkaban.serialization.de.FlowExecutionDeserializer;
 import azkaban.serialization.de.JobFlowDeserializer;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -42,25 +45,26 @@ import joptsimple.OptionSpec;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 
 import static java.util.Arrays.asList;
 
 /**
  * Runs a job from the command line
- * 
+ *
  * The usage is
- * 
+ *
  * java azkaban.job.CommandLineJobRunner props-file prop_key=prop_val
- * 
+ *
  * Any argument that contains an '=' is assumed to be a property, all others are
  * assumed to be properties files for the job
- * 
+ *
  * The order of the properties files matters--in the case where both define a
  * property it will be read from the last file given.
- * 
+ *
  * @author jkreps
- * 
+ *
  */
 public class CommandLineJobRunner {
 
@@ -129,16 +133,14 @@ public class CommandLineJobRunner {
         }
 
         final ExecutableFlowSerializer flowSerializer = new DefaultExecutableFlowSerializer();
-        final ExecutableFlowDeserializer flowDeserializer = new ExecutableFlowDeserializer(
-                new JobFlowDeserializer(
-                        ImmutableMap.<String, Function<Map<String, Object>, ExecutableFlow>>of(
-                                "jobManagerLoaded", new JobManagerFlowDeserializer(jobManager, factory))
-                )
-        );
+        final ExecutableFlowDeserializer flowDeserializer = new DefaultExecutableFlowDeserializer(jobManager, factory);
+        FlowExecutionSerializer flowExecutionSerializer = new FlowExecutionSerializer(flowSerializer);
+        FlowExecutionDeserializer flowExecutionDeserializer = new FlowExecutionDeserializer(flowDeserializer);
+
+
         FlowManager allFlows = new RefreshableFlowManager(jobManager,
-                                                          factory,
-                                                          flowSerializer,
-                                                          flowDeserializer,
+                                                          flowExecutionSerializer,
+                                                          flowExecutionDeserializer,
                                                           executionsStorageFile,
                                                           lastId);
         jobManager.setFlowManager(allFlows);
@@ -147,7 +149,7 @@ public class CommandLineJobRunner {
 
         for(String jobName: jobNames) {
             try {
-                final ExecutableFlow flowToRun = allFlows.createNewExecutableFlow(jobName, overrideProps);
+                final ExecutableFlow flowToRun = allFlows.createNewExecutableFlow(jobName);
 
                 if (flowToRun == null) {
                     System.out.printf("Job[%s] is unknown.  Not running.%n", jobName);
@@ -166,41 +168,40 @@ public class CommandLineJobRunner {
                 }
 
 
-                flowToRun.execute(new FlowCallback()
-                {
-                    @Override
-                    public void progressMade()
-                    {
-                    }
-
-                    @Override
-                    public void completed(Status status)
-                    {
-                        if (status == Status.FAILED) {
-                            System.out.printf("Job failed.%n");
-                            //final Throwable exception = flowToRun.getException();
-                            final Map<String, Throwable> exceptions = flowToRun.getExceptions();
-                            
-                            if (exceptions == null || exceptions.isEmpty()) {
-                                System.out.println("flowToRun.getExceptions() was null when it should not have been.  Please notify the Azkaban developers.");
+                flowToRun.execute(
+                        overrideProps,
+                        new FlowCallback()
+                        {
+                            @Override
+                            public void progressMade()
+                            {
                             }
 
-                            // exception.printStackTrace();
-                            int errorNum = 1;
-                            for ( Map.Entry<String, Throwable> entry: exceptions.entrySet()) {
-                                final String jobId = entry.getKey();
-                                final Throwable e = entry.getValue();
-                                
-                                System.err.println(errorNum + ".  " + jobId + "\n" );
-                                e.printStackTrace(System.err);
-                                System.err.println("\n\n");
-                                errorNum ++;
-                            }
-                        }
+                            @Override
+                            public void completed(Status status)
+                            {
+                                if (status == Status.FAILED) {
+                                    System.out.printf("Job failed.%n");
+                                    final Map<String, Throwable> exceptions = flowToRun.getExceptions();
 
-                        countDown.countDown();
-                    }
-                });
+                                    if (exceptions == null || exceptions.isEmpty()) {
+                                        System.out.println("flowToRun.getExceptions() was null/empty when it should not have been.  Please notify the Azkaban developers.");
+                                    }
+
+                                    int errorNum = 1;
+                                    for (Entry<String, Throwable> entry: exceptions.entrySet()) {
+                                        String name = entry.getKey();
+                                        System.err.println(errorNum + ".  "  + name + "\n");
+                                        entry.getValue().printStackTrace(System.err);
+                                        System.err.println("\n\n");
+                                        errorNum ++;
+                                    }
+                                        
+                                }
+
+                                countDown.countDown();
+                            }
+                        });
             } catch(Exception e) {
                 System.out.println("Failed to run job '" + jobName + "':");
                 e.printStackTrace();

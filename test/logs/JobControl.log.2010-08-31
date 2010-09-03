@@ -1,0 +1,20 @@
+2010/08/31 00:59:27.799 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/31 00:59:27.801 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/31 00:59:27.809 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Software/hadoop-0.20.2
+2010/08/31 00:59:27.901 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/31 00:59:27.901 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/31 00:59:27.904 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/31 00:59:27.904 INFO [AzkabanApplication] [] Last known execution id was [33]
+2010/08/31 00:59:28.061 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/31 01:23:16.783 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/31 01:23:16.898 INFO [AzkabanApp] [] kk thx bye.
+2010/08/31 10:12:56.674 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/31 10:12:56.676 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/31 10:12:56.683 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Software/hadoop-0.20.2
+2010/08/31 10:12:56.776 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/31 10:12:56.776 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/31 10:12:56.779 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/31 10:12:56.779 INFO [AzkabanApplication] [] Last known execution id was [33]
+2010/08/31 10:12:56.936 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/31 20:26:53.085 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/31 20:26:53.162 INFO [AzkabanApp] [] kk thx bye.

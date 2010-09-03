@@ -16,21 +16,16 @@
 
 package azkaban.flow;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicReference;
-
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobManager;
 import azkaban.app.JobWrappingFactory;
 import azkaban.common.utils.Props;
-import azkaban.serialization.ExecutableFlowSerializer;
-import azkaban.serialization.de.ExecutableFlowDeserializer;
+import azkaban.serialization.FlowExecutionSerializer;
+import azkaban.serialization.de.FlowExecutionDeserializer;
+
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -40,24 +35,21 @@ public class RefreshableFlowManager implements FlowManager
     private final Object idSync = new Object();
     
     private final JobManager jobManager;
-    private final JobWrappingFactory jobFactory;
-    private final ExecutableFlowSerializer serializer;
-    private final ExecutableFlowDeserializer deserializer;
+    private final FlowExecutionSerializer serializer;
+    private final FlowExecutionDeserializer deserializer;
     private final File storageDirectory;
 
     private final AtomicReference<ImmutableFlowManager> delegateManager;
 
     public RefreshableFlowManager(
             JobManager jobManager,
-            JobWrappingFactory jobFactory,
-            ExecutableFlowSerializer serializer,
-            ExecutableFlowDeserializer deserializer,
+            FlowExecutionSerializer serializer,
+            FlowExecutionDeserializer deserializer,
             File storageDirectory,
             long lastId
     )
     {
         this.jobManager = jobManager;
-        this.jobFactory = jobFactory;
         this.serializer = serializer;
         this.deserializer = deserializer;
         this.storageDirectory = storageDirectory;
@@ -97,9 +89,9 @@ public class RefreshableFlowManager implements FlowManager
     }
 
     @Override
-    public ExecutableFlow createNewExecutableFlow(String name, Props overrideProps)
+    public ExecutableFlow createNewExecutableFlow(String name)
     {
-        return delegateManager.get().createNewExecutableFlow(name, overrideProps);
+        return delegateManager.get().createNewExecutableFlow(name);
     }
 
     @Override
@@ -117,13 +109,13 @@ public class RefreshableFlowManager implements FlowManager
     }
 
     @Override
-    public ExecutableFlow saveExecutableFlow(ExecutableFlow flow)
+    public FlowExecutionHolder saveExecutableFlow(FlowExecutionHolder holder)
     {
-        return delegateManager.get().saveExecutableFlow(flow);
+        return delegateManager.get().saveExecutableFlow(holder);
     }
 
     @Override
-    public ExecutableFlow loadExecutableFlow(long id)
+    public FlowExecutionHolder loadExecutableFlow(long id)
     {
         return delegateManager.get().loadExecutableFlow(id);
     }
@@ -138,10 +130,11 @@ public class RefreshableFlowManager implements FlowManager
     {
         Map<String, Flow> flowMap = new HashMap<String, Flow>();
         Set<String> rootFlows = new TreeSet<String>();
-        for (JobDescriptor rootDescriptor : jobManager.getRootJobDescriptors(jobManager.loadJobDescriptors())) {
+        final Map<String, JobDescriptor> allJobDescriptors = jobManager.loadJobDescriptors();
+        for (JobDescriptor rootDescriptor : jobManager.getRootJobDescriptors(allJobDescriptors)) {
             if (rootDescriptor.getId() != null) {
                 // This call of magical wonderment ends up pushing all Flow objects in the dependency graph for the root into flowMap
-                Flows.buildLegacyFlow(jobFactory, jobManager, flowMap, rootDescriptor);
+                Flows.buildLegacyFlow(jobManager, flowMap, rootDescriptor, allJobDescriptors);
                 rootFlows.add(rootDescriptor.getId());
             }
         }

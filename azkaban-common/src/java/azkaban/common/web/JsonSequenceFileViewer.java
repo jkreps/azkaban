@@ -64,9 +64,9 @@ public class JsonSequenceFileViewer extends HdfsSequenceFileViewer {
                 boolean readSomething = reader.next(keyWritable, valueWritable);
                 if(!readSomething)
                     break;
-                output.write(safeToString(keySerializer.toObject(keyWritable.get())));
+                output.write(safeToString(keySerializer.toObject(keyWritable.getBytes())));
                 output.write("\t=>\t");
-                output.write(safeToString(valueSerializer.toObject(valueWritable.get())));
+                output.write(safeToString(valueSerializer.toObject(valueWritable.getBytes())));
                 output.write("\n");
                 output.flush();
             }

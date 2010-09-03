@@ -119,7 +119,7 @@ public class PigProcessJob extends JavaProcessJob {
 	}
 	
 	protected Map<String, String> getPigParams() {
-		return super.getMapFromPrefixProperties(PIG_PARAM_PREFIX);
+		return getProps().getMapByPrefix(PIG_PARAM_PREFIX);
 	}
 
 	protected List<String> getPigParamFiles() {

@@ -38,4 +38,10 @@ public class DoNothingJob extends AbstractJob {
     // does nothing, just a placeholder for dependencies
     }
 
+    @Override
+    public Props getJobGeneratedProperties() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

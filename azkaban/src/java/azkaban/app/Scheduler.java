@@ -21,12 +21,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
@@ -35,6 +37,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import azkaban.flow.*;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
@@ -51,10 +54,6 @@ import org.joda.time.format.PeriodFormat;
 
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
-import azkaban.flow.ExecutableFlow;
-import azkaban.flow.FlowCallback;
-import azkaban.flow.FlowManager;
-import azkaban.flow.Status;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -174,7 +173,7 @@ public class Scheduler {
             throw new RuntimeException("Error loading schedule from " + schedulefile);
         }
 
-        for(String key: schedule.keySet()) {
+        for(String key: schedule.getKeySet()) {
             ScheduledJob job = parseScheduledJob(key, schedule.get(key));
             if(job != null) {
                 this.schedule(job, false);
@@ -224,9 +223,10 @@ public class Scheduler {
     /**
      * Schedule this flow to run one time at the specified date
      * 
-     * @param flow The ExecutableFlow to run
+     * @param holder The execution of the flow to run
      */
-    public ScheduledFuture<?> scheduleNow(ExecutableFlow flow) {
+    public ScheduledFuture<?> scheduleNow(FlowExecutionHolder holder) {
+        ExecutableFlow flow = holder.getFlow();
         logger.info("Scheduling job '" + flow.getName() + "' for now");
 
         ScheduledJob oldScheduledJob = _scheduled.get(flow.getName());
@@ -243,7 +243,7 @@ public class Scheduler {
         // mark the job as scheduled
         _scheduled.put(flow.getName(), schedJob);
 
-        return _executor.schedule(new ScheduledFlow(flow, schedJob), 1, TimeUnit.MILLISECONDS);
+        return _executor.schedule(new ScheduledFlow(holder, schedJob), 1, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -509,9 +509,10 @@ public class Scheduler {
                     /* append log file link */
                     JobExecution jobExec = _jobManager.loadMostRecentJobExecution(jobId);
                     if(jobExec == null) {
-                        body.append("Job execution object is null. \n\n");
+                        body.append("Job execution object is null for jobId:" + jobId + "\n\n");
                     }
-                    String logPath = jobExec.getLog();
+
+                    String logPath = jobExec != null ? jobExec.getLog() : null;
                     if(logPath == null) {
                         body.append("Log path is null. \n\n");
                     } else {
@@ -519,10 +520,11 @@ public class Scheduler {
                                     + lastLogLineNum + " lines in the log are:\n");
 
                         /* append last N lines of the log file */
-                        String logFilePath = this._jobManager.getLogDir() + File.separator + logPath;
+                        String logFilePath = this._jobManager.getLogDir() + File.separator
+                                             + logPath;
                         Vector<String> lastNLines = Utils.tail(logFilePath, 60);
 
-                        if (lastNLines != null) {
+                        if(lastNLines != null) {
                             for(String line: lastNLines) {
                                 body.append(line + "\n");
                             }
@@ -532,7 +534,8 @@ public class Scheduler {
                     errorNo++;
                 }
 
-                //logger.error("\n\n error email body: \n" + body.toString() + "\n");
+                // logger.error("\n\n error email body: \n" + body.toString() +
+                // "\n");
 
                 _mailman.sendEmailIfPossible(senderAddress,
                                              emailList,
@@ -677,8 +680,7 @@ public class Scheduler {
 
                 final List<String> finalEmailList = emailList;
 
-                final ExecutableFlow flowToRun = allKnownFlows.createNewExecutableFlow(_scheduledJob.getId(),
-                                                                                       new Props());
+                final ExecutableFlow flowToRun = allKnownFlows.createNewExecutableFlow(_scheduledJob.getId());
 
                 if(_ignoreDep) {
                     for(ExecutableFlow subFlow: flowToRun.getChildren()) {
@@ -689,16 +691,19 @@ public class Scheduler {
                 senderAddress = desc.getSenderEmail();
                 final String senderEmail = senderAddress;
 
+                final Props parentProps = produceParentProperties(flowToRun);
+
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
                 _scheduledJob.setStarted(new DateTime());
                 _executing.put(flowToRun.getName(), new ScheduledJobAndInstance(flowToRun,
                                                                                 _scheduledJob));
-                flowToRun.execute(new FlowCallback() {
+                flowToRun.execute(parentProps, new FlowCallback() {
 
                     @Override
                     public void progressMade() {
-                        allKnownFlows.saveExecutableFlow(flowToRun);
+                        allKnownFlows.saveExecutableFlow(new FlowExecutionHolder(flowToRun,
+                                                                                 parentProps));
                     }
 
                     @Override
@@ -706,7 +711,8 @@ public class Scheduler {
                         _scheduledJob.setEnded(new DateTime());
 
                         try {
-                            allKnownFlows.saveExecutableFlow(flowToRun);
+                            allKnownFlows.saveExecutableFlow(new FlowExecutionHolder(flowToRun,
+                                                                                     parentProps));
                             switch(status) {
                                 case SUCCEEDED:
                                     sendSuccessEmail(_scheduledJob,
@@ -756,7 +762,7 @@ public class Scheduler {
                     }
                 });
 
-                allKnownFlows.saveExecutableFlow(flowToRun);
+                allKnownFlows.saveExecutableFlow(new FlowExecutionHolder(flowToRun, parentProps));
             } catch(Throwable t) {
                 if(emailList != null) {
                     sendErrorEmail(_scheduledJob, t, senderAddress, emailList);
@@ -775,36 +781,36 @@ public class Scheduler {
      */
     private class ScheduledFlow implements Runnable {
 
-        private final ExecutableFlow _flow;
         private final ScheduledJob _scheduledJob;
+        private final FlowExecutionHolder holder;
 
-        private ScheduledFlow(ExecutableFlow flow, ScheduledJob scheduledJob) {
-            this._flow = flow;
+        private ScheduledFlow(FlowExecutionHolder holder, ScheduledJob scheduledJob) {
+            this.holder = holder;
             this._scheduledJob = scheduledJob;
         }
 
         public void run() {
-            logger.info("Starting run of " + _flow.getName());
+            final ExecutableFlow flow = holder.getFlow();
+            logger.info("Starting run of " + flow.getName());
 
             List<String> emailList = null;
             String senderAddress = null;
             try {
-                emailList = _jobManager.getJobDescriptor(_flow.getName())
-                                       .getEmailNotificationList();
+                emailList = _jobManager.getJobDescriptor(flow.getName()).getEmailNotificationList();
                 final List<String> finalEmailList = emailList;
 
-                senderAddress = _jobManager.getJobDescriptor(_flow.getName()).getSenderEmail();
+                senderAddress = _jobManager.getJobDescriptor(flow.getName()).getSenderEmail();
                 final String senderEmail = senderAddress;
 
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
                 _scheduledJob.setStarted(new DateTime());
-                _executing.put(_flow.getName(), new ScheduledJobAndInstance(_flow, _scheduledJob));
-                _flow.execute(new FlowCallback() {
+                _executing.put(flow.getName(), new ScheduledJobAndInstance(flow, _scheduledJob));
+                flow.execute(holder.getParentProps(), new FlowCallback() {
 
                     @Override
                     public void progressMade() {
-                        allKnownFlows.saveExecutableFlow(_flow);
+                        allKnownFlows.saveExecutableFlow(holder);
                     }
 
                     @Override
@@ -812,7 +818,7 @@ public class Scheduler {
                         _scheduledJob.setEnded(new DateTime());
 
                         try {
-                            allKnownFlows.saveExecutableFlow(_flow);
+                            allKnownFlows.saveExecutableFlow(holder);
                             switch(status) {
                                 case SUCCEEDED:
                                     sendSuccessEmail(_scheduledJob,
@@ -822,7 +828,7 @@ public class Scheduler {
                                     break;
                                 case FAILED:
                                     sendErrorEmail(_scheduledJob,
-                                                   _flow.getExceptions(),
+                                                   flow.getExceptions(),
                                                    senderEmail,
                                                    finalEmailList);
                                     break;
@@ -844,7 +850,7 @@ public class Scheduler {
                     }
                 });
 
-                allKnownFlows.saveExecutableFlow(_flow);
+                allKnownFlows.saveExecutableFlow(holder);
             } catch(Throwable t) {
                 if(emailList != null) {
                     sendErrorEmail(_scheduledJob, t, senderAddress, emailList);
@@ -856,5 +862,25 @@ public class Scheduler {
                             t);
             }
         }
+    }
+
+    private Props produceParentProperties(final ExecutableFlow flow) {
+        Props parentProps = new Props();
+
+        parentProps.put("azkaban.flow.id", flow.getId());
+        parentProps.put("azkaban.flow.uuid", UUID.randomUUID().toString());
+
+        DateTime loadTime = new DateTime();
+
+        parentProps.put("azkaban.flow.start.timestamp", loadTime.toString());
+        parentProps.put("azkaban.flow.start.year", loadTime.toString("yyyy"));
+        parentProps.put("azkaban.flow.start.month", loadTime.toString("MM"));
+        parentProps.put("azkaban.flow.start.day", loadTime.toString("dd"));
+        parentProps.put("azkaban.flow.start.hour", loadTime.toString("HH"));
+        parentProps.put("azkaban.flow.start.minute", loadTime.toString("mm"));
+        parentProps.put("azkaban.flow.start.seconds", loadTime.toString("ss"));
+        parentProps.put("azkaban.flow.start.milliseconds", loadTime.toString("SSS"));
+        parentProps.put("azkaban.flow.start.timezone", loadTime.toString("ZZZZ"));
+        return parentProps;
     }
 }

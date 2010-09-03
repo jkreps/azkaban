@@ -1,0 +1,11 @@
+2010/08/30 23:51:59.057 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/30 23:51:59.058 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/30 23:51:59.083 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Software/hadoop-0.20.2
+2010/08/30 23:51:59.215 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/30 23:51:59.215 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/30 23:51:59.227 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/30 23:51:59.228 INFO [AzkabanApplication] [] Last known execution id was [32]
+2010/08/30 23:51:59.535 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/30 23:52:49.250 INFO [Scheduler] [] Scheduling job 'hadoop_wordcount' for 08-30-2010 23:52:49:169
+2010/08/30 23:57:23.869 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/30 23:57:23.975 INFO [AzkabanApp] [] kk thx bye.

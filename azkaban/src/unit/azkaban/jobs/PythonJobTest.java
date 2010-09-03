@@ -77,13 +77,13 @@ public class PythonJobTest
     descriptor = EasyMock.createMock(JobDescriptor.class);
     
     props = new Props();
-    props.put(ProcessJob.WORKING_DIR, ".");
+    props.put(AbstractProcessJob.WORKING_DIR, ".");
     props.put("type", "python");
     props.put("script",  scriptFile);
     props.put("t",  "90");
 
     EasyMock.expect(descriptor.getId()).andReturn("script").times(1);
-    EasyMock.expect(descriptor.getProps()).andReturn(props).times(5);
+    EasyMock.expect(descriptor.getProps()).andReturn(props).times(3);
     EasyMock.expect(descriptor.getFullPath()).andReturn(".").times(1);
     EasyMock.replay(descriptor);
     job = new PythonJob(descriptor);

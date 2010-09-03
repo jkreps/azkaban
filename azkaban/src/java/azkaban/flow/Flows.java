@@ -16,17 +16,11 @@
 
 package azkaban.flow;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobManager;
-import azkaban.app.JobWrappingFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 /**
  *
@@ -34,10 +28,10 @@ import com.google.common.collect.Lists;
 public class Flows
 {
     public static Flow buildLegacyFlow(
-            final JobWrappingFactory jobFactory,
             final JobManager jobManager,
             final Map<String, Flow> alreadyBuiltFlows,
-            final JobDescriptor rootDescriptor
+            final JobDescriptor rootDescriptor,
+            final Map<String, JobDescriptor> allJobDescriptors
     )
     {
         //TODO MED: The jobManager isn't really the best Job factory.  It should be revisited, but it works for now.
@@ -48,28 +42,33 @@ public class Flows
         final Flow retVal;
         if (rootDescriptor.hasDependencies()) {
             Set<JobDescriptor> dependencies = rootDescriptor.getDependencies();
-            List<Flow> dependencyFlows =
-                    Lists.newArrayList(
-                            Iterables.transform(
-                                    dependencies,
-                                    new Function<JobDescriptor, Flow>()
-                                    {
-                                        @Override
-                                        public Flow apply(JobDescriptor jobDescriptor)
-                                        {
-                                            return buildLegacyFlow(jobFactory, jobManager, alreadyBuiltFlows, jobDescriptor);
-                                        }
-                                    }
-                            )
-                    );
+            Flow[] depFlows = new Flow[dependencies.size()];
 
-            retVal = new MultipleDependencyFlow(
-                    new IndividualJobFlow(
-                            rootDescriptor.getId(),
-                            jobManager
-                            ),
-                    dependencyFlows.toArray(new Flow[dependencyFlows.size()])
-            );
+            int index = 0;
+            for (JobDescriptor jobDescriptor : dependencies) {
+                depFlows[index] = buildLegacyFlow(jobManager, alreadyBuiltFlows, jobDescriptor, allJobDescriptors);
+                ++index;
+            }
+
+            if ("propertyPusher".equals(rootDescriptor.getJobType())) {
+                String propertyFlowName = rootDescriptor.getProps().getString("prop-dependency");
+                JobDescriptor propertyJobDescriptor = allJobDescriptors.get(propertyFlowName);
+
+                retVal = new PropertyPusherFlow(
+                        rootDescriptor.getId(),
+                        buildLegacyFlow(jobManager, alreadyBuiltFlows, propertyJobDescriptor, allJobDescriptors),
+                        depFlows
+                );
+            }
+            else {
+                retVal = new MultipleDependencyFlow(
+                        new IndividualJobFlow(
+                                rootDescriptor.getId(),
+                                jobManager
+                        ),
+                        depFlows
+                );
+            }
         }
         else {
             retVal = new IndividualJobFlow(

@@ -61,5 +61,12 @@ public class WordCountLocal extends AbstractJob {
          out.close();
        }
  
+    @Override
+    public Props getJobGeneratedProperties()
+    {
+      return new Props();
+    }
+    
+    
     }
     

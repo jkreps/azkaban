@@ -36,9 +36,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import org.apache.log4j.Logger;
 import com.google.common.base.Objects;
 
 /**
@@ -50,6 +48,8 @@ import com.google.common.base.Objects;
  * 
  */
 public class Props {
+
+    private static Logger logger = Logger.getLogger(Props.class);
 
     private final Map<String, String> _current;
     private final Props _parent;
@@ -103,7 +103,7 @@ public class Props {
 
     public Props(Props parent, Props props) {
         this(parent);
-        if (props != null) {
+        if(props != null) {
             putAll(props);
         }
     }
@@ -152,13 +152,6 @@ public class Props {
         return _current.keySet();
     }
 
-    public Set<String> keySet() {
-        Set<String> keySet = new HashSet<String>(_current.keySet());
-        if(_parent != null)
-            keySet.addAll(_parent.keySet());
-        return keySet;
-    }
-
     public Props getParent() {
         return _parent;
     }
@@ -181,16 +174,16 @@ public class Props {
     /**
      * Put the given Properties into the Props. This method performs any
      * variable substitution in the value replacing any occurrence of ${name}
-     * with the value of get("name").  get() is called first on the Props and
+     * with the value of get("name"). get() is called first on the Props and
      * next on the Properties object.
-     *
+     * 
      * @param properties The properties to put
-     *
+     * 
      * @throws IllegalArgumentException If the variable given for substitution
      *         is not a valid key in this Props.
      */
     public void put(Properties properties) {
-        for (String propName : properties.stringPropertyNames()) {
+        for(String propName: properties.stringPropertyNames()) {
             _current.put(propName, properties.getProperty(propName));
         }
     }
@@ -213,11 +206,11 @@ public class Props {
     }
 
     public void putAll(Props p) {
-        if (p == null) {
+        if(p == null) {
             return;
         }
 
-        for(String key: p.keySet())
+        for(String key: p.getKeySet())
             this.put(key, p.get(key));
     }
 
@@ -234,7 +227,7 @@ public class Props {
      * The number of unique keys defined by this Props and all parent Props
      */
     public int size() {
-        return keySet().size();
+        return getKeySet().size();
     }
 
     /**
@@ -264,9 +257,9 @@ public class Props {
     }
 
     public String getString(String key, String defaultValue) {
-        if(containsKey(key))
+        if(containsKey(key)) {
             return get(key);
-        else
+        } else
             return defaultValue;
     }
 
@@ -409,6 +402,21 @@ public class Props {
         return _current.equals(p._current) && Objects.equal(this._parent, p._parent);
     }
 
+    public boolean equalsProps(Props p) {
+        if(p == null) {
+            return false;
+        }
+
+        final Set<String> myKeySet = getKeySet();
+        for(String s: myKeySet) {
+            if(!get(s).equals(p.get(s))) {
+                return false;
+            }
+        }
+
+        return myKeySet.size() == p.getKeySet().size();
+    }
+
     @Override
     public int hashCode() {
         int code = this._current.hashCode();
@@ -540,29 +548,55 @@ public class Props {
     public Map<String, String> getMapByPrefix(String prefix) {
         Map<String, String> values = new HashMap<String, String>();
 
-        if (_parent != null) {
-            for (Map.Entry<String, String> entry : _parent.getMapByPrefix(prefix).entrySet()) {
+        if(_parent != null) {
+            for(Map.Entry<String, String> entry: _parent.getMapByPrefix(prefix).entrySet()) {
                 values.put(entry.getKey(), entry.getValue());
             }
         }
 
         for(String key: this.localKeySet()) {
-            if(key.startsWith(prefix))
+            if(key.startsWith(prefix)) {
                 values.put(key.substring(prefix.length()), get(key));
+            }
         }
         return values;
     }
-    
+
     public Set<String> getKeySet() {
-    	HashSet<String> keySet = new HashSet<String>();
-    	
-    	keySet.addAll(localKeySet());
-    	
-     	if(_parent != null) {
-    		keySet.addAll(_parent.getKeySet());
-    	}
-    	
-    	return keySet;
+        HashSet<String> keySet = new HashSet<String>();
+
+        keySet.addAll(localKeySet());
+
+        if(_parent != null) {
+            keySet.addAll(_parent.getKeySet());
+        }
+
+        return keySet;
+    }
+
+    public void logProperties(String comment) {
+        logger.info(comment);
+
+        for(String key: getKeySet()) {
+            logger.info("  key=" + key + " value=" + get(key));
+        }
+    }
+
+    public static Props clone(Props p) {
+        return copyNext(p);
+    }
+
+    private static Props copyNext(Props source) {
+        Props priorNodeCopy = null;
+        if(source.getParent() != null) {
+            priorNodeCopy = copyNext(source.getParent());
+        }
+        Props dest = new Props(priorNodeCopy);
+        for(String key: source.localKeySet()) {
+            dest.put(key, source.get(key));
+        }
+
+        return dest;
     }
 
 }

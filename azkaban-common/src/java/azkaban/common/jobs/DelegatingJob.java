@@ -16,6 +16,8 @@
 
 package azkaban.common.jobs;
 
+import azkaban.common.utils.Props;
+
 public abstract class DelegatingJob implements Job {
 
     private final Job _innerJob;
@@ -38,6 +40,12 @@ public abstract class DelegatingJob implements Job {
 
     public double getProgress() throws Exception {
         return _innerJob.getProgress();
+    }
+
+    @Override
+    public Props getJobGeneratedProperties()
+    {
+        return _innerJob.getJobGeneratedProperties();
     }
 
     public abstract void run() throws Exception;

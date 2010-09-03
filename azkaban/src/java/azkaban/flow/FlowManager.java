@@ -16,6 +16,9 @@
 
 package azkaban.flow;
 
+import azkaban.flow.ExecutableFlow;
+import azkaban.flow.Flow;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
@@ -72,7 +75,7 @@ public interface FlowManager extends Iterable<Flow>
      * @param name name of flow
      * @return A clone of the Flow that is executable
      */
-    ExecutableFlow createNewExecutableFlow(String name, Props overrideProps);
+    ExecutableFlow createNewExecutableFlow(String name);
 
     /**
      * A method that will return a unique "next id".  The contract around this method is that if value X will only ever
@@ -102,7 +105,7 @@ public interface FlowManager extends Iterable<Flow>
      * @param flow the ExecutableFlow to be saved
      * @return the ExecutableFlow that was saved (the argument passed in to this method).
      */
-    ExecutableFlow saveExecutableFlow(ExecutableFlow flow);
+    FlowExecutionHolder saveExecutableFlow(FlowExecutionHolder flow);
 
     /**
      * Loads an ExecutableFlow.  The index for loading the ExecutableFlow is its id.  If a flow with id 7 was previously
@@ -113,7 +116,7 @@ public interface FlowManager extends Iterable<Flow>
      * @param id id of the flow to load
      * @return the flow with said id, null if doesn't exist
      */
-    ExecutableFlow loadExecutableFlow(long id);
+    FlowExecutionHolder loadExecutableFlow(long id);
 
     /**
      * Tells the FlowManager to reload its flows.

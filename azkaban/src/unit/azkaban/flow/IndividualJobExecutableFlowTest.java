@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * These tests could probably be simplified by adding a "ThreadFactory" dependency on IndividualJobExecutableFlow
- * 
+ *
  * TODO: Maybe do that?
  */
 public class IndividualJobExecutableFlowTest
@@ -66,7 +66,7 @@ public class IndividualJobExecutableFlowTest
 
         final Job mockJob = EasyMock.createMock(Job.class);
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", overrideProps, jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
         EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
@@ -83,38 +83,70 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
+        final Props returnProps = new Props();
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(returnProps).once();
+
         EasyMock.replay(mockJob, jobManager);
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 
-        executableFlow.execute(new FlowCallback()
-        {
-            @Override
-            public void progressMade()
-            {
-                assertionViolated.set(true);
-                reason = String.format("progressMade() shouldn't actually be called.");
-            }
+        executableFlow.execute(
+                overrideProps,
+                new FlowCallback()
+                {
+                    @Override
+                    public void progressMade()
+                    {
+                        assertionViolated.set(true);
+                        reason = String.format("progressMade() shouldn't actually be called.");
+                    }
 
-            @Override
-            public void completed(Status status)
-            {
-                completionLatch.countDown();
-                if (Status.SUCCEEDED != status) {
-                    assertionViolated.set(true);
-                    reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
-                }
-            }
-        });
+                    @Override
+                    public void completed(Status status)
+                    {
+                        completionLatch.countDown();
+                        if (Status.SUCCEEDED != status) {
+                            assertionViolated.set(true);
+                            reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
+                        }
+                    }
+                });
 
         completionLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
         Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
+        Assert.assertEquals(overrideProps, executableFlow.getParentProps());
+        Assert.assertEquals(returnProps, executableFlow.getReturnProps());
+
+        Props otherProps = new Props();
+        otherProps.put("billy", "blank");
+
+        boolean exceptionThrown = false;
+        try {
+            executableFlow.execute(
+                    otherProps,
+                    new FlowCallback() {
+                        @Override
+                        public void progressMade() {
+                        }
+
+                        @Override
+                        public void completed(Status status) {
+                        }
+                    }
+            );
+        }
+        catch (IllegalArgumentException e) {
+            exceptionThrown = true;
+        }
 
         EasyMock.verify(mockJob);
 
+        Assert.assertTrue("Expected an IllegalArgumentException to be thrown because props weren't the same.", exceptionThrown);
         Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
+        Assert.assertEquals(null, executableFlow.getReturnProps());
+        Assert.assertEquals(null, executableFlow.getParentProps());
     }
 
 
@@ -126,10 +158,10 @@ public class IndividualJobExecutableFlowTest
 
         final Job mockJob = EasyMock.createMock(Job.class);
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", overrideProps, jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("blah").times(2);
+        EasyMock.expect(mockJob.getId()).andReturn("blah").times(1);
         
         
         mockJob.run();
@@ -147,27 +179,28 @@ public class IndividualJobExecutableFlowTest
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
         Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
-       
-        executableFlow.execute(new FlowCallback()
-        {
-            @Override
-            public void progressMade()
-            {
-                assertionViolated.set(true);
-                reason = String.format("progressMade() shouldn't actually be called.");
-            }
 
-            @Override
-            public void completed(Status status)
-            {
-                completionLatch.countDown();
-                Assert.assertEquals(theExceptions, executableFlow.getExceptions());
-                if (Status.FAILED != status) {
-                    assertionViolated.set(true);
-                    reason = String.format("In executableFlow Callback: status[%s] != Status.FAILED", status);
-                }
-            }
-        } );
+        executableFlow.execute(
+                overrideProps,
+                new FlowCallback()
+                {
+                    @Override
+                    public void progressMade()
+                    {
+                        assertionViolated.set(true);
+                        reason = String.format("progressMade() shouldn't actually be called.");
+                    }
+
+                    @Override
+                    public void completed(Status status)
+                    {
+                        completionLatch.countDown();
+                        if (Status.FAILED != status) {
+                            assertionViolated.set(true);
+                            reason = String.format("In executableFlow Callback: status[%s] != Status.FAILED", status);
+                        }
+                    }
+                });
 
         completionLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.FAILED, executableFlow.getStatus());
@@ -185,7 +218,7 @@ public class IndividualJobExecutableFlowTest
     public void testNoChildren() throws Exception
     {
         EasyMock.replay(jobManager);
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", new Props(), jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
 
         Assert.assertFalse("IndividualJobExecutableFlow objects should not have any children.", executableFlow.hasChildren());
         Assert.assertTrue("IndividualJobExecutableFlow objects should not return any children.", executableFlow.getChildren().isEmpty());
@@ -200,7 +233,7 @@ public class IndividualJobExecutableFlowTest
 
         final Job mockJob = EasyMock.createMock(Job.class);
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", overrideProps, jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
         EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
@@ -217,42 +250,51 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
+        final Props returnProps = new Props();
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(returnProps).once();
+
         EasyMock.replay(mockJob, jobManager);
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 
         final AtomicBoolean firstCallbackCalled = new AtomicBoolean(false);
-        executableFlow.execute(new OneCallFlowCallback(firstCallbackCalled)
-        {
-            @Override
-            public void theCallback(Status status)
-            {
-                firstCallbackLatch.countDown();
-                if (Status.SUCCEEDED != status) {
-                    assertionViolated.set(true);
-                    reason = String.format("In executableFlow Callback1: status[%s] != Status.SUCCEEDED", status);
-                }
-            }
-        });
+        executableFlow.execute(
+                overrideProps,
+                new OneCallFlowCallback(firstCallbackCalled)
+                {
+                    @Override
+                    public void theCallback(Status status)
+                    {
+                        firstCallbackLatch.countDown();
+                        if (Status.SUCCEEDED != status) {
+                            assertionViolated.set(true);
+                            reason = String.format("In executableFlow Callback1: status[%s] != Status.SUCCEEDED", status);
+                        }
+                    }
+                });
 
         final AtomicBoolean secondCallbackCalled = new AtomicBoolean(false);
-        executableFlow.execute(new OneCallFlowCallback(secondCallbackCalled)
-        {
-            @Override
-            public void theCallback(Status status)
-            {
-                secondCallbackLatch.countDown();
-                if (Status.SUCCEEDED != status) {
-                    assertionViolated.set(true);
-                    reason = String.format("In executableFlow Callback2: status[%s] != Status.SUCCEEDED", status);
-                }
-            }
-        });
+        executableFlow.execute(
+                overrideProps,
+                new OneCallFlowCallback(secondCallbackCalled)
+                {
+                    @Override
+                    public void theCallback(Status status)
+                    {
+                        secondCallbackLatch.countDown();
+                        if (Status.SUCCEEDED != status) {
+                            assertionViolated.set(true);
+                            reason = String.format("In executableFlow Callback2: status[%s] != Status.SUCCEEDED", status);
+                        }
+                    }
+                });
 
         firstCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
         secondCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
         Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
+        Assert.assertEquals(overrideProps, executableFlow.getParentProps());
+        Assert.assertEquals(returnProps, executableFlow.getReturnProps());
 
         EasyMock.verify(mockJob);
 
@@ -260,7 +302,8 @@ public class IndividualJobExecutableFlowTest
         Assert.assertTrue("Second callback wasn't called?", secondCallbackCalled.get());
         Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
-
+        Assert.assertEquals(null, executableFlow.getParentProps());
+        Assert.assertEquals(null, executableFlow.getReturnProps());
     }
 
     
@@ -272,10 +315,10 @@ public class IndividualJobExecutableFlowTest
 
         final Job mockJob = EasyMock.createMock(Job.class);
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", overrideProps, jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("blah").times(2);
+        EasyMock.expect(mockJob.getId()).andReturn("blah").times(1);
 
         mockJob.run();
         EasyMock.expectLastCall().andThrow(theException).once();
@@ -285,32 +328,36 @@ public class IndividualJobExecutableFlowTest
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 
         final AtomicBoolean firstCallbackCalled = new AtomicBoolean(false);
-        executableFlow.execute(new OneCallFlowCallback(firstCallbackCalled)
-        {
-            @Override
-            public void theCallback(Status status)
-            {
-                firstCallbackLatch.countDown();
-                if (Status.FAILED != status) {
-                    assertionViolated.set(true);
-                    reason = String.format("In executableFlow Callback1: status[%s] != Status.FAILED", status);
-                }
-            }
-        });
+        executableFlow.execute(
+                overrideProps,
+                new OneCallFlowCallback(firstCallbackCalled)
+                {
+                    @Override
+                    public void theCallback(Status status)
+                    {
+                        firstCallbackLatch.countDown();
+                        if (Status.FAILED != status) {
+                            assertionViolated.set(true);
+                            reason = String.format("In executableFlow Callback1: status[%s] != Status.FAILED", status);
+                        }
+                    }
+                });
 
         final AtomicBoolean secondCallbackCalled = new AtomicBoolean(false);
-        executableFlow.execute(new OneCallFlowCallback(secondCallbackCalled)
-        {
-            @Override
-            public void theCallback(Status status)
-            {
-                secondCallbackLatch.countDown();
-                if (Status.FAILED != status) {
-                    assertionViolated.set(true);
-                    reason = String.format("In executableFlow Callback2: status[%s] != Status.FAILED", status);
-                }
-            }
-        });
+        executableFlow.execute(
+                overrideProps,
+                new OneCallFlowCallback(secondCallbackCalled)
+                {
+                    @Override
+                    public void theCallback(Status status)
+                    {
+                        secondCallbackLatch.countDown();
+                        if (Status.FAILED != status) {
+                            assertionViolated.set(true);
+                            reason = String.format("In executableFlow Callback2: status[%s] != Status.FAILED", status);
+                        }
+                    }
+                });
 
         firstCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
         secondCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
@@ -335,10 +382,14 @@ public class IndividualJobExecutableFlowTest
 
         final Job mockJob = EasyMock.createMock(Job.class);
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", overrideProps, jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
+
+        final Props firstProps = new Props();
+        final Props secondProps = new Props();
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
         EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(firstProps).once();
 
         mockJob.run();
         EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
@@ -356,29 +407,32 @@ public class IndividualJobExecutableFlowTest
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 
-        executableFlow.execute(new FlowCallback()
-        {
-            @Override
-            public void progressMade()
-            {
-                assertionViolated.set(true);
-                reason = String.format("progressMade() shouldn't actually be called.");
-            }
+        executableFlow.execute(
+                overrideProps,
+                new FlowCallback()
+                {
+                    @Override
+                    public void progressMade()
+                    {
+                        assertionViolated.set(true);
+                        reason = String.format("progressMade() shouldn't actually be called.");
+                    }
 
-            @Override
-            public void completed(Status status)
-            {
-                completionLatch.countDown();
-                if (Status.SUCCEEDED != status) {
-                    assertionViolated.set(true);
-                    reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
-                }
-            }
-        });
+                    @Override
+                    public void completed(Status status)
+                    {
+                        completionLatch.countDown();
+                        if (Status.SUCCEEDED != status) {
+                            assertionViolated.set(true);
+                            reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
+                        }
+                    }
+                });
 
         completionLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
         Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
+        Assert.assertEquals(firstProps, executableFlow.getReturnProps());
 
         EasyMock.verify(mockJob, jobManager);
         EasyMock.reset(mockJob, jobManager);
@@ -387,9 +441,12 @@ public class IndividualJobExecutableFlowTest
 
         Assert.assertTrue("Expected to be able to reset the executableFlow.", executableFlow.reset());
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
+        Assert.assertEquals(null, executableFlow.getParentProps());
+        Assert.assertEquals(null, executableFlow.getReturnProps());
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
         EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(secondProps).once();
 
         mockJob.run();
         EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
@@ -407,29 +464,33 @@ public class IndividualJobExecutableFlowTest
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 
-        executableFlow.execute(new FlowCallback()
-        {
-            @Override
-            public void progressMade()
-            {
-                assertionViolated.set(true);
-                reason = String.format("progressMade() shouldn't actually be called.");
-            }
+        executableFlow.execute(
+                overrideProps,
+                new FlowCallback()
+                {
+                    @Override
+                    public void progressMade()
+                    {
+                        assertionViolated.set(true);
+                        reason = String.format("progressMade() shouldn't actually be called.");
+                    }
 
-            @Override
-            public void completed(Status status)
-            {
-                completionLatch2.countDown();
-                if (Status.SUCCEEDED != status) {
-                    assertionViolated.set(true);
-                    reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
-                }
-            }
-        });
+                    @Override
+                    public void completed(Status status)
+                    {
+                        completionLatch2.countDown();
+                        if (Status.SUCCEEDED != status) {
+                            assertionViolated.set(true);
+                            reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
+                        }
+                    }
+                });
 
         completionLatch2.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
         Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
+        Assert.assertEquals(overrideProps, executableFlow.getParentProps());
+        Assert.assertEquals(secondProps, executableFlow.getReturnProps());
 
         EasyMock.verify(mockJob);
     }
@@ -441,7 +502,7 @@ public class IndividualJobExecutableFlowTest
 
         final Job mockJob = EasyMock.createMock(Job.class);
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", overrideProps, jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
         executableFlow.setStatus(Status.FAILED);
 
         Assert.assertTrue("Should be able to reset the flow.", executableFlow.reset());
@@ -461,29 +522,33 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(new Props()).once();
+
         EasyMock.replay(mockJob, jobManager);
 
         Assert.assertEquals(Status.READY, executableFlow.getStatus());
 
-        executableFlow.execute(new FlowCallback()
-        {
-            @Override
-            public void progressMade()
-            {
-                assertionViolated.set(true);
-                reason = String.format("progressMade() shouldn't actually be called.");
-            }
+        executableFlow.execute(
+                overrideProps,
+                new FlowCallback()
+                {
+                    @Override
+                    public void progressMade()
+                    {
+                        assertionViolated.set(true);
+                        reason = String.format("progressMade() shouldn't actually be called.");
+                    }
 
-            @Override
-            public void completed(Status status)
-            {
-                completionLatch.countDown();
-                if (Status.SUCCEEDED != status) {
-                    assertionViolated.set(true);
-                    reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
-                }
-            }
-        });
+                    @Override
+                    public void completed(Status status)
+                    {
+                        completionLatch.countDown();
+                        if (Status.SUCCEEDED != status) {
+                            assertionViolated.set(true);
+                            reason = String.format("In executableFlow Callback: status[%s] != Status.SUCCEEDED", status);
+                        }
+                    }
+                });
 
         completionLatch.await(1000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
@@ -499,7 +564,7 @@ public class IndividualJobExecutableFlowTest
 
         final Job mockJob = EasyMock.createMock(Job.class);
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", overrideProps, jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
 
         Assert.assertTrue("Should be able to reset the flow.", executableFlow.reset());
 
@@ -517,6 +582,8 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(new Props()).once();
+        
         EasyMock.replay(mockJob, jobManager);
 
         new Thread(new Runnable()
@@ -541,29 +608,31 @@ public class IndividualJobExecutableFlowTest
         }).start();
 
         AtomicBoolean runOnce = new AtomicBoolean(false);
-        executableFlow.execute(new OneCallFlowCallback(runOnce)
-        {
-            @Override
-            protected void theCallback(Status status)
-            {
-                if (status != Status.FAILED) {
-                    assertionViolated.set(true);
-                    reason = String.format("In executableFlow callback: status[%s] != Status.FAILED", status);
-                    return;
-                }
+        executableFlow.execute(
+                overrideProps,
+                new OneCallFlowCallback(runOnce)
+                {
+                    @Override
+                    protected void theCallback(Status status)
+                    {
+                        if (status != Status.FAILED) {
+                            assertionViolated.set(true);
+                            reason = String.format("In executableFlow callback: status[%s] != Status.FAILED", status);
+                            return;
+                        }
 
-                if (! (runLatch.getCount() == 1 && cancelLatch.getCount() == 0)) {
-                    assertionViolated.set(true);
-                    reason = String.format(
-                            "In executableFlow callback: ! (runLatch.count[%s] == 1 && cancelLatch.count[%s] == 0)",
-                            runLatch.getCount(),
-                            cancelLatch.getCount()
-                    );
-                }
-            }
-        });
+                        if (! (runLatch.getCount() == 1 && cancelLatch.getCount() == 0)) {
+                            assertionViolated.set(true);
+                            reason = String.format(
+                                    "In executableFlow callback: ! (runLatch.count[%s] == 1 && cancelLatch.count[%s] == 0)",
+                                    runLatch.getCount(),
+                                    cancelLatch.getCount()
+                            );
+                        }
+                    }
+                });
 
         Assert.assertTrue("Expected callback to be called once.", runOnce.get());
+        Assert.assertEquals(0, executableFlow.getReturnProps().size());
     }
-    
 }

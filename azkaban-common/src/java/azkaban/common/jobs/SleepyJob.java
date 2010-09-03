@@ -28,6 +28,7 @@ import azkaban.common.utils.Props;
 public class SleepyJob extends AbstractJob {
 
     private final long _sleepTimeMs;
+    private Props _props =  new Props();
 
     public SleepyJob(String name, Props p) {
         super(name);
@@ -41,6 +42,11 @@ public class SleepyJob extends AbstractJob {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    @Override
+    public Props getJobGeneratedProperties() {
+        return _props;
     }
 
 }

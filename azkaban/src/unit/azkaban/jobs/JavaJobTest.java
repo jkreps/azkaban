@@ -86,8 +86,9 @@ public class JavaJobTest
     descriptor = EasyMock.createMock(JobDescriptor.class);
     
     props = new Props();
+    props.put(AbstractProcessJob.WORKING_DIR, ".");
     
-    EasyMock.expect(descriptor.getId()).andReturn("java").times(2);
+    EasyMock.expect(descriptor.getId()).andReturn("java").times(1);
     EasyMock.expect(descriptor.getProps()).andReturn(props).times(1);
     EasyMock.expect(descriptor.getFullPath()).andReturn(".").times(1);
     

@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<project name="azkaban-test-job-set" default="all">
+    <property name="package.name" value="azkaban-test-job-set"/>
+    <property name="base.dir" value="."/>
+    <property name="java.dir" value="${base.dir}/src/main/java"/>
+    <property name="conf.dir" value="${base.dir}/conf"/>
+    <property name="lib.dir" value="${base.dir}/../dist/jar-with-deps"/>
+    <property name="dist.dir" value="${base.dir}/dist"/>
+    <property name="dist.lib.dir" value="${dist.dir}/lib"/>
+    <property name="jar-with-deps.dir" value="${dist.dir}/jar"/>
+    <property name="class.dir" value="${dist.dir}/classes"/>
+    <property name="job.out.dir" value="${dist.dir}/job"/>
+    <property name="zip.out.dir" value="${dist.dir}/zip"/>
+
+    <path id="main-classpath">
+        <fileset dir="${lib.dir}">
+            <include name="*.jar" />
+        </fileset>
+        <pathelement path="${class.dir}" />
+    </path>
+
+    <target name="all" depends="clean, jar-with-deps" description="Builds and packages the job" />
+
+    <target name="clean" description="Clean all created files" >
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <target name="dist" depends="compile, dist-lib" description="dist it"/>
+
+    <target name="compile" description="compile me">
+        <delete dir="${class.dir}"/>
+        <mkdir dir="${class.dir}"/>
+        <javac fork="true" destdir="${class.dir}" target="1.6" debug="true" deprecation="true" failonerror="true">
+            <src path="${java.dir}"/>
+            <classpath refid="main-classpath"/>
+        </javac>
+    </target>
+
+    <target name="dist-lib" description="copies libs into dist folder">
+        <delete dir="${dist.lib.dir}"/>
+        <mkdir dir="${dist.lib.dir}"/>
+        <copy todir="${dist.lib.dir}">
+            <fileset dir="${lib.dir}" includes="*.jar" excludes="jarjar-1.0.jar"/>
+        </copy>
+    </target>
+
+    <target name="jar-with-deps" depends="dist" description="Make big bad jar">
+        <delete dir="${jar-with-deps.dir}"/>
+        <mkdir dir="${jar-with-deps.dir}"/>
+
+        <jar jarfile="${jar-with-deps.dir}/${package.name}.jar" filesetmanifest="merge">
+            <fileset dir="${class.dir}"/>
+            <zipgroupfileset dir="${dist.lib.dir}" includes="*.jar"/>
+        </jar>
+    </target>
+
+    <target name="job" depends="jar-with-deps" description="build job directory ala Azkaban">
+        <delete dir="${job.out.dir}"/>
+        <mkdir dir="${job.out.dir}"/>
+        <copy todir="${job.out.dir}">
+            <fileset dir="${jar-with-deps.dir}">
+                <include name="**/${package.name}.jar" />
+            </fileset>
+            <fileset dir="${conf.dir}">
+                <include name="**/*.*" />
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="zip" depends="job" description="build install zip">
+        <mkdir dir="${zip.out.dir}" />
+        <zip destfile="${zip.out.dir}/${package.name}.zip">
+            <fileset dir="${job.out.dir}"/>
+        </zip>
+    </target>
+</project>

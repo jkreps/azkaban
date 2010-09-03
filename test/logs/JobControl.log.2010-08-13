@@ -1,0 +1,45 @@
+2010/08/13 09:46:42.575 INFO [Scheduler] [] Scheduling job 'java_sleep' for 08-13-2010 09:46:42:575
+2010/08/13 09:48:50.543 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/13 09:48:50.636 INFO [AzkabanApp] [] kk thx bye.
+2010/08/13 09:48:53.149 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/13 09:48:53.150 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/13 09:48:53.158 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs
+2010/08/13 09:48:53.252 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/13 09:48:53.252 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/13 09:48:53.254 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/13 09:48:53.255 INFO [AzkabanApplication] [] Last known execution id was [8]
+2010/08/13 09:48:53.411 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/13 09:49:10.124 INFO [Scheduler] [] Scheduling job 'java_sleep' for 08-13-2010 09:49:10:059
+2010/08/13 09:51:59.238 INFO [Scheduler] [] Scheduling job 'java_wordcount' for 08-13-2010 09:51:59:238
+2010/08/13 09:55:57.388 INFO [Scheduler] [] Scheduling job 'command_ls' for 08-13-2010 09:55:57:388
+2010/08/13 09:56:11.046 INFO [Scheduler] [] Scheduling job 'command_rm' for 08-13-2010 09:56:11:046
+2010/08/13 09:56:32.246 INFO [Scheduler] [] Scheduling job 'command_err' for 08-13-2010 09:56:32:246
+2010/08/13 09:56:47.703 INFO [Scheduler] [] Scheduling job 'java_sleep' for 08-13-2010 09:56:47:703
+2010/08/13 09:57:16.055 INFO [Scheduler] [] Scheduling job 'java_wordcount' for 08-13-2010 09:57:16:055
+2010/08/13 09:57:38.704 INFO [Scheduler] [] Scheduling job 'java_error' for 08-13-2010 09:57:38:704
+2010/08/13 09:58:16.977 INFO [Scheduler] [] Scheduling job 'hadoop_wordcount' for 08-13-2010 09:58:16:976
+2010/08/13 10:00:24.268 INFO [Scheduler] [] Scheduling job 'hadoop_wordcount' for 08-13-2010 10:00:24:267
+2010/08/13 10:01:51.878 INFO [Scheduler] [] Scheduling job 'hadoop_wordcount_error' for 08-13-2010 10:01:51:878
+2010/08/13 10:02:53.336 INFO [Scheduler] [] Scheduling job 'pig_count' for 08-13-2010 10:02:53:336
+2010/08/13 10:05:29.045 INFO [Scheduler] [] Scheduling job 'pig_count' for 08-13-2010 10:05:29:045
+2010/08/13 10:07:41.356 INFO [AzkabanApp] [] Shutting down http server...
+2010/08/13 10:07:41.458 INFO [AzkabanApp] [] kk thx bye.
+2010/08/13 10:07:43.794 INFO [AzkabanApp] [] Job log directory set to /var/folders/BW/BWxIRu5kHl4jjhH8gCvLdU+++TM/-Tmp-
+2010/08/13 10:07:43.795 INFO [AzkabanApp] [] Job directories set to [test/jobs]
+2010/08/13 10:07:43.803 INFO [AzkabanApplication] [] Using hadoop config found in /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs
+2010/08/13 10:07:43.898 INFO [AzkabanApplication] [] Schedule file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule
+2010/08/13 10:07:43.898 INFO [AzkabanApplication] [] Schedule backup file param not set. Defaulting to /Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/jobs.schedule.backup
+2010/08/13 10:07:43.901 INFO [AzkabanApplication] [] Using path[/Users/lguo/Documents/workspace/lguo/azkaban_lguo/test/jobs/executions] for storing executions.
+2010/08/13 10:07:43.901 INFO [AzkabanApplication] [] Last known execution id was [21]
+2010/08/13 10:07:44.061 INFO [AzkabanApp] [] Server running on port 8082.
+2010/08/13 10:07:55.345 INFO [Scheduler] [] Scheduling job 'pig_count' for 08-13-2010 10:07:55:279
+2010/08/13 10:09:58.665 INFO [Scheduler] [] Scheduling job 'pig_count' for 08-13-2010 10:09:58:665
+2010/08/13 10:10:31.692 INFO [Scheduler] [] Scheduling job 'pig_count' for 08-13-2010 10:10:31:691
+2010/08/13 10:11:00.171 INFO [Scheduler] [] Scheduling job 'python_celsius' for 08-13-2010 10:12:00:171
+2010/08/13 10:27:24.324 INFO [Scheduler] [] Scheduling job 'python_celsius' for 08-13-2010 10:27:24:324
+2010/08/13 10:33:21.245 INFO [Scheduler] [] Scheduling job 'python_celsius' for 08-13-2010 10:33:21:244
+2010/08/13 10:34:12.854 INFO [Scheduler] [] Scheduling job 'python_celsius' for 08-13-2010 10:34:12:854
+2010/08/13 10:36:54.056 INFO [Scheduler] [] Scheduling job 'python_celsius' for 08-13-2010 10:36:54:056
+2010/08/13 10:38:20.932 INFO [Scheduler] [] Scheduling job 'python_celsius' for 08-13-2010 10:38:20:932
+2010/08/13 10:39:50.357 INFO [Scheduler] [] Scheduling job 'python_celsius' for 08-13-2010 10:39:50:357
+2010/08/13 11:57:22.065 INFO [Scheduler] [] Scheduling job 'command_err' for 08-13-2010 11:57:22:065

@@ -23,7 +23,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.apache.velocity.app.VelocityEngine;
@@ -34,14 +33,13 @@ import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
 import azkaban.flow.CachingFlowManager;
-import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowManager;
-import azkaban.flow.JobManagerFlowDeserializer;
 import azkaban.flow.RefreshableFlowManager;
 import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
 import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
 import azkaban.jobs.JavaJob;
 import azkaban.jobs.JavaProcessJob;
+import azkaban.jobs.NoopJob;
 import azkaban.jobs.PigProcessJob;
 import azkaban.jobs.ProcessJob;
 import azkaban.jobs.PythonJob;
@@ -49,10 +47,10 @@ import azkaban.jobs.RubyJob;
 import azkaban.jobs.ScriptJob;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
 import azkaban.serialization.ExecutableFlowSerializer;
+import azkaban.serialization.FlowExecutionSerializer;
+import azkaban.serialization.de.DefaultExecutableFlowDeserializer;
 import azkaban.serialization.de.ExecutableFlowDeserializer;
-import azkaban.serialization.de.JobFlowDeserializer;
-
-import com.google.common.base.Function;
+import azkaban.serialization.de.FlowExecutionDeserializer;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -114,13 +112,14 @@ public class AzkabanApplication
                 _logsDir.getAbsolutePath(),
                 "java",
                 new ImmutableMap.Builder<String, Class<? extends Job>>()
-                  .put("java", JavaJob.class)
-                  .put("command", ProcessJob.class)
-                  .put("javaprocess", JavaProcessJob.class)
-                  .put("pig", PigProcessJob.class)
-                  .put("python", PythonJob.class) 
-                  .put("ruby", RubyJob.class)
-                  .put("script", ScriptJob.class).build());
+                 .put("java", JavaJob.class)
+                 .put("command", ProcessJob.class)
+                 .put("javaprocess", JavaProcessJob.class)
+                 .put("pig", PigProcessJob.class)
+                 .put("propertyPusher", NoopJob.class)
+                 .put("python", PythonJob.class)
+                 .put("ruby", RubyJob.class)
+                 .put("script", ScriptJob.class).build());
 
         _hdfsUrl = defaultProps.getString("hdfs.instance.url", null);
         _jobManager = new JobManager(factory,
@@ -150,16 +149,19 @@ public class AzkabanApplication
         logger.info(String.format("Last known execution id was [%s]", lastExecutionId));
 
         final ExecutableFlowSerializer flowSerializer = new DefaultExecutableFlowSerializer();
-        final ExecutableFlowDeserializer flowDeserializer = new ExecutableFlowDeserializer(
-                new JobFlowDeserializer(
-                        ImmutableMap.<String, Function<Map<String, Object>, ExecutableFlow>>of(
-                                "jobManagerLoaded", new JobManagerFlowDeserializer(_jobManager, factory)
-                        )
-                )
-        );
+        final ExecutableFlowDeserializer flowDeserializer = new DefaultExecutableFlowDeserializer(_jobManager, factory);
+
+        FlowExecutionSerializer flowExecutionSerializer = new FlowExecutionSerializer(flowSerializer);
+        FlowExecutionDeserializer flowExecutionDeserializer = new FlowExecutionDeserializer(flowDeserializer);
 
         _allFlows = new CachingFlowManager(
-                new RefreshableFlowManager(_jobManager, factory, flowSerializer, flowDeserializer, executionsStorageDir, lastExecutionId),
+                new RefreshableFlowManager(
+                        _jobManager,
+                        flowExecutionSerializer,
+                        flowExecutionDeserializer, 
+                        executionsStorageDir,
+                        lastExecutionId
+                ),
                 defaultProps.getInt("azkaban.flow.cache.size", 1000)
         );
         _jobManager.setFlowManager(_allFlows);

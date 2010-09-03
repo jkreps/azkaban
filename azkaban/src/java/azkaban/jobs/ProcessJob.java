@@ -16,24 +16,17 @@
 
 package azkaban.jobs;
 
+import azkaban.app.JobDescriptor;
+import azkaban.common.jobs.Job;
+import azkaban.common.utils.Props;
+import org.apache.log4j.Level;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.log4j.Level;
-
-import azkaban.app.JobDescriptor;
-import azkaban.app.PropsUtils;
-import azkaban.common.jobs.AbstractJob;
-import azkaban.common.jobs.Job;
-import azkaban.common.utils.Props;
 
 /**
  * A job that runs a simple unix command
@@ -41,46 +34,31 @@ import azkaban.common.utils.Props;
  * @author jkreps
  * 
  */
-public class ProcessJob extends AbstractJob implements Job {
-
-    public static final String ENV_PREFIX = "env.";
+public class ProcessJob extends AbstractProcessJob implements Job {
+ 
     public static final String COMMAND = "command";
-    public static final String WORKING_DIR = "working.dir";
-    public static final String JOB_PROP_ENV = "JOB_PROP_FILE";
-    public static final String JOB_NAME_ENV = "JOB_NAME";
     public static final int CLEAN_UP_TIME_MS = 1000;
-
-    private final String _jobPath;
-    private final String _name;
-    private volatile Props _props;
+    
     private volatile Process _process;
     private volatile boolean _isComplete;
-
+    
     public ProcessJob(JobDescriptor descriptor) {
-        super(descriptor.getId());
-        this._props = descriptor.getProps();
-        this._isComplete = false;
-        this._jobPath = descriptor.getFullPath();
-        this._name = descriptor.getId();
+        super(descriptor);
     }
+        
 
     public void run() {
-    	_props = PropsUtils.resolveProps(_props);
-    	
+        
+        resolveProps();
+        
         // Sets a list of all the commands that need to be run.
         List<String> commands = getCommandList();
         info(commands.size() + " commands to execute.");
 
-        Map<String, String> env = getEnvironmentVariables();
-
-        String cwd = getWorkingDirectory();
-        // Create process file
-        File file = createFlattenedPropsFile(cwd, _props, _name);
-        System.out.println("Temp file created " + file.getAbsolutePath());
-
-        env.put(JOB_PROP_ENV, file.getAbsolutePath());
-        env.put(JOB_NAME_ENV, _name);
-
+        File[] propFiles =initPropsFiles();
+        
+        //System.err.println("in process job outputFile=" +propFiles[1]);
+ 
         // For each of the jobs, set up a process and run them.
         for(String command: commands) {
             info("Executing command: " + command);
@@ -88,13 +66,13 @@ public class ProcessJob extends AbstractJob implements Job {
 
             ProcessBuilder builder = new ProcessBuilder(cmdPieces);
 
-            builder.directory(new File(cwd));
-            builder.environment().putAll(env);
+            builder.directory(new File(getCwd()));
+            builder.environment().putAll(getEnv());
 
             try {
                 _process = builder.start();
             } catch(IOException e) {
-                file.delete();
+                for (File file: propFiles)   if (file != null && file.exists()) file.delete();
                 throw new RuntimeException(e);
             }
             Thread outputGobbler = new LoggingGobbler(new InputStreamReader(_process.getInputStream()),
@@ -118,7 +96,7 @@ public class ProcessJob extends AbstractJob implements Job {
 
             _isComplete = true;
             if(exitCode != 0) {
-                file.delete();
+                for (File file: propFiles)   if (file != null && file.exists()) file.delete();
                 throw new RuntimeException("Processes ended with exit code " + exitCode + ".");
             }
 
@@ -129,22 +107,15 @@ public class ProcessJob extends AbstractJob implements Job {
             } catch(InterruptedException e) {
             }
         }
-
-        file.delete();
+        
+        // Get the output properties from this job.
+       generateProperties(propFiles[1]);
+               
+       for (File file: propFiles)
+           if (file != null && file.exists()) file.delete();
+    
     }
-
-    private File createFlattenedPropsFile(String workingDir, final Props props, final String id) {
-        final File directory = new File(workingDir);
-        final File tempFile;
-        try {
-            tempFile = File.createTempFile(id + "_", "_tmp", directory);
-            props.storeFlattened(tempFile);
-        } catch(IOException e) {
-            throw new RuntimeException("Failed to create temp property file ", e);
-        }
-
-        return tempFile;
-    }
+       
 
     protected List<String> getCommandList() {
         List<String> commands = new ArrayList<String>();
@@ -155,28 +126,8 @@ public class ProcessJob extends AbstractJob implements Job {
         return commands;
     }
 
-    protected Map<String, String> getEnvironmentVariables() {
-        return getMapFromPrefixProperties(ENV_PREFIX);
-    }
 
-    protected String getWorkingDirectory() {
-        return _props.containsKey(WORKING_DIR) ? _props.getString(WORKING_DIR)
-                                              : new File(_jobPath).getParent();
-    }
-
-    protected final Map<String, String> getMapFromPrefixProperties(String prefix) {
-        Map<String, String> prefixProperties = new HashMap<String, String>();
-        Set<String> keys = _props.keySet();
-        for(String key: keys) {
-            if(key.toLowerCase().startsWith(prefix)) {
-                String value = _props.getString(key);
-                String strippedKey = key.substring(prefix.length());
-                prefixProperties.put(strippedKey, value);
-            }
-        }
-
-        return prefixProperties;
-    }
+   
 
     @Override
     public void cancel() throws Exception {
@@ -285,7 +236,11 @@ public class ProcessJob extends AbstractJob implements Job {
     }
 
     public String getJobName() {
-        return _name;
+        return getId();
+    }
+
+    public JobDescriptor getJobDescriptor() {
+        return _descriptor;
     }
 
     /**

@@ -16,5 +16,7 @@ public class RubyJob extends LongArgJob {
               desc, 
               ImmutableSet.of(RUBY_BINARY_KEY, SCRIPT_KEY, JobDescriptor.JOB_TYPE));
     }
+
+   
     
 }

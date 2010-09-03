@@ -55,6 +55,10 @@ public class ExecutableFlowSerializer implements Function<ExecutableFlow, Map<St
         Function<ExecutableFlow, Map<String, Object>> subSerializer = serializers.get(executableFlow.getClass());
 
         if (subSerializer == null) {
+            if (executableFlow instanceof WrappingExecutableFlow) {
+                return apply(((WrappingExecutableFlow) executableFlow).getDelegateFlow());
+            }
+
             throw new RuntimeException(String.format("No known serializer for class[%s].", executableFlow.getClass()));
         }
 

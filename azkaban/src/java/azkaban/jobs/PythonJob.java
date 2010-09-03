@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import azkaban.app.JobDescriptor;
 
 
+
 public class PythonJob extends LongArgJob {
     
     private static final String PYTHON_BINARY_KEY = "python";
@@ -17,5 +18,8 @@ public class PythonJob extends LongArgJob {
               desc, 
               ImmutableSet.of(PYTHON_BINARY_KEY, SCRIPT_KEY, JobDescriptor.JOB_TYPE));
     }
+
+
+
     
 }

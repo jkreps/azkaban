@@ -80,12 +80,22 @@ public class WordCountGrid extends AbstractJob {
          conf.setCombinerClass(Reduce.class);
          conf.setReducerClass(Reduce.class);
     
+         Path outputPath = new Path(_output);
+         outputPath.getFileSystem(conf).delete(outputPath);
+         
          conf.setInputFormat(TextInputFormat.class);
          conf.setOutputFormat(TextOutputFormat.class);
     
          FileInputFormat.setInputPaths(conf, new Path(_input));
-         FileOutputFormat.setOutputPath(conf, new Path(_output));
+         FileOutputFormat.setOutputPath(conf, outputPath);
          JobClient.runJob(conf);
        }
+
+
+      @Override
+      public Props getJobGeneratedProperties()
+      {
+        return new Props();
+      }
     }
     

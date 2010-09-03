@@ -29,7 +29,14 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 
 /**
+ * A grouping of flows.
  *
+ * For example, if you had two functions f(x) and g(x) that you wanted to execute together, you
+ * could conceivably create a new function h(x) = { f(x); g(x); }.  That is essentially what
+ * this class does with ExecutableFlow objects.
+ *
+ * You should never really have to create one of these directly.  Try to use MultipleDependencyFlow
+ * instead.
  */
 public class GroupedFlow implements Flow
 {
@@ -79,14 +86,14 @@ public class GroupedFlow implements Flow
     }
 
     @Override
-    public ExecutableFlow createExecutableFlow(String id, Props overrideProps, Map<String, ExecutableFlow> overrides)
+    public ExecutableFlow createExecutableFlow(String id, Map<String, ExecutableFlow> overrides)
     {
         ExecutableFlow executableFlows[] = new ExecutableFlow[flows.length];
 
         for (int i = 0; i < executableFlows.length; i++) {
             executableFlows[i] = overrides.containsKey(flows[i].getName()) ?
                                  overrides.get(flows[i].getName()) :
-                                 flows[i].createExecutableFlow(id, overrideProps, overrides);
+                                 flows[i].createExecutableFlow(id, overrides);
         }
 
         // Grouped(Executable)Flow is just an abstraction, it doesn't represent anything concrete and thus shouldn't

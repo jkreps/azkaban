@@ -49,7 +49,13 @@ public class IndividualJobEFSerializer implements Function<ExecutableFlow, Map<S
         jobInfoMapBuilder.put("name", jobName);
         jobInfoMapBuilder.put("status", flow.getStatus().toString());
         jobInfoMapBuilder.put("id", flow.getId());
-        jobInfoMapBuilder.put("overrideProps", flow.getOverrideProps().getMapByPrefix(""));
+        if (flow.getParentProps() != null) {
+            jobInfoMapBuilder.put("overrideProps", flow.getParentProps().getMapByPrefix(""));
+        }
+
+        if (flow.getReturnProps() != null) {
+            jobInfoMapBuilder.put("returnProps", flow.getReturnProps().getMapByPrefix(""));
+        }
 
         if (flow.getStartTime() != null) {
             jobInfoMapBuilder.put("startTime", flow.getStartTime().toString());

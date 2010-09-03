@@ -3,7 +3,6 @@ package azkaban.jobs;
 import com.google.common.collect.ImmutableSet;
 
 import azkaban.app.JobDescriptor;
-import azkaban.common.utils.Props;
 
 /**
  * A script job issues a command of the form
@@ -24,5 +23,6 @@ public class ScriptJob extends LongArgJob {
               desc, 
               ImmutableSet.of(DEFAULT_EXECUTABLE_KEY, SCRIPT_KEY, JobDescriptor.JOB_TYPE));
     }
+ 
 
 }

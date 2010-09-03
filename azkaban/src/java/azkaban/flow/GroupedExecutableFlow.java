@@ -16,8 +16,7 @@
 
 package azkaban.flow;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
+import azkaban.common.utils.Props;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
@@ -30,7 +29,18 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ * A grouping of executable flows.
  *
+ * For example, if you had two functions f(x) and g(x) that you wanted to execute together, you
+ * could conceivably create a new function h(x) = { f(x); g(x); }.  That is essentially what
+ * this class does with ExecutableFlow objects.
+ *
+ * It will run the sub flows in parallel and aggregate all of their "return properties" into a single
+ * properties object.  It aggregates the properties in the order that the flows are specified on the
+ * constructor, so order does matter if subflows return properties with the same key (last one wins)
+ *
+ * You should never really have to create one of these directly.  Try to use MultipleDependencyExecutableFlow
+ * instead.
  */
 public class GroupedExecutableFlow implements ExecutableFlow
 {
@@ -44,7 +54,11 @@ public class GroupedExecutableFlow implements ExecutableFlow
     private volatile DateTime startTime;
     private volatile DateTime endTime;
     private volatile GroupedExecutableFlow.GroupedFlowCallback theGroupCallback;
+
     private volatile Map<String,Throwable> exceptions = new HashMap<String, Throwable>();
+    private volatile Props parentProps;
+    private volatile Props returnProps;
+    private final String name;
 
     public GroupedExecutableFlow(String id, ExecutableFlow... flows)
     {
@@ -59,6 +73,12 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 return o1.getName().compareTo(o2.getName());
             }
         });
+
+        String[] names = new String[flows.length];
+        for (int i = 0; i < flows.length; i++) {
+            names[i] = flows[i].getName();
+        }
+        name = StringUtils.join(names, " + ");
 
         jobState = Status.READY;
         updateState();
@@ -83,6 +103,8 @@ public class GroupedExecutableFlow implements ExecutableFlow
                         theEndTime = subFlowEndTime;
                     }
                 }
+
+                setAndVerifyParentProps();
                 startTime = theStartTime;
                 endTime = theEndTime;
                 break;
@@ -116,13 +138,15 @@ public class GroupedExecutableFlow implements ExecutableFlow
                         thisStartTime = subFlowStartTime;
                     }
                 }
+                setAndVerifyParentProps();
 
                 startTime = thisStartTime;
                 endTime = null;
 
                 // Make sure everything is initialized before leaking the pointer to "this".
+                // This is just installing the callback in an already running flow.
                 for (ExecutableFlow runningFlow : runningFlows) {
-                    runningFlow.execute(theGroupCallback);
+                    runningFlow.execute(parentProps, theGroupCallback);
                 }
         }
     }
@@ -136,23 +160,37 @@ public class GroupedExecutableFlow implements ExecutableFlow
     @Override
     public String getName()
     {
-        return StringUtils.join(
-                Iterables.transform(Arrays.asList(flows), new Function<ExecutableFlow, String>()
-                {
-                    @Override
-                    public String apply(ExecutableFlow flow)
-                    {
-                        return flow.getName();
-                    }
-                }).iterator(),
-                " + "
-        );
+        return name;
+    }
+    
+    @Override
+    public Props getReturnProps() {
+        return returnProps;
     }
 
     @Override
-    public void execute(final FlowCallback callback)
+    public void execute(Props parentProps, final FlowCallback callback)
     {
+        if (parentProps == null) {
+            parentProps = new Props();
+        }
+
         synchronized (sync) {
+            if (this.parentProps == null) {
+                this.parentProps = parentProps;
+            }
+            else if (jobState != Status.COMPLETED && !this.parentProps.equalsProps(parentProps)) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "%s.execute() called with multiple differing parentProps objects.  " +
+                                "Call reset() before executing again with a different Props object. this.parentProps[%s], parentProps[%s]",
+                                getClass().getSimpleName(),
+                                this.parentProps,
+                                parentProps
+                        )
+                );
+            }
+
             switch (jobState) {
                 case READY:
                     jobState = Status.RUNNING;
@@ -178,7 +216,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
         for (ExecutableFlow flow : flows) {
             if (jobState != Status.FAILED) {
                 try {
-                    flow.execute(theGroupCallback);
+                    flow.execute(this.parentProps, theGroupCallback);
                 }
                 catch (RuntimeException e) {
                     final List<FlowCallback> callbacks;
@@ -214,6 +252,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                 switch (flow.getStatus()) {
                     case FAILED:
                         jobState = Status.FAILED;
+                        returnProps = new Props();
                         return;
                     case COMPLETED:
                     case SUCCEEDED:
@@ -225,6 +264,14 @@ public class GroupedExecutableFlow implements ExecutableFlow
 
             if (allComplete) {
                 jobState = Status.SUCCEEDED;
+
+                returnProps = new Props();
+
+                for (ExecutableFlow flow : flows) {
+                    returnProps = new Props(returnProps, flow.getReturnProps());
+                }
+
+                returnProps.logProperties("Output properties for " + getName());
             }
         }
     }
@@ -246,6 +293,8 @@ public class GroupedExecutableFlow implements ExecutableFlow
                     jobState = Status.READY;
                     callbacksToCall = new ArrayList<FlowCallback>();
                     theGroupCallback = new GroupedFlowCallback();
+                    parentProps = null;
+                    returnProps = null;
                     startTime = null;
                     endTime = null;
                     exceptions.clear();
@@ -264,6 +313,8 @@ public class GroupedExecutableFlow implements ExecutableFlow
                     return false;
                 default:
                     jobState = Status.COMPLETED;
+                    parentProps = new Props();
+                    returnProps = new Props();
             }
         }
 
@@ -304,6 +355,11 @@ public class GroupedExecutableFlow implements ExecutableFlow
     }
 
     @Override
+    public Props getParentProps() {
+        return parentProps;
+    }
+
+    @Override
     public Map<String,Throwable> getExceptions()
     {
         return exceptions;
@@ -321,6 +377,30 @@ public class GroupedExecutableFlow implements ExecutableFlow
             }
             catch (RuntimeException t) {
                 // TODO: Figure out how to use the logger to log that a callback threw an exception.
+            }
+        }
+    }
+
+    private void setAndVerifyParentProps() {
+        for (ExecutableFlow flow : flows) {
+            if (flow.getStatus() == Status.READY) {
+                continue;
+            }
+
+            final Props childsParentProps = flow.getParentProps();
+            
+            if (parentProps == null) {
+                parentProps = childsParentProps;
+            }
+            else {
+                if (childsParentProps != null && !parentProps.equalsProps(childsParentProps)) {
+                    throw new IllegalStateException(
+                            String.format(
+                                    "Parent props differ for sub flows. Flow Id[%s]",
+                                    id
+                            )
+                    );
+                }
             }
         }
     }
