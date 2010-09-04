@@ -1,22 +1,34 @@
 
-Test "command" jobs in azkaban. 
+Please do the following to run the tests.
 
-This directory contains three *command* jobs:
-1. lstest runs "ls" command and is expected to suceed;
-2. errtest runs a non-existing command and is expected to fail;
-3. rmtest runs "rm non-existing-file" and is expected to fail.
+Assumption:
+ROOT=<your_azkaban_repo_dir>
 
+1. Open $ROOT/test/jobs/system.properties to update:
+   a. mail.host=<your_mail_host> 
+   b. server.url=http://<your_hostname>:8081/
+   c. job.failure.email=<your_email_address>
+   d. job.sucess.email=<your_email_address> 
 
-Please do the following initialization. 
-
-1. Open system.properties to update:
-a. mail.host=<your_mail_host> 
-b. server.url=http://<your_hostname>:8082/
-c. job.failure.email=<your_email_address>
-d. job.sucess.email=<your_email_address> 
+2. set ent variable HADOOP_HOME: 
+   $ export HADOOP_HOME=$ROOT/test/jobs/
+  Note: 
+   You don't need to install hadoop. Azkaban will use the 
+   included hadoop jars to run hadoop jobs in local mode.
 
 2. Run azkaban server locally:
-a. go to $ROOT;
-b. run command: bin/azkaban.sh -j test/jobs/command_job 
+   $ cd $ROOT
+   $ bin/azkaban.sh -j test/jobs 
 
-3. Open http://<your_hostname>:8082/ in your browser  
+3. Open http://<your_hostname>:8081/ in your browser to run 
+   or schedule the test jobs:
+   a. "command_ls" is a command job to execute "ls";
+   b. "hadoop_wordcount" is a hadoop word count job. The input
+      file is $ROOT/test/jobs/wordcount.input and output is in 
+	  $ROOT/test/wordcount.output;
+   c. "java_sleep" is a java job which sleeps for some time;
+   d. "java_wordcount" is a java word count job which takes input
+      from $ROOT/test/jobs/wordcount.input and dumps its output
+	  to /tmp/dummy;
+   e. "python_celsius" is a python job which converts Fahrenheit
+      to celsius.

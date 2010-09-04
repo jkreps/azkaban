@@ -1,3 +1,0 @@
-type=command
-command=rm /tmp/i-dont-exist 
-env.testenv=testingEnv

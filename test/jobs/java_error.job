@@ -1,6 +1,0 @@
-name=error_java
-type=java
-job.class=azkaban.test.WordCountLocal
-method.run=run
-input=wordcount_error.input
-output=/tmp/dummy 

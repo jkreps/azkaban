@@ -1,3 +1,0 @@
-type=command
-command=xls -la
-env.testenv=testingEnv

@@ -1,2 +1,0 @@
-type=command
-command=bash hadoop_prepare.sh wordcount.input wordcount.output
