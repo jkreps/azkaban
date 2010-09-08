@@ -44,13 +44,6 @@ public class TextFileViewer implements HdfsFileViewer {
     }
 
     public boolean canReadFile(FileSystem fs, Path path) {
-//        for(String suffix: acceptedSuffix) {
-//            if(path.toString().endsWith(suffix)) {
-//                return true;
-//            }
-//        }
-//
-//        return false;
         return true;
     }
 
