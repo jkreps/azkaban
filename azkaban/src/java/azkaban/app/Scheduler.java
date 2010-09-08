@@ -490,10 +490,10 @@ public class Scheduler {
                                                      + InetAddress.getLocalHost().getHostName()
                                                      + " has failed with the following errors: \r\n\r\n");
                 int errorNo = 1;
-                String logUrlPrefix = _runtimeProps != null ? _runtimeProps.getProperty(AppCommon.LOG_URL_PREFIX)
+                String logUrlPrefix = _runtimeProps != null ? _runtimeProps.getProperty(AppCommon.DEFAULT_LOG_URL_PREFIX)
                                                            : null;
                 if(logUrlPrefix == null && _runtimeProps != null) {
-                    logUrlPrefix = _runtimeProps.getProperty(AppCommon.DEFAULT_LOG_URL_PREFIX);
+                    logUrlPrefix = _runtimeProps.getProperty(AppCommon.LOG_URL_PREFIX);
                 }
 
                 final int lastLogLineNum = 60;
