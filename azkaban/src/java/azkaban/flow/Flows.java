@@ -50,25 +50,13 @@ public class Flows
                 ++index;
             }
 
-            if ("propertyPusher".equals(rootDescriptor.getJobType())) {
-                String propertyFlowName = rootDescriptor.getProps().getString("prop-dependency");
-                JobDescriptor propertyJobDescriptor = allJobDescriptors.get(propertyFlowName);
-
-                retVal = new PropertyPusherFlow(
-                        rootDescriptor.getId(),
-                        buildLegacyFlow(jobManager, alreadyBuiltFlows, propertyJobDescriptor, allJobDescriptors),
-                        depFlows
-                );
-            }
-            else {
-                retVal = new MultipleDependencyFlow(
-                        new IndividualJobFlow(
-                                rootDescriptor.getId(),
-                                jobManager
-                        ),
-                        depFlows
-                );
-            }
+            retVal = new MultipleDependencyFlow(
+                    new IndividualJobFlow(
+                            rootDescriptor.getId(),
+                            jobManager
+                    ),
+                    depFlows
+            );
         }
         else {
             retVal = new IndividualJobFlow(
