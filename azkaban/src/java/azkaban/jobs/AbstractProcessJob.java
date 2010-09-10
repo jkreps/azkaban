@@ -3,6 +3,7 @@ package azkaban.jobs;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.Set;
 
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import azkaban.app.JobDescriptor;
@@ -26,7 +28,9 @@ import azkaban.util.JSONToJava;
  *
  */
 public abstract class AbstractProcessJob extends AbstractJob {
-    
+
+    private static final Logger log = Logger.getLogger(AbstractProcessJob.class);
+
     public static final String ENV_PREFIX = "env.";
     public static final String WORKING_DIR = "working.dir";
     public static final String JOB_PROP_ENV = "JOB_PROP_FILE";
@@ -135,9 +139,13 @@ public abstract class AbstractProcessJob extends AbstractJob {
             }
             return outputProps;
         }
+        catch (FileNotFoundException e) {
+            log.info(String.format("File[%s] wasn't found, returning empty props.", outputPropertiesFile));
+            return new Props();
+        }
         catch (Exception e) {
-            e.printStackTrace(System.err);
-            throw new RuntimeException("Unable to gather output properties from: " +  outputPropertiesFile.getAbsolutePath());
+            log.error("Exception thrown when trying to load output file props.  Returning empty Props instead of failing.  Is this really the best thing to do?", e);
+            return new Props();
         }
         finally {
             IOUtils.closeQuietly(reader);
