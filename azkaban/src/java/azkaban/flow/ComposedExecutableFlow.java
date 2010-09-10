@@ -279,7 +279,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
 
     @Override
     public Props getReturnProps() {
-        return depender.getReturnProps();
+        return new Props(dependee.getReturnProps(), depender.getReturnProps());
     }
 
     @Override

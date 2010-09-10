@@ -75,7 +75,7 @@ public class JobDescriptor {
         this._id = id;
         this._path = conicalPath;
         this._fullpath = fullpath;
-        this._props = props;
+        this._props = PropsUtils.resolveProps(props);
 
         this._jobType = props.getString(JOB_TYPE, "");
 

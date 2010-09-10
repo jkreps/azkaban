@@ -84,7 +84,8 @@ public class ComposedExecutableFlowTest
 
         final Props intermediateReturnProps = new Props();
         intermediateReturnProps.put("some","value1--");
-        EasyMock.expect(dependeeFlow.getReturnProps()).andReturn(intermediateReturnProps).once();
+        intermediateReturnProps.put("other", "value2--");
+        EasyMock.expect(dependeeFlow.getReturnProps()).andReturn(intermediateReturnProps).times(2);
         
         final Capture<FlowCallback> dependerCallback = new Capture<FlowCallback>();
         final Capture<Props> intermediatePropsCap = new Capture<Props>();
@@ -131,8 +132,9 @@ public class ComposedExecutableFlowTest
 
         final Props intProps = intermediatePropsCap.getValue().local();
         Assert.assertTrue(intProps != null);
-        Assert.assertEquals(1, intProps.size());
+        Assert.assertEquals(2, intProps.size());
         Assert.assertEquals("value1--", intProps.get("some"));
+        Assert.assertEquals("value2--", intProps.get("other"));
 
         callbackRan = new AtomicBoolean(false);
         flow.execute(
@@ -153,12 +155,23 @@ public class ComposedExecutableFlowTest
         EasyMock.reset(props, dependerFlow);
 
         final Props someProps = new Props();
-        EasyMock.expect(dependerFlow.getReturnProps()).andReturn(someProps);
+        someProps.put("some", "yay");
+        someProps.put("something", "you");
+        EasyMock.expect(dependerFlow.getReturnProps()).andReturn(someProps).times(1);
         EasyMock.expect(props.equalsProps(props)).andReturn(false).once();
 
         EasyMock.replay(props, dependerFlow);
 
-        Assert.assertEquals(someProps, flow.getReturnProps());
+        final Props retProps = flow.getReturnProps();
+        final Props expectedProps = new Props();
+        expectedProps.put("some", "yay");
+        expectedProps.put("something", "you");
+        expectedProps.put("other", "value2--");
+
+        Assert.assertTrue(
+                String.format("Return props should be the combination of all sub-flow return props[%s].  Was[%s]", expectedProps, retProps),
+                retProps.equalsProps(expectedProps)
+        );
 
         boolean exceptionThrown = false;
         try {

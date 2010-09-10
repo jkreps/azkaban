@@ -21,8 +21,7 @@ public class DefaultExecutableFlowDeserializer extends ExecutableFlowDeserialize
         setJobDeserializer(
                 new JobFlowDeserializer(
                         ImmutableMap.<String, Function<Map<String, Object>, ExecutableFlow>>of(
-                                "jobManagerLoaded", new JobManagerFlowDeserializer(jobManager, jobFactory),
-                                "propertyPusher", new PropertyPusherFlowDeserializer(this)
+                                "jobManagerLoaded", new JobManagerFlowDeserializer(jobManager, jobFactory)
                         )
                 )
         );
