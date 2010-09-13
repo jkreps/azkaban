@@ -49,6 +49,8 @@ public class ProcessJob extends AbstractProcessJob implements Job {
 
     public void run() {
         
+        resolveProps();
+        
         // Sets a list of all the commands that need to be run.
         List<String> commands = getCommandList();
         info(commands.size() + " commands to execute.");
