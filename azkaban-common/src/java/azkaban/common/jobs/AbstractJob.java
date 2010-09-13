@@ -18,6 +18,8 @@ package azkaban.common.jobs;
 
 import org.apache.log4j.Logger;
 
+import azkaban.common.utils.Props;
+
 public abstract class AbstractJob implements Job {
 
     private final String _id;
@@ -84,6 +86,10 @@ public abstract class AbstractJob implements Job {
 
     public void error(String message, Throwable t) {
         this._log.error(message, t);
+    }
+    
+    public Props getJobGeneratedProperties() {
+        return new Props();
     }
     
     public abstract void run() throws Exception;
