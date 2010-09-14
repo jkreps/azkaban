@@ -80,10 +80,10 @@ public class JobManagerFlowDeserializer implements Function<Map<String, Object>,
         }
 
         if (returnPropsMap != null) {
-            Props parentProps = new Props();
-            parentProps.putAll(parentPropsMap);
+            Props returnProps = new Props();
+            returnProps.putAll(returnPropsMap);
 
-            retVal.setReturnProperties(parentProps);
+            retVal.setReturnProperties(returnProps);
         }
 
         return retVal;

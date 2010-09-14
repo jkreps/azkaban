@@ -201,6 +201,10 @@ public class Props {
     }
 
     public void putAll(Map<? extends String, ? extends String> m) {
+        if (m == null) {
+            return;
+        }
+        
         for(Map.Entry<? extends String, ? extends String> entry: m.entrySet())
             this.put(entry.getKey(), entry.getValue());
     }
