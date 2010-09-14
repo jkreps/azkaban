@@ -566,6 +566,14 @@ public class Props {
         return values;
     }
 
+    /**
+     * @deprecated Replaced by {@link #getKeySet()}
+     */
+    @Deprecated 
+    public Set<String> keySet() {
+        return getKeySet();
+    }
+    
     public Set<String> getKeySet() {
         HashSet<String> keySet = new HashSet<String>();
 

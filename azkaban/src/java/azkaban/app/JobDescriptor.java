@@ -63,6 +63,7 @@ public class JobDescriptor {
     private final long _retryBackoffMs;
     private final Integer _requiredPermits;
     private final Props _props;
+    private final Props _resolvedProps;
     private final Set<JobDescriptor> _dependencies;
     private final ClassLoader _classLoader;
     private final List<String> _readResourceLocks;
@@ -75,8 +76,9 @@ public class JobDescriptor {
         this._id = id;
         this._path = conicalPath;
         this._fullpath = fullpath;
-        this._props = PropsUtils.resolveProps(props);
-
+        this._props = props;
+        this._resolvedProps = PropsUtils.resolveProps(props);
+        
         this._jobType = props.getString(JOB_TYPE, "");
 
         // @TODO Move this validation check in Java Job
@@ -129,6 +131,10 @@ public class JobDescriptor {
 
     public Props getProps() {
         return this._props;
+    }
+    
+    public Props getResolvedProps() {
+        return this._resolvedProps;
     }
 
     public boolean hasDependencies() {

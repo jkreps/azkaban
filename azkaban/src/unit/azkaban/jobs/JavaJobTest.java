@@ -89,7 +89,7 @@ public class JavaJobTest
     props.put(AbstractProcessJob.WORKING_DIR, ".");
     
     EasyMock.expect(descriptor.getId()).andReturn("java").times(1);
-    EasyMock.expect(descriptor.getProps()).andReturn(props).times(1);
+    EasyMock.expect(descriptor.getResolvedProps()).andReturn(props).times(1);
     EasyMock.expect(descriptor.getFullPath()).andReturn(".").times(1);
     
     EasyMock.replay(descriptor);
