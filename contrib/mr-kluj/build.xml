@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<project name="mr-kluj" default="jar-with-deps">
+    <property name="package.name" value="mr-kluj-1.0.0"/>
+    <property name="base.dir" value="."/>
+    <property name="lib.dir" value="${base.dir}/lib"/>
+    <property name="jar-with-deps.dir" value="${base.dir}/dist/jar-with-deps"/>
+
+    <target name="jar-with-deps" description="Make big bad jar">
+        <delete dir="${jar-with-deps.dir}"/>
+        <mkdir dir="${jar-with-deps.dir}"/>
+
+        <exec executable="lein">
+            <arg value="clean"/>
+        </exec>
+        <exec executable="lein">
+            <arg value="javac"/>
+        </exec>
+        <exec executable="lein">
+            <arg value="jar"/>
+        </exec>
+
+        <jar jarfile="${jar-with-deps.dir}/${package.name}.jar" filesetmanifest="merge">
+            <manifest>
+                <attribute name="Main-Class" value="com.linkedin.mr_kluj.GenericClojureJob"/>
+            </manifest>
+            <zipgroupfileset file="mr-kluj-1.0.0-SNAPSHOT.jar"/>
+            <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
+        </jar>
+    </target>
+</project>
