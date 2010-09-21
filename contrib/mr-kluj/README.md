@@ -1,4 +1,4 @@
-# mr-kluj
+# Mr.Kluj
 
 MR.Kluj is a kludge of a MapReduce library written in Clojure.  It is intended to be used primarily
 for production MapReduce workflows but allow for scripted interaction to make it easier to build the workflows.
@@ -37,13 +37,13 @@ The Reducer is the equivalent of a reduce function from the functional programmi
 
 The Combiner is just a Reducer with some additional constraints on the output it accepts and produces.
 
-    Note: This library assumes knowledge of Hadoop MapReduce, so if the above explanation of the four parts doesn't make sense, I would recommend [reading about Hadoop](http://hadoop.apache.org/) before trying to dig into the internals of Mr.Kluj
+Note: This library assumes knowledge of Hadoop MapReduce, so if the above explanation of the four parts doesn't make sense, I would recommend [reading about Hadoop](http://hadoop.apache.org/) before trying to dig into the internals of Mr.Kluj
 
 These four parts to a MapReduce job basically enumerate a set of four functions that need to be defined in order to run a MapReduce job.  Thus, all that's needed is a way to define these four functions and a way to pass those definitions across the wire to their respective TaskTrackers.  Clojure provides for both of these mechanisms because it handles scripted interaction.  So, the script itself should be the definition of the four functions and can be utilized as the mechanism of shipping these functions across the wire.
 
 To get into specifics, the clojure defines a protocol:
 
-   (defprotocol HadoopJob
+    (defprotocol HadoopJob
      "Everything required to run a Hadoop Job"
      (starter [this]
        "Returns a (fn [] ...) that returns a org.apache.hadoop.mapreduce.Job object")
@@ -66,7 +66,7 @@ As stated in the document strings, each of these essentially returns a lambda th
 
 This is the basic building block of Mr.Kluj.  If a script generates one of these (actually, it needs to generate a sequence of them), then that script can be used on the client side by interpretting the script and then asking for the `starter`, which it invokes to get a Job object.  The script can then be sent along to the Mapper/Combiner/Reducer and they can load it up and then ask for the mapper/combiner/reducer functions respectively, which can then be used to do the actual mapping and reducing.
 
-Mr.Kluj provides classes \[com.linkedin.mr_kluj GenericClojureJob ClojureMapper ClojureCombiner ClojureReducer\] which are set up to work with scripts, push them into Configuration and pull them out of Configuration to make sure that all parts of the MapReduce job have what they need.
+Mr.Kluj provides classes `[com.linkedin.mr_kluj GenericClojureJob ClojureMapper ClojureCombiner ClojureReducer]` which are set up to work with scripts, push them into Configuration and pull them out of Configuration to make sure that all parts of the MapReduce job have what they need.
 
 So, that resolves the question of how to define a MapReduce job: just create an instance of the protocol HadoopJob.  This is the lowest level interaction made possible by Mr.Kluj.  It doesn't enforce any constraints on how you write your code (except that it be clojure) and just gets you interfacing with Hadoop. 
 
@@ -182,7 +182,7 @@ This also exemplifies a two important assumptions that are made in this abstract
 1. Data is stored entirely in the value, the key can essentially be ignored.  This means that functions like filter only operate on the _value_ of the `(key,value)` pair.  The point where the key is important is when dealing with intermediate data.  That boundary is dealt with for you by the `group-by` and `join` functions, which take as input a key which is ignored and emit a key of boolean false as output.
 2. Data stored in a value is a java.util.Map.  Maps work as a decent abstraction of a row of data (if you want a specific column, that's the same as getting that column name from the map).
 
-   (vold/group-by
+    (vold/group-by
      [["profile_id" "'int64'"]]
      [["num_friends" (fn [val] 1) + "'int32'"]
       ["friends_names_mashed" #(get % "fullname") str "'string'"]])
@@ -206,19 +206,19 @@ First thing to do after checking out the repository is the first thing you do wi
 
 The first time you do this, there will be some missing dependencies.  The jars are included in the `jars-to-install` directory.  Just copy the maven installation command-line from the error messages and adjust them to point to the right files for installation.  That is, you will probably get errors that look like
 
-> 1) org.apache.hadoop:hadoop:jar:0.20.3-dev-core
->
->  Try downloading the file manually from the project website.
->
->  Then, install it using the command: 
->      mvn install:install-file -DgroupId=org.apache.hadoop -DartifactId=hadoop -Dversion=0.20.3-dev-core -Dpackaging=jar -Dfile=/path/to/file
->
->  Alternatively, if you host your own repository you can deploy the file there: 
->      mvn deploy:deploy-file -DgroupId=org.apache.hadoop -DartifactId=hadoop -Dversion=0.20.3-dev-core -Dpackaging=jar -Dfile=/path/to/file -Durl=[url] -DrepositoryId=[id]
->
->  Path to dependency: 
->  	1) org.apache.maven:super-pom:jar:2.0
->  	2) org.apache.hadoop:hadoop:jar:0.20.3-dev-core
+    1) org.apache.hadoop:hadoop:jar:0.20.3-dev-core
+
+     Try downloading the file manually from the project website.
+
+     Then, install it using the command: 
+        mvn install:install-file -DgroupId=org.apache.hadoop -DartifactId=hadoop -Dversion=0.20.3-dev-core -Dpackaging=jar -Dfile=/path/to/file
+
+     Alternatively, if you host your own repository you can deploy the file there: 
+        mvn deploy:deploy-file -DgroupId=org.apache.hadoop -DartifactId=hadoop -Dversion=0.20.3-dev-core -Dpackaging=jar -Dfile=/path/to/file -Durl=[url] -DrepositoryId=[id]
+
+     Path to dependency: 
+ 	1) org.apache.maven:super-pom:jar:2.0
+ 	2) org.apache.hadoop:hadoop:jar:0.20.3-dev-core
 
 the correct response to this is
 
@@ -233,7 +233,7 @@ This will display the "help" text which is partially helpful
 
      Usage: <java-command> clj-script-file key value key value
 
-* `java-command` represents the java command, e.g. `java -jar dist/jar-with-deps/mr-kluj-1.0.0.jar` or `java -cp dist/jar-with-deps/mr-kluj-1.0.0.jar com.linkedin.mr_kluj.GenericClojureJob` and all the `-D` properties you want.
+* `<java-command>` represents the java command, e.g. `java -jar dist/jar-with-deps/mr-kluj-1.0.0.jar` or `java -cp dist/jar-with-deps/mr-kluj-1.0.0.jar com.linkedin.mr_kluj.GenericClojureJob` and all the `-D` properties you want.
 * `clj-script-file` is a clojure script that has your job in it.
 * `key value key value` is a set of alternating key-value pairs that are passed into the script via the `user/*props*` global variable
 
