@@ -1,9 +1,6 @@
 # Mr.Kluj
 
-Mr.Kluj is a kludge of a MapReduce library written in Clojure.  It is intended to be used primarily
-for production MapReduce workflows but allow for scripted interaction to make it easier to build the workflows.
-The why of this library basically lies in issues I had with the current "accepted" methods of writing Hadoop
-MapReduce jobs:
+Mr.Kluj is a kludge of a MapReduce library written in Clojure.  It is intended to be used primarily for production MapReduce workflows but allow for scripted interaction to make it easier to build the workflows.  The why of this library basically lies in issues I had with the current methods of writing Hadoop MapReduce jobs:
 
 * **Hadoop Java API**
     1. Verbose
@@ -167,15 +164,15 @@ Going through this job, it starts out by creating a staged-job.  A staged-job is
 
     (vold/voldemort-storage-input "/voldemort/serialized/input/path")
 
-Sets up the job to take input from a voldemort serialized file at the given path.
+Is just an `add-config` which sets up the job to take input from a voldemort serialized file at the given path.
 
      (job/apply-properties-to-configuration user/*props*)
 
-Applies all the properties from the user/*props* object.  The user/*props* object is one of two global variables defined by Mr.Kluj.  It is a java.util.Properties object that is useful as a method of parameterizing your hadoop jobs.  The other global variable defined is user/*context* which provides access to the context object.
+Is another `add-config` which applies all the properties from the user/*props* object.  The user/*props* object is one of two global variables defined by Mr.Kluj.  It is a java.util.Properties object that is useful as a method of parameterizing your hadoop jobs.  The other global variable defined is user/*context* which provides access to the context object.
 
 	(job/filter #(not (= (get % "type") "spammer")))
 
-This applies a filter to the data.  It is given a unary function that returns a true/false.  This particular function pulls the "type" field out of the value and checks if it is the word "spammer", ostensibly filtering out spammers such that they aren't a part of the calculation.
+Is a `map-mapper` that applies a filter to the data.  It is given a unary function that returns a true/false.  This particular function pulls the "type" field out of the value and checks if it is the word "spammer", ostensibly filtering out spammers such that they aren't a part of the calculation.
 
 This also exemplifies a two important assumptions that are made in this abstraction layer.  The assumptions are as follows:
 
@@ -187,14 +184,16 @@ This also exemplifies a two important assumptions that are made in this abstract
      [["num_friends" (fn [val] 1) + "'int32'"]
       ["friends_names_mashed" #(get % "fullname") str "'string'"]])
 
-This does a group-by operation, grouping by the "column" `profile_id` which is of type `int64` (or `long` in Java terms).  For each `profile_id` is computes two projection/aggregations: `num_friends` and `friends_names_mashed`.  `Num_friends` emits a default value of 1 for each row in the mapper and then is aggregated with the `+` operation.  `Friends_names_mashed` emits the `fullname` of the profile for each row and then aggregates them together with the `str` function (this last aggregation really isn't that useful as the order in which `str` will be called is not guaranteed, but oh well, it's an example).  Note that they both specify the type of the output as well.
+Is a combination of many wrappers (`map-mapper, add-config, create-combiner, create-reducer, map-reduce-output`) that all combine to perform a group-by operation, grouping by the "column" `profile_id` which is of type `int64` (or `long` in Java terms).  For each `profile_id` is computes two projection/aggregations: `num_friends` and `friends_names_mashed`.  `Num_friends` emits a default value of 1 for each row in the mapper and then is aggregated with the `+` operation.  `Friends_names_mashed` emits the `fullname` of the profile for each row and then aggregates them together with the `str` function (this last aggregation really isn't that useful as the order in which `str` will be called is not guaranteed, but oh well, it's an example).  Note that they both specify the type of the output as well.
 
     (vold/voldemort-storage-output
       "/some/output/path"
       "'boolean'"
       "{ 'profile_id':'int64', 'num_friends':'int32', 'friends_names_mashed':'string'}")
 
-This specifies the output location and serialization scheme for the job.  It will generate output into a file at "/some/output/path" with the given schemas (key first, value second).
+Is an `add-config` that specifies the output location and serialization scheme for the job.  It will generate output into a file at "/some/output/path" with the given schemas (key first, value second).
+
+In this way, the wrappers can be combined to produce high-level, reusable functionality, while still providing low-level access to what is happening in the MapReduce world, if needed.
 
 That completes the long story of how to use Mr.Kluj.  Hopefully that explains what it is, why it is and gives some insight into whether it will be helpful for you as well.  This writeup did not cover all of the functions provided, so please look at the API docs for a complete list of what's available.
 
