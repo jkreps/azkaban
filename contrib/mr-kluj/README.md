@@ -179,10 +179,10 @@ This also exemplifies a two important assumptions that are made in this abstract
 1. Data is stored entirely in the value, the key can essentially be ignored.  This means that functions like filter only operate on the _value_ of the `(key,value)` pair.  The point where the key is important is when dealing with intermediate data.  That boundary is dealt with for you by the `group-by` and `join` functions, which take as input a key which is ignored and emit a key of boolean false as output.
 2. Data stored in a value is a java.util.Map.  Maps work as a decent abstraction of a row of data (if you want a specific column, that's the same as getting that column name from the map).
 
-    (vold/group-by
-     [["profile_id" "'int64'"]]
-     [["num_friends" (fn [val] 1) + "'int32'"]
-      ["friends_names_mashed" #(get % "fullname") str "'string'"]])
+        (vold/group-by
+          [["profile_id" "'int64'"]]
+          [["num_friends" (fn [val] 1) + "'int32'"]
+	   ["friends_names_mashed" #(get % "fullname") str "'string'"]])
 
 Is a combination of many wrappers (`map-mapper, add-config, create-combiner, create-reducer, map-reduce-output`) that all combine to perform a group-by operation, grouping by the "column" `profile_id` which is of type `int64` (or `long` in Java terms).  For each `profile_id` is computes two projection/aggregations: `num_friends` and `friends_names_mashed`.  `Num_friends` emits a default value of 1 for each row in the mapper and then is aggregated with the `+` operation.  `Friends_names_mashed` emits the `fullname` of the profile for each row and then aggregates them together with the `str` function (this last aggregation really isn't that useful as the order in which `str` will be called is not guaranteed, but oh well, it's an example).  Note that they both specify the type of the output as well.
 
