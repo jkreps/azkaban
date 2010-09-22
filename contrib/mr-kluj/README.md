@@ -1,6 +1,6 @@
 # Mr.Kluj
 
-MR.Kluj is a kludge of a MapReduce library written in Clojure.  It is intended to be used primarily
+Mr.Kluj is a kludge of a MapReduce library written in Clojure.  It is intended to be used primarily
 for production MapReduce workflows but allow for scripted interaction to make it easier to build the workflows.
 The why of this library basically lies in issues I had with the current "accepted" methods of writing Hadoop
 MapReduce jobs:
@@ -22,7 +22,7 @@ While I can't claim that this solves all of the problems I have with the other o
 
 **How it works**
 
-MR.Kluj is built on the idea that there are four parts to every map reduce job:
+Mr.Kluj is built on the idea that there are four parts to every map reduce job:
 
     1. Starter
     2. Mapper
