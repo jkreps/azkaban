@@ -12,9 +12,11 @@
 		 [joda-time/joda-time "1.6"]
 		 [commons-lang/commons-lang "2.1"]
 		 [commons-logging/commons-logging "1.0.4"]
+		 [commons-httpclient/commons-httpclient "3.1"]
 		 [azkaban/azkaban-common "0.4-SNAPSHOT"]]
   :namespaces [com.linkedin.mr-kluj.job 
-	       com.linkedin.mr-kluj.hadoop-utils]
+	       com.linkedin.mr-kluj.hadoop-utils
+	       com.linkedin.mr-kluj.utils]
   :dev-dependencies [[lein-javac "1.2.1-SNAPSHOT"]]
   :source-path "src/main/clj"
   :java-source-path [["src/main/java"]])

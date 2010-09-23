@@ -33,11 +33,11 @@
 
 (defn- aselect
   "Selects indexes out of an array.
-   
+
    indexes is a sequence of indexes (0, 1, 2, etc.)
    returns a vector of the indexes pulled out of the array"
   [indexes]
-  (fn [arg]
+  (fn [^"[Ljava.lang.String;" arg]
     (vec (map (fn [index] (when (< index (alength arg)) (aget arg index))) indexes))))
 
 (defn cut
@@ -55,7 +55,7 @@
   ([delimiter indexes]
      (let [select-fn (aselect indexes)]
        (fn [arg]
-	 (select-fn (.split #^java.lang.String arg delimiter))))))
+	 (select-fn (.split ^String arg delimiter))))))
 
 (defn assoc-fn
   "Applies a function to multiple indices of a vector, replacing those indices with the

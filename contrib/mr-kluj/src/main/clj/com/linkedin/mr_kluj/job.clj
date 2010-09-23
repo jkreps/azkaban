@@ -27,9 +27,9 @@
 
     [org.apache.hadoop.fs Path FileSystem]
     [org.apache.hadoop.conf Configuration]
-    [org.apache.hadoop.io Text BytesWritable]
+    [org.apache.hadoop.io Text BytesWritable LongWritable]
     [org.apache.hadoop.mapreduce MapContext ReduceContext Job]
-    [org.apache.hadoop.mapreduce.lib.input FileInputFormat]
+    [org.apache.hadoop.mapreduce.lib.input FileInputFormat TextInputFormat]
     [org.apache.hadoop.mapreduce.lib.output FileOutputFormat TextOutputFormat]
 
     [org.apache.log4j Logger]
@@ -428,6 +428,20 @@
         (map (fn [key] [key (.getProperty properties key)])
           (.stringPropertyNames properties)))
       job)))
+
+(defn text-file-input
+  "Sets the input of the job to be to a text file using TextInputFormat"
+  [path]
+  (compose-wrappers
+    (map-mapper
+      (fn [#^LongWritable key #^Text value _]
+        [[(.get key) (.toString value)]]))
+    (add-config
+      (fn [#^Job job]
+        (when (nil? path) (throw (RuntimeException. (format "Input on job[%s] cannot be null." (.getJobName job)))))
+        (doto job
+          (.setInputFormatClass TextInputFormat)
+          (FileInputFormat/addInputPaths #^String path))))))
 
 (defn text-file-output
   "Sets the output of the job to be to a text file using TextOutputFormat (which essentially just does a .toString() on
