@@ -36,7 +36,7 @@
 		</subant>
 	</target>
 
-	<target name="jars" description="Compile main source tree java files">
+	<target name="jars" depends="clean" description="Compile main source tree java files">
 		<echo message="building azkaban-common.jar" />
 		<subant target="jars">
 			<fileset dir="azkaban-common" includes="build.xml" />
