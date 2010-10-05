@@ -35,7 +35,7 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
 {
     private final ReadWriteLockManager _readWriteLockManager;
     private final String _logDir;
-    private final String _defaultType;
+    //private final String _defaultType;
     private final Map<String, Class<? extends Job>> _jobToClass;
 
     private final NamedPermitManager _permitManager;
@@ -51,16 +51,21 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
         this._permitManager = permitManager;
         this._readWriteLockManager = readWriteLockManager;
         this._logDir = logDir;
-        this._defaultType = defaultType;
+        //this._defaultType = defaultType;
         this._jobToClass = jobTypeToClassMap;
     }
 
     @Override
     public Job apply(JobDescriptor jobDescriptor)
     {
+      
+      Job job;
+      try {
         String jobType = jobDescriptor.getJobType();
         if (jobType == null || jobType.length() == 0) {
-            jobType = _defaultType;
+           /*throw an exception when job name is null or empty*/
+          throw new JobExecutionException (
+                                           String.format("Type of job[%s] is null or empty", jobDescriptor));
         }
         Class<? extends Object> executorClass = _jobToClass.get(jobType);
 
@@ -72,8 +77,8 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
                             jobType
                     ));
         }
-
-        Job job = (Job)Utils.callConstructor(executorClass, jobDescriptor);
+        
+        job = (Job)Utils.callConstructor(executorClass, jobDescriptor);
 
         // wrap up job in retrying proxy if necessary
         if(jobDescriptor.getRetries() > 0)
@@ -120,6 +125,11 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
             GroupLock groupLock = new GroupLock(jobLocks);
             job = new ResourceThrottledJob(job, groupLock);
         }
+
+      }
+      catch (Exception e) {
+          job = new InitErrorJob(jobDescriptor.getId(), e);
+      }
 
         // wrap up job in logging proxy
         job = new LoggingJob(_logDir, job, job.getId());
