@@ -19,11 +19,14 @@ package azkaban.app;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import azkaban.common.utils.Props;
 import azkaban.common.utils.UndefinedPropertyException;
+import azkaban.flow.ExecutableFlow;
+import org.joda.time.DateTime;
 
 public class PropsUtils {
 
@@ -146,5 +149,25 @@ public class PropsUtils {
     	}
 
     	return resolvedProps;
+    }
+
+    public static Props produceParentProperties(final ExecutableFlow flow) {
+        Props parentProps = new Props();
+
+        parentProps.put("azkaban.flow.id", flow.getId());
+        parentProps.put("azkaban.flow.uuid", UUID.randomUUID().toString());
+
+        DateTime loadTime = new DateTime();
+
+        parentProps.put("azkaban.flow.start.timestamp", loadTime.toString());
+        parentProps.put("azkaban.flow.start.year", loadTime.toString("yyyy"));
+        parentProps.put("azkaban.flow.start.month", loadTime.toString("MM"));
+        parentProps.put("azkaban.flow.start.day", loadTime.toString("dd"));
+        parentProps.put("azkaban.flow.start.hour", loadTime.toString("HH"));
+        parentProps.put("azkaban.flow.start.minute", loadTime.toString("mm"));
+        parentProps.put("azkaban.flow.start.seconds", loadTime.toString("ss"));
+        parentProps.put("azkaban.flow.start.milliseconds", loadTime.toString("SSS"));
+        parentProps.put("azkaban.flow.start.timezone", loadTime.toString("ZZZZ"));
+        return parentProps;
     }
 }

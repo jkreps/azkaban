@@ -41,6 +41,11 @@
 	</servlet>
 
 	<servlet>
+		<servlet-name>job-runner</servlet-name>
+		<servlet-class>azkaban.web.JobRunnerServlet</servlet-class>
+	</servlet>
+
+	<servlet>
 		<servlet-name>job-upload</servlet-name>
 		<servlet-class>azkaban.web.pages.JobUploadServlet</servlet-class>
 	</servlet>
@@ -60,10 +65,15 @@
 		<url-pattern>/job</url-pattern>
 	</servlet-mapping>
 
-	<servlet-mapping>
-		<servlet-name>job-upload</servlet-name>
-		<url-pattern>/job-upload/*</url-pattern>
-	</servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>job-upload</servlet-name>
+        <url-pattern>/job-upload/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>job-runner</servlet-name>
+        <url-pattern>/job-runner/*</url-pattern>
+    </servlet-mapping>
 
 	<servlet-mapping>
 		<servlet-name>logs</servlet-name>

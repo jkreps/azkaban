@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
@@ -481,6 +480,8 @@ public class Scheduler {
         if((emailList == null || emailList.isEmpty()) && _jobFailureEmail != null)
             emailList = Arrays.asList(_jobFailureEmail);
 
+        logger.info(String.format("Sending error email for job[%s] from %s to %s", job.getId(), senderAddress, emailList));
+
         if(emailList != null && _mailman != null) {
             try {
 
@@ -555,6 +556,8 @@ public class Scheduler {
         if((emailList == null || emailList.isEmpty()) && _jobSuccessEmail != null) {
             emailList = Arrays.asList(_jobSuccessEmail);
         }
+
+        logger.info(String.format("Sending success email for job[%s] from %s to %s", job.getId(), senderAddress, emailList));
 
         if(emailList != null && _mailman != null) {
             try {
@@ -691,7 +694,7 @@ public class Scheduler {
                 senderAddress = desc.getSenderEmail();
                 final String senderEmail = senderAddress;
 
-                final Props parentProps = produceParentProperties(flowToRun);
+                final Props parentProps = PropsUtils.produceParentProperties(flowToRun);
 
                 // mark the job as executing
                 _scheduled.remove(_scheduledJob.getId());
@@ -869,23 +872,4 @@ public class Scheduler {
         }
     }
 
-    private Props produceParentProperties(final ExecutableFlow flow) {
-        Props parentProps = new Props();
-
-        parentProps.put("azkaban.flow.id", flow.getId());
-        parentProps.put("azkaban.flow.uuid", UUID.randomUUID().toString());
-
-        DateTime loadTime = new DateTime();
-
-        parentProps.put("azkaban.flow.start.timestamp", loadTime.toString());
-        parentProps.put("azkaban.flow.start.year", loadTime.toString("yyyy"));
-        parentProps.put("azkaban.flow.start.month", loadTime.toString("MM"));
-        parentProps.put("azkaban.flow.start.day", loadTime.toString("dd"));
-        parentProps.put("azkaban.flow.start.hour", loadTime.toString("HH"));
-        parentProps.put("azkaban.flow.start.minute", loadTime.toString("mm"));
-        parentProps.put("azkaban.flow.start.seconds", loadTime.toString("ss"));
-        parentProps.put("azkaban.flow.start.milliseconds", loadTime.toString("SSS"));
-        parentProps.put("azkaban.flow.start.timezone", loadTime.toString("ZZZZ"));
-        return parentProps;
-    }
 }

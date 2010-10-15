@@ -90,7 +90,7 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
 
             FileItem item = (FileItem) params.get("file");
             String deployPath = (String) params.get("path");
-            File jobDir = unzipFile(item);
+            File jobDir = extractFile(item);
 
             jobManager.deployJobDir(jobDir.getAbsolutePath(), deployPath);
         } catch (Exception e) {
@@ -103,6 +103,19 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
 
         String redirectSuccess = (String)params.get("redirect_success");
         setMessagedUrl(response, redirectSuccess, "Installation Succeeded");
+    }
+
+    private File extractFile(FileItem item) throws IOException, ServletException {
+        final String contentType = item.getContentType();
+        if (contentType.startsWith("application/zip")) {
+            return unzipFile(item);
+        }
+
+        if (contentType.startsWith("application/x-tar")) {
+            return untarFile(item);
+        }
+
+        throw new ServletException(String.format("Unsupported file type[%s].", contentType));
     }
 
     private void setMessagedUrl(HttpServletResponse response, String redirectUrl, String message) throws IOException {
@@ -124,4 +137,12 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
         return unzipped;
     }
 
+    private File untarFile(FileItem item) throws IOException, ServletException {
+        File extractionPath = Utils.createTempDir(new File(_tempDir));
+
+        if (true)
+            throw new ServletException("Unsupported file type [tar].");
+
+        return extractionPath;
+    }
 }

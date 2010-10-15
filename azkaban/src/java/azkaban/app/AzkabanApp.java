@@ -5,6 +5,7 @@ import azkaban.common.utils.Utils;
 import azkaban.jobs.AzkabanCommandLine;
 import azkaban.web.AzkabanServletContextListener;
 import azkaban.web.JobManagerServlet;
+import azkaban.web.JobRunnerServlet;
 import azkaban.web.LogServlet;
 import azkaban.web.pages.ExecutionHistoryServlet;
 import azkaban.web.pages.HdfsBrowserServlet;
@@ -99,6 +100,7 @@ public class AzkabanApp
                           ExecutionHistoryServlet.class.getName());
       servlets.addServlet("Job Manager", "/api/jobs", JobManagerServlet.class.getName());
       servlets.addServlet("Job Upload", "/job-upload/*", JobUploadServlet.class.getName());
+      servlets.addServlet("Job Runner", "/job-runner/*", JobRunnerServlet.class.getName());
       servlets.addServlet("HDFS Browser", "/fs/*", HdfsBrowserServlet.class.getName());
 
       try {
