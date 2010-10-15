@@ -117,8 +117,8 @@
 		<war destfile="${module.dist.dir.war}/${name}.war" webxml="${basedir}/web/web.xml">
 			<classes dir="${module.classes.dir}" />
 			<lib dir="${module.lib.dir}">
-				<exclude name="${module.lib.dir}/servlet-api.jar" />
-				<exclude name="${module.lib.dir}/src/**" />
+				<exclude name="servlet-api-2.5.jar" />
+				<exclude name="src/**" />
 			</lib>
 			<lib dir="${batch.base.dir}/${dist.dir}/azkaban-common/jars">
 			</lib>

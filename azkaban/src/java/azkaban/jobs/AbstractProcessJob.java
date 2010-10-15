@@ -52,7 +52,7 @@ public abstract class AbstractProcessJob extends AbstractJob {
     protected AbstractProcessJob(JobDescriptor descriptor) {
         super(descriptor.getId());
         
-        _props = descriptor.getResolvedProps();  //starting properties
+        _props = descriptor.getProps();
         _jobPath = descriptor.getFullPath();
          
         _descriptor = descriptor;
@@ -72,10 +72,6 @@ public abstract class AbstractProcessJob extends AbstractJob {
         return _jobPath;
     }
     
-    /**
-     * 
-     * @author eric
-     */
     protected void resolveProps () {
         _props = PropsUtils.resolveProps(_props);
     }

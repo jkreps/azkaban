@@ -674,7 +674,7 @@ public class Scheduler {
                     return;
                 }
 
-                JobDescriptor desc = _jobManager.loadJobDescriptors(null, null, _ignoreDep)
+                final JobDescriptor desc = _jobManager.loadJobDescriptors(null, null, _ignoreDep)
                                                 .get(_scheduledJob.getId());
                 emailList = desc.getEmailNotificationList();
 
@@ -715,10 +715,12 @@ public class Scheduler {
                                                                                      parentProps));
                             switch(status) {
                                 case SUCCEEDED:
-                                    sendSuccessEmail(_scheduledJob,
-                                                     _scheduledJob.getExecutionDuration(),
-                                                     senderEmail,
-                                                     finalEmailList);
+                                    if (desc.getSendSuccessEmail()) {
+                                        sendSuccessEmail(_scheduledJob,
+                                                _scheduledJob.getExecutionDuration(),
+                                                senderEmail,
+                                                finalEmailList);
+                                    }
                                     break;
                                 case FAILED:
                                     sendErrorEmail(_scheduledJob,
@@ -796,10 +798,11 @@ public class Scheduler {
             List<String> emailList = null;
             String senderAddress = null;
             try {
-                emailList = _jobManager.getJobDescriptor(flow.getName()).getEmailNotificationList();
+                final JobDescriptor descriptor = _jobManager.getJobDescriptor(flow.getName());
+                emailList =  descriptor.getEmailNotificationList();
                 final List<String> finalEmailList = emailList;
 
-                senderAddress = _jobManager.getJobDescriptor(flow.getName()).getSenderEmail();
+                senderAddress = descriptor.getSenderEmail();
                 final String senderEmail = senderAddress;
 
                 // mark the job as executing
@@ -821,10 +824,12 @@ public class Scheduler {
                             allKnownFlows.saveExecutableFlow(holder);
                             switch(status) {
                                 case SUCCEEDED:
-                                    sendSuccessEmail(_scheduledJob,
-                                                     _scheduledJob.getExecutionDuration(),
-                                                     senderEmail,
-                                                     finalEmailList);
+                                    if (descriptor.getSendSuccessEmail()) {
+                                        sendSuccessEmail(_scheduledJob,
+                                                _scheduledJob.getExecutionDuration(),
+                                                senderEmail,
+                                                finalEmailList);
+                                    }
                                     break;
                                 case FAILED:
                                     sendErrorEmail(_scheduledJob,

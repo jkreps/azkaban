@@ -17,6 +17,7 @@
   :namespaces [com.linkedin.mr-kluj.job 
 	       com.linkedin.mr-kluj.hadoop-utils
 	       com.linkedin.mr-kluj.utils]
-  :dev-dependencies [[lein-javac "1.2.1-SNAPSHOT"]]
+  :dev-dependencies [[lein-javac "1.2.1-SNAPSHOT"]
+	[swank-clojure "1.2.1"]]
   :source-path "src/main/clj"
   :java-source-path [["src/main/java"]])
