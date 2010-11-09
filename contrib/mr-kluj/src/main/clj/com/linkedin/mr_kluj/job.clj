@@ -429,31 +429,6 @@
           (.stringPropertyNames properties)))
       job)))
 
-(defn text-file-input
-  "Sets the input of the job to be to a text file using TextInputFormat"
-  [path]
-  (compose-wrappers
-    (map-mapper
-      (fn [#^LongWritable key #^Text value _]
-        [[(.get key) (.toString value)]]))
-    (add-config
-      (fn [#^Job job]
-        (when (nil? path) (throw (RuntimeException. (format "Input on job[%s] cannot be null." (.getJobName job)))))
-        (doto job
-          (.setInputFormatClass TextInputFormat)
-          (FileInputFormat/addInputPaths #^String path))))))
-
-(defn text-file-output
-  "Sets the output of the job to be to a text file using TextOutputFormat (which essentially just does a .toString() on
-  the key and value"
-  [path]
-  (add-config
-    (fn [#^Job job]
-      (when (nil? path) (throw (RuntimeException. (format "Output on job[%s] cannot be null." (.getJobName job)))))
-      (doto job
-        (.setOutputFormatClass TextOutputFormat)
-        (FileOutputFormat/setOutputPath (Path. path))))))
-
 (defmacro run
   "Sets up the jobs to run.  Takes a sequence of jobs that are run in the order specified"
   [& jobs]

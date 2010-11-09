@@ -1,9 +1,7 @@
 (defproject mr-kluj "1.0.0-SNAPSHOT"
   :description "A project to make map reduce jobs in clojure simple(r)"
-  :dependencies [[org.clojure/clojure "1.2.0-beta1"]
-                 [org.clojure/clojure-contrib "1.2.0-beta1"]
-		 [org.apache.hadoop/hadoop "0.20.3-dev-core"]
-		 [voldemort/voldemort "0.70.1"]
+  :dependencies [[org.clojure/clojure "1.2.0"]
+                 [org.clojure/clojure-contrib "1.2.0"]
 		 [log4j/log4j "1.2.15" :exclusions [javax.mail/mail
 						    javax.jms/jms
 						    com.sun.jdmk/jmxtools
@@ -13,11 +11,10 @@
 		 [commons-lang/commons-lang "2.1"]
 		 [commons-logging/commons-logging "1.0.4"]
 		 [commons-httpclient/commons-httpclient "3.1"]
-		 [azkaban/azkaban-common "0.4-SNAPSHOT"]]
-  :namespaces [com.linkedin.mr-kluj.job 
-	       com.linkedin.mr-kluj.hadoop-utils
-	       com.linkedin.mr-kluj.utils]
+		 [azkaban/azkaban-common "0.4-SNAPSHOT"]
+		 [org.apache.hadoop/hadoop "0.20.3-dev-core"]
+		 [voldemort/voldemort "0.70.1"]]
   :dev-dependencies [[lein-javac "1.2.1-SNAPSHOT"]
-	[swank-clojure "1.2.1"]]
+		     [swank-clojure "1.2.1"]]
   :source-path "src/main/clj"
   :java-source-path [["src/main/java"]])

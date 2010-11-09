@@ -6,9 +6,6 @@
   <version>1.0.0-SNAPSHOT</version>
   <name>mr-kluj</name>
   <description>A project to make map reduce jobs in clojure simple(r)</description>
-  <scm>
-    <tag>2efc6c494fb752b0f0b6a0968585b070131eb3e2</tag>
-  </scm>
   <build>
     <sourceDirectory>src/main/clj</sourceDirectory>
     <testSourceDirectory>test</testSourceDirectory>
@@ -45,22 +42,12 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.2.0-beta1</version>
+      <version>1.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure-contrib</artifactId>
-      <version>1.2.0-beta1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop</artifactId>
-      <version>0.20.3-dev-core</version>
-    </dependency>
-    <dependency>
-      <groupId>voldemort</groupId>
-      <artifactId>voldemort</artifactId>
-      <version>0.70.1</version>
+      <version>1.2.0</version>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
@@ -104,6 +91,11 @@
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
       <version>1.0.4</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>3.1</version>
     </dependency>
     <dependency>
       <groupId>azkaban</groupId>
