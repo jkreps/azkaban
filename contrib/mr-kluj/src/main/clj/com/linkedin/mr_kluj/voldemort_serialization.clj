@@ -201,6 +201,7 @@
         (fn [key values context]
           [key (sort-by :index values)]))
       (job/wrap-reducer-input
+        (fn [key values context]
           [false (join-sorted :index :value conj [(into {} key)] values)]))
       (job/wrap-reducer-input
         (let [output-keys (concat (mapcat (fn [[path serializer projections]] (map first projections)) inputs) (map first fields))
