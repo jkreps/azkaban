@@ -107,15 +107,29 @@ h2 {
 	padding-left: 3px;
 }
 
+
+.job-name-white:hover {
+	color: yellow;
+}
+
+.job-name-white {
+	font-size: 110%;
+	text-decoration: none;
+	color: white;
+	vertical-align: top;
+	padding-left: 3px;
+}
+
 .sched-form {
 	background-color: lightgrey;
+	color: #222;
 	padding: 0.5em;
 	border: 1px solid black;
 }
 
 .jobdesc {
 	font-size: 13pt;
-	text-align: left;
+	text-align: center;
 	width: 400px;
 	padding: 10px;
 	margin: auto;
@@ -148,14 +162,6 @@ h2 {
 	padding: 2px;
 }
 
-.job-name-FAILED {
-	color: red;
-}
-
-.job-name-READY {
-	color: green;
-}
-
-.job-name-RUNNING {
-	color: blue;
+.all-jobs {
+	background-color: #FFF;
 }

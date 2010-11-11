@@ -1,4 +1,7 @@
-<html>
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>#appname()</title>
     <link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"></link>
@@ -19,31 +22,35 @@
   <body>
   
       #appnamebox()
-    <div id="container">
-      #messages()
-	      <h2>Upload Jobs</h2>
-	  <div>
-	      <div style="margin: auto; width: 500px;  ">
-		      <form enctype="multipart/form-data" method="post" action="$!context/api/jobs">
-		        <input type="hidden" name="redirect" value="/"/>
-		        <input type="hidden" name="redirect_error" value="$!context/job-upload"/>
-		        <input type="hidden" name="redirect_success" value="$!context/job-upload"/>
-		        <table>
-		          <tr>
-		            <td>Path</td>
-		            <td><input id="path" name="path" type="text" size="20"/>
-		          </tr>
-		          <tr>
-		            <td>Job flow zip file</td>
-		            <td><input id="file" name="file" type="file" onChange="changeFile()" /></td>
-		          </tr>
-		          <tr>
-		            <td></td><td><input type="submit" value="Deploy"/></td>
-		          </tr>
-		        </table>
-		      </form>
-	      </div>
-	    </div>
-    </div>
+      <div id="main">
+		<h2 class="title" >Upload Job</h2>
+		<div id="variableWidth">
+		    #messages()
+		   <div class="box">
+			    <div style="margin: auto; width: 500px;  ">
+			      <form enctype="multipart/form-data" method="post" action="$!context/api/jobs">
+			        <input type="hidden" name="redirect" value="/"/>
+			        <input type="hidden" name="redirect_error" value="$!context/job-upload"/>
+			        <input type="hidden" name="redirect_success" value="$!context/job-upload"/>
+			        <table style="text-align:left;">
+			          <tr>
+			            <td class="h3like">Path</td>
+			            <td><input id="path" name="path" type="text" size="20"/>
+			          </tr>
+			          <tr>
+			            <td class="h3like">Job flow zip file</td>
+			            <td><input id="file" name="file" type="file" onChange="changeFile()" /></td>
+			          </tr>
+			          <tr>
+			            <td></td><td><input type="submit" value="Deploy"/></td>
+			          </tr>
+			        </table>
+			      </form>
+		      </div>
+		    </div>
+		   </div>
+		</div>
+  	  </div>
+ 
   </body>
 </html>

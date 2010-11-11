@@ -1,11 +1,20 @@
 function JobControler() {
 
   function init() {
-    $("#sched-tree").treeview({
+	  $(".sched-tree").treeview({
+	    url: "test.php",  
         collapsed: true,
         animated: "medium",
-        control:"#sched-tree-control",
-        persist: "cookie"
+      //  persist: "cookie",
+		ajax: {
+		  	"url" : contextURL + "/manager",
+			data: {
+				"additional": function() {
+					return "yeah: " + new Date;
+				}
+			},
+			type: "post"
+		}
       });
     
     var treeElems = $(".execing-jobs");

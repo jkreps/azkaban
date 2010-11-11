@@ -14,7 +14,10 @@
 #end
 
 
-<html>
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>#appname()</title>
       <link rel="stylesheet" href="${context}/static/js/jquery-treeview/jquery.treeview.css" />
@@ -26,61 +29,82 @@
       <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"/>
       <link rel="stylesheet" type="text/css" href="${context}/static/css/job_controller.css"/>
       <script src="${context}/static/js/job_controller.js" type="text/javascript"></script>
+      
+      <style>
+	      #executionHistory {
+	        background-color: #AAA;
+	        padding: 10px;
+	        width: 100%;
+	      }
+	      
+	      .historytree {
+	      	text-align: left;
+	      }
+      </style>
+      <script type="text/javascript">
+      	var contextURL = "${context}";
+      </script>
   </head>
   <body>
     #appnamebox()
-    <div id="container">
-      #messages()
-      
-      <h2>Execution History</h2>
-      #if($executions.size() > 0)
-        <table class="jobtable">
-          <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th>Started</th>
-            <th>Ended</th>
-            <th>Elapsed</th>
-            <th>Status</th>
-            <th>Restart</th>
-          </tr>
-          #foreach($flow in $executions)
-            <tr>
-              <td>$flow.id</td>
-              <td><ul id="sched-tree">#history_execing_job($flow)</ul></td>
-              <td>
-                #if($utils.isNull($flow.started))
-                  &ndash;
-                #else
-                  $utils.formatDateTime($flow.started)
-                #end
-              </td>
-              <td>
-                #if($utils.isNull($flow.ended))
-                  &ndash; 
-                #else
-                  $utils.formatDateTime($flow.ended)
-                #end
-              </td>
-              <td>
-                #if($utils.isNull($flow.ended))
-                  &ndash;
-                #else
-                  $utils.formatPeriod($utils.period($flow.started, $flow.ended))
-                #end
-              </td>
-              <td>
-                $flow.status
-              </td>
-              <td>
-                <a href="${context}/history?action=restart&id=${flow.id}">restart</a>
-              </td>
-            </tr>
-          #end
-        </table>
-      #else
-        No recorded executions
-      #end
-    </div>
+    
+    <div id="main">
+        <h2 class="title" >History</h2>
+  	    <div id="variableWidth">
+  	        #messages()
+  	       <div class="box">
+  	       <h3>Execution History</h3>
+		      #if($executions.size() > 0)
+		        <table id="executionHistory" class="jobtable">
+		          <tr>
+		            <th>Id</th>
+		            <th>Name</th>
+		            <th>Started</th>
+		            <th>Ended</th>
+		            <th>Elapsed</th>
+		            <th>Status</th>
+		            <th>Restart</th>
+		          </tr>
+		          #foreach($flow in $executions)
+		            <tr>
+		              <td>$flow.id</td>
+		              <td class="historytree"><ul class="sched-tree">#history_execing_job($flow)</ul></td>
+		              <td>
+		                #if($utils.isNull($flow.started))
+		                  &ndash;
+		                #else
+		                  $utils.formatDateTime($flow.started)
+		                #end
+		              </td>
+		              <td>
+		                #if($utils.isNull($flow.ended))
+		                  &ndash; 
+		                #else
+		                  $utils.formatDateTime($flow.ended)
+		                #end
+		              </td>
+		              <td>
+		                #if($utils.isNull($flow.ended))
+		                  &ndash;
+		                #else
+		                  $utils.formatPeriod($utils.period($flow.started, $flow.ended))
+		                #end
+		              </td>
+		              <td>
+		                $flow.status
+		              </td>
+		              <td>
+		                <a href="${context}/flow?action=restart&id=${flow.id}">restart</a>
+		              </td>
+		            </tr>
+		          #end
+		        </table>
+		      #else
+		        No recorded executions
+		      #end
+  	       </div>
+  	    </div>
+  	</div>
+    
   </body>
 </html>

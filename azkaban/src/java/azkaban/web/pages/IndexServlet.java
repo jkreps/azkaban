@@ -83,7 +83,14 @@ public class IndexServlet extends AbstractAzkabanServlet {
 
         AzkabanApplication app = getApplication();
         String action = getParam(req, "action");
-        if("unschedule".equals(action)) {
+        if ("expand".equals(action)) {
+        	System.out.println("expand");
+        	
+        	resp.getWriter().print("response");
+        	resp.getWriter().flush();
+        	return;
+        }
+        else if("unschedule".equals(action)) {
             String job = getParam(req, "job");
             app.getScheduler().unschedule(job);
         } else if("cancel".equals(action)) {

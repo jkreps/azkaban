@@ -1,4 +1,7 @@
-<html>
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>#appname()</title>
     <link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"></link>
@@ -6,12 +9,20 @@
     <style>
       
       .breadcrumbs {
+     	text-align:center;
         font-size: 24pt;
+        color: #EEEEEE;
         font-weight: bold;
         padding: 10px;
       }
+      
+      .breadcrumbs a:hover {
+      	color: yellow;
+      }
+      
       .breadcrumbs a {
-        color: darkred;
+        color: white;
+        text-shadow: rgba(0, 0, 0, .5) 0px 3px 6px;
         text-decoration: none;
       }
       .subdirs {
@@ -20,6 +31,8 @@
         font-size: 16pt;
         color: black;
         width: 600px;
+        background-color: white;
+        text-shadow: rgba(0, 0, 0, .3) 0px 3px 6px;
         border: 1px solid black;
         margin: auto;
       }  
@@ -40,49 +53,54 @@
   </head>
   <body>
     #appnamebox()
-    <div id="container">
-      <h2>Hadoop File Viewer</h2>
-      <div class="breadcrumbs">
-        <a href="${context}/fs/">/</a>
-        #set($size = $paths.size() - 1)
-        #if($size >= 0)
-          #foreach($i in [0 ..$size])
-            <a href="$context/fs${paths.get($i)}">${segments.get($i)}</a> /
-          #end
-        #end
-      </div>
-      
-      <div class="subdirs">
-        <table class="fileTable">
-          <tr>
-            <th>File</th>
-            <th>Size</th>
-            <th></th>
-          </tr>
-          #foreach($status in $subdirs)
-            <tr>
-              <td>
-              <a href="$context/fs${status.getPath().toUri().getPath()}">
-                ${status.path.name}#if($status.isDir())/#end
-              </a>
-              </td>
-              <td style="text-align: center">
-                #if($status.isDir())
-                  &ndash;
-                #else
-                  $utils.displayBytes(${status.len})
-                #end
-              </td>
-              ##<td>
-              ##  <form action="${context}/fs" method="post">
-              ##    <input type="hidden" name="file" value="${status.getPath().toUri().getPath()}"/>
-              ##    <input type="submit" name="action" value="delete"/>
-              ##  </form>
-              ##</td>
-            </tr>
-          #end
-        </table>
-      </div>
-    </div>
+    <div id="main">
+        <h2 class="title" >Hadoop File Viewer</h2>
+  	    <div id="variableWidth">
+  	        #messages()
+  	       <div class="box">
+	             <div class="breadcrumbs">
+			        <a href="${context}/fs/">/</a>
+			        #set($size = $paths.size() - 1)
+			        #if($size >= 0)
+			          #foreach($i in [0 ..$size])
+			            <a href="$context/fs${paths.get($i)}">${segments.get($i)}</a> /
+			          #end
+			        #end
+			      </div>
+			      
+			      <div class="subdirs">
+			        <table class="fileTable">
+			          <tr>
+			            <th>File</th>
+			            <th>Size</th>
+			            <th></th>
+			          </tr>
+			          #foreach($status in $subdirs)
+			            <tr>
+			              <td>
+			              <a href="$context/fs${status.getPath().toUri().getPath()}">
+			                ${status.path.name}#if($status.isDir())/#end
+			              </a>
+			              </td>
+			              <td style="text-align: center">
+			                #if($status.isDir())
+			                  &ndash;
+			                #else
+			                  $utils.displayBytes(${status.len})
+			                #end
+			              </td>
+			              ##<td>
+			              ##  <form action="${context}/fs" method="post">
+			              ##    <input type="hidden" name="file" value="${status.getPath().toUri().getPath()}"/>
+			              ##    <input type="submit" name="action" value="delete"/>
+			              ##  </form>
+			              ##</td>
+			            </tr>
+			          #end
+			        </table>
+			      </div>
+  	       </div>
+  	    </div>
+  	</div>
   </body>
 </html>

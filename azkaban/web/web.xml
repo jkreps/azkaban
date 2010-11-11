@@ -36,6 +36,11 @@
 	</servlet>
 
 	<servlet>
+		<servlet-name>flow-execution</servlet-name>
+		<servlet-class>azkaban.web.pages.FlowExecutionServlet</servlet-class>
+	</servlet>
+
+	<servlet>
 		<servlet-name>job-manager</servlet-name>
 		<servlet-class>azkaban.web.JobManagerServlet</servlet-class>
 	</servlet>
@@ -73,6 +78,11 @@
 	<servlet-mapping>
 		<servlet-name>history</servlet-name>
 		<url-pattern>/history</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>flow-execution</servlet-name>
+		<url-pattern>/flow</url-pattern>
 	</servlet-mapping>
 
 	<servlet-mapping>

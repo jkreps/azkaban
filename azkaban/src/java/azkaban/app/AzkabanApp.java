@@ -7,6 +7,7 @@ import azkaban.web.AzkabanServletContextListener;
 import azkaban.web.JobManagerServlet;
 import azkaban.web.LogServlet;
 import azkaban.web.pages.ExecutionHistoryServlet;
+import azkaban.web.pages.FlowExecutionServlet;
 import azkaban.web.pages.HdfsBrowserServlet;
 import azkaban.web.pages.IndexServlet;
 import azkaban.web.pages.JobDetailServlet;
@@ -100,7 +101,9 @@ public class AzkabanApp
       servlets.addServlet("Job Manager", "/api/jobs", JobManagerServlet.class.getName());
       servlets.addServlet("Job Upload", "/job-upload/*", JobUploadServlet.class.getName());
       servlets.addServlet("HDFS Browser", "/fs/*", HdfsBrowserServlet.class.getName());
-
+      servlets.addServlet("Flow Execution", "/flow", FlowExecutionServlet.class.getName());
+      servlets.addServlet("favicon", "/favicon.ico", Default.class.getName());
+      
       try {
           server.start();
       } catch(Exception e) {

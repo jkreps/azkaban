@@ -9,15 +9,17 @@
 }
 
 #sched-tree {
-	background: #fff;
+	background-color: rgba(0,1,1,0);
 	padding: .5em;
 }
 
 .treeview li {
+	background-color: rgba(0,1,1,0);
 	padding: 1 0 3 16px;
 }
 
 .treeview .hitarea {
+		background-color: rgba(0,1,1,0);
 	xpadding-right: 3px;
 }
 

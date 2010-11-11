@@ -1,0 +1,51 @@
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>#appname()</title>
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"></link>
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"></link>
+    <link rel="stylesheet" type="text/css" href="${context}/static/js/jqueryui/themes/custom-theme/jquery-ui.custom.css"></link>
+    <script type="text/javascript" src="${context}/static/js/jquery.js"></script>
+    <script type="text/javascript" src="${context}/static/js/azkaban-graph.js"></script>
+    <script type="text/javascript" src="${context}/static/js/azkaban-flow.js"></script>
+    <script src="${context}/static/js/jqueryui/jquery-ui.custom.min.js"></script>
+    <script src="${context}/static/js/jquery/jquery.contextMenu.js"></script>
+    <link rel="stylesheet" type="text/css" href="${context}/static/js/jquery/jquery.contextMenu.css"></link>
+   
+    <script type="text/javascript">
+    	var flowData = '${jsonflow}';
+    </script>
+  </head>
+  <body>
+    #appnamebox()
+    <div id="main">
+        <h2 class="title" >Flow Instance</h2>
+  	    <div id="variableWidth">
+  	        #messages()
+  	       <div class="box">
+  	       		<h3>Name: ${name} ID: ${id}</h3>
+  	       		<div id="content2">
+	  	       	   	<div id="graphTab" onmousedown="moveGraph(this, event, 'down')" onmouseup="moveGraph(this, event, 'up')" onmouseover="mouseFocus('true')" onmouseout="mouseFocus('false')" >
+						<svg id="graph" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 100% 100%" > 
+						</svg>
+					</div>
+				</div>
+  	       </div>
+  	       <div id="extra2">
+				<div id="buttonpanel">
+					<div id="executeButton">Execute</div>
+				</div>
+			</div>
+
+  	    </div>
+  	 </div>
+  	 <ul id="nodeMenu" class="contextMenu"> 
+		<li class="disable"><a href="#disable">Disable</a></li> 
+		<li class="enable"><a href="#enable">Enable</a></li> 
+		<li class="view"><a href="#view">View...</a></li> 
+	</ul>
+  </body>
+</html>
+ 
