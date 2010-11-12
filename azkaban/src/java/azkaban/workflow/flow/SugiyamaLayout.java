@@ -95,7 +95,6 @@ public class SugiyamaLayout extends DagLayout {
 			float average = findAverage(node.getDependencies());
 			node.setPosition(average);
 			node.setNumOnLevel( numOnLevel );
-			System.out.println("getAverage " + average);
 		}
 	
 		Collections.sort(free);

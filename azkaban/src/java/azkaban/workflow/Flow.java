@@ -159,10 +159,10 @@ public class Flow extends WorkUnit {
 			}
 			visited.remove(node.getAlias());
 		}
-
-		for (FlowNode node : flowItems.values()) {
-			System.out.println("Job " + node.getAlias() + " level " + node.getLevel());
-		}
+//
+//		for (FlowNode node : flowItems.values()) {
+//			System.out.println("Job " + node.getAlias() + " level " + node.getLevel());
+//		}
 		
 		return errorMessages.isEmpty();
 	}

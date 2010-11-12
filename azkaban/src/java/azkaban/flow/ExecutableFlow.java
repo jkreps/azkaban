@@ -77,7 +77,7 @@ public interface ExecutableFlow
      * @return a boolean value indicating the success of the reset
      */
     public boolean reset();
-
+    
     /**
      * Sets the state of a job to Status.COMPLETED.  This means that the job is considered "successful" for all intents
      * and purposes, but that it wasn't actually run.
@@ -95,7 +95,7 @@ public interface ExecutableFlow
      * @return true if the flow has children
      */
     public boolean hasChildren();
-
+    
     /**
      * Returns a list of the children Flow objects if any exist.  If there are no children, this should simply
      * return an empty list.

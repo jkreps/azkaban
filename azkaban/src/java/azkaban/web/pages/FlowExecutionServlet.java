@@ -22,6 +22,7 @@ import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowExecutionHolder;
 import azkaban.flow.FlowManager;
 import azkaban.flow.Flows;
+import azkaban.flow.IndividualJobExecutableFlow;
 import azkaban.flow.Status;
 import azkaban.web.AbstractAzkabanServlet;
 import azkaban.workflow.Flow;
@@ -34,11 +35,15 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.hadoop.fs.Path;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class FlowExecutionServlet extends AbstractAzkabanServlet {
@@ -49,24 +54,50 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         resp.setContentType("application/xhtml+xml");
         Page page = newPage(req, resp, "azkaban/web/pages/flow_instance.vm");
         final FlowManager allFlows = this.getApplication().getAllFlows();
-        if (hasParam(req, "id")) {
+     
+        if (hasParam(req, "job_id")) {
+        	
+        	String jobID = getParam(req, "job_id");
+        	ExecutableFlow flow = allFlows.createNewExecutableFlow(jobID);
+        	
+        	page.add("id", "0");
+        	page.add("name", jobID);
+        	
+        	if (flow == null) {
+        		addError(req, "Job " + jobID + " not found.");
+        		page.render();
+        		return;
+        	}
+        	
+        	// This will be used the other
+        	Flow displayFlow = new Flow(flow.getName(), (Props)null);
+        	fillFlow(displayFlow, flow);
+        	displayFlow.validateFlow();
+        	
+        	String flowJSON = createJsonFlow(displayFlow);
+        	page.add("jsonflow", flowJSON);
+        	page.add("action", "run");
+        }
+        else if (hasParam(req, "id")) {
         	long id = Long.parseLong(getParam(req, "id"));
-        	FlowExecutionHolder holder = allFlows.loadExecutableFlow(id);
+           	FlowExecutionHolder holder = allFlows.loadExecutableFlow(id);
         	ExecutableFlow executableFlow = holder.getFlow();
 
         	// This will be used the other
         	Flow displayFlow = new Flow(executableFlow.getName(), (Props)null);
         	fillFlow(displayFlow, executableFlow);
-
+        	displayFlow.validateFlow();
+        	
         	String flowJSON = createJsonFlow(displayFlow);
         	page.add("jsonflow", flowJSON);
         	page.add("id", id);
         	page.add("name", executableFlow.getName());
+        	page.add("action", "restart");
         }
 
         page.render();
     }
-
+    
     private void fillFlow(Flow displayFlow, ExecutableFlow executableFlow) {
     	List<String> dependencies = new ArrayList<String>();
     	for( ExecutableFlow depFlow : executableFlow.getChildren()) {
@@ -90,7 +121,10 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
     		return "running";
     	case READY:
     		return "ready";
+    	case IGNORED:
+    	    return "disabled";
     	}
+    
     	
     	return "normal";
     }
@@ -132,4 +166,79 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
 
 		return jsonFlow.toJSONString();
 	}
+	
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        resp.setContentType("application/xhtml+xml");
+
+        final FlowManager allFlows = this.getApplication().getAllFlows();
+        String action = getParam(req, "action");
+        
+        if (action.equals("restart")) {   	
+        	String value = req.getParameter("disabled");
+        	String[] disabledValues = value.split(",");
+        	HashSet<String> disabledJobs = new HashSet<String>();
+        	for (String disabled : disabledValues) {
+        		if (!disabled.isEmpty()) {
+        			disabledJobs.add(disabled);
+        		}
+        	}
+        	
+        	long id = Long.parseLong(getParam(req, "id"));
+           	FlowExecutionHolder holder = allFlows.loadExecutableFlow(id);
+        	//Flows.resetFailedFlows(holder.getFlow());
+        	
+        	// Disable all proper values
+        	ExecutableFlow executableFlow = holder.getFlow();
+        	traverseFlow(disabledJobs, executableFlow);
+        	
+        	try {
+        		this.getApplication().getScheduler().scheduleNow(holder);
+            	addMessage(req, String.format("Flow[%s] restarted.", id));
+        	} catch(Exception e) {
+        	}
+        }
+        else if (action.equals("run")) {
+        	String name = getParam(req, "name");
+        	String value = req.getParameter("disabled");
+        	String[] disabledValues = value.split(",");
+        	HashSet<String> disabledJobs = new HashSet<String>();
+        	for (String disabled : disabledValues) {
+        		if (!disabled.isEmpty()) {
+        			disabledJobs.add(disabled);
+        		}
+        	}
+        	
+           	ExecutableFlow flow = allFlows.createNewExecutableFlow(name);
+           	if (flow == null) {
+        		addError(req, "Job " + name + " not found.");
+           	}
+           	traverseFlow(disabledJobs, flow);
+           	
+        	try {
+        		this.getApplication().getScheduler().scheduleNow(flow);
+            	addMessage(req, String.format("Flow[%s] running.", name));
+        	} catch(Exception e) {
+        	}
+        }
+ 
+        
+        resp.sendRedirect(req.getContextPath());
+    }
+    
+    private void traverseFlow(HashSet<String> disabledJobs, ExecutableFlow flow) {
+    	String name = flow.getName();
+    	flow.reset();
+    	if (flow instanceof IndividualJobExecutableFlow && disabledJobs.contains(name)) {
+    		IndividualJobExecutableFlow individualJob = (IndividualJobExecutableFlow)flow;
+    		individualJob.setStatus(Status.IGNORED);
+    	}
+    	else {
+    		for(ExecutableFlow childFlow : flow.getChildren()) {
+    			traverseFlow(disabledJobs, childFlow);
+    		}
+    	}
+    	
+    }
 }

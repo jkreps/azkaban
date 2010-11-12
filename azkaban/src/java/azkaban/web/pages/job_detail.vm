@@ -105,7 +105,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			    <div class="box">
 			          <h3>Job History</h3>
 			            #if($executions.size() > 0)
-				        <table class="jobtable">
+				        <table class="jobtable translucent">
 				          <tr>
 				            <th>Name</th>
 				            <th>Started</th>
@@ -162,7 +162,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			    
 			    <div class="box">
 			        <h3>Job Properties</h3>
-			    	<table class="jobtable">
+			    	<table class="jobtable translucent">
 			        <tr>
 			          <th>Key</th>
 			          <th>Value</th>

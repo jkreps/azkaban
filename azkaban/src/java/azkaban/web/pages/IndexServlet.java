@@ -36,6 +36,7 @@ import org.joda.time.Seconds;
 
 import azkaban.app.AzkabanApplication;
 import azkaban.app.JobDescriptor;
+import azkaban.app.JobManager;
 import azkaban.app.Scheduler.ScheduledJobAndInstance;
 import azkaban.common.web.Page;
 import azkaban.flow.ExecutableFlow;
@@ -96,7 +97,11 @@ public class IndexServlet extends AbstractAzkabanServlet {
         } else if("cancel".equals(action)) {
             cancelJob(app, req);
         } else if("schedule".equals(action)) {
-            scheduleJobs(app, req, resp);
+            String redirect = scheduleJobs(app, req, resp);
+            if (!redirect.isEmpty()) {
+            	resp.sendRedirect(redirect);
+            	return;
+            }
         } else {
             throw new ServletException("Unknown action: " + action);
         }
@@ -128,44 +133,66 @@ public class IndexServlet extends AbstractAzkabanServlet {
         }
     }
 
-    private void scheduleJobs(AzkabanApplication app,
+    private String scheduleJobs(AzkabanApplication app,
                               HttpServletRequest req,
                               HttpServletResponse resp) throws IOException, ServletException {
         String[] jobNames = req.getParameterValues("jobs");
         if(!hasParam(req, "jobs")) {
             addError(req, "You must select at least one job to run.");
-            return;
+            return "";
         }
-        for(String job: jobNames) {
-            if(hasParam(req, "schedule")) {
-                int hour = getIntParam(req, "hour");
-                int minutes = getIntParam(req, "minutes");
-                boolean isPm = getParam(req, "am_pm").equalsIgnoreCase("pm");
-
-                ReadablePeriod thePeriod = null;
-                if(hasParam(req, "is_recurring")) {
-                    thePeriod = parsePeriod(req);
-                }
-
-                if(isPm && hour < 12)
-                    hour += 12;
-                hour %= 24;
-
-                app.getScheduler().schedule(job,
-                                            new LocalDateTime().withHourOfDay(hour)
-                                                               .withMinuteOfHour(minutes)
-                                                               .withSecondOfMinute(0),
-                                            thePeriod,
-                                            false);
-                addMessage(req, job + " scheduled.");
-            } else if(hasParam(req, "run_now")) {
-                boolean ignoreDeps = !hasParam(req, "include_deps");
-                @SuppressWarnings("unused")
-                ScheduledFuture<?> f = app.getScheduler().schedule(job, new DateTime(), ignoreDeps);
-                addMessage(req, "Running " + job);
-            } else {
-                addError(req, "Neither run_now nor schedule param is set.");
+        
+        if (hasParam(req, "flow_now")) {
+        	if (jobNames.length > 1) {
+        		addError(req, "Can only run flow instance on one job.");
+                return "";
+        	}
+        	
+        	String jobName = jobNames[0];
+            JobManager jobManager = app.getJobManager();
+            JobDescriptor descriptor = jobManager.getJobDescriptor(jobName);
+            if (descriptor == null) {
+            	addError(req, "Can only run flow instance on one job.");
+                return "";
             }
+            else {
+            	return req.getContextPath() + "/flow?job_id=" + jobName;
+            }
+        }
+        else {
+	        for(String job: jobNames) {
+	            if(hasParam(req, "schedule")) {
+	                int hour = getIntParam(req, "hour");
+	                int minutes = getIntParam(req, "minutes");
+	                boolean isPm = getParam(req, "am_pm").equalsIgnoreCase("pm");
+	
+	                ReadablePeriod thePeriod = null;
+	                if(hasParam(req, "is_recurring")) {
+	                    thePeriod = parsePeriod(req);
+	                }
+	
+	                if(isPm && hour < 12)
+	                    hour += 12;
+	                hour %= 24;
+	
+	                app.getScheduler().schedule(job,
+	                                            new LocalDateTime().withHourOfDay(hour)
+	                                                               .withMinuteOfHour(minutes)
+	                                                               .withSecondOfMinute(0),
+	                                            thePeriod,
+	                                            false);
+	                addMessage(req, job + " scheduled.");
+	            } else if(hasParam(req, "run_now")) {
+	                boolean ignoreDeps = !hasParam(req, "include_deps");
+	                @SuppressWarnings("unused")
+	                ScheduledFuture<?> f = app.getScheduler().schedule(job, new DateTime(), ignoreDeps);
+	                addMessage(req, "Running " + job);
+	            }
+	            else {
+	                addError(req, "Neither run_now nor schedule param is set.");
+	            }
+	        }
+	        return "";
         }
 
     }

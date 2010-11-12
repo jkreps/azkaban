@@ -61,9 +61,11 @@ public class ComposedExecutableFlow implements ExecutableFlow
 
         final Status dependerState = depender.getStatus();
         switch (dependerState) {
+        	case IGNORED:
             case READY:
                 final Status dependeeState = dependee.getStatus();
                 switch (dependeeState) {
+                	case IGNORED:
                     case READY:
                         jobState = Status.READY;
                         startTime = null;
@@ -221,7 +223,7 @@ public class ComposedExecutableFlow implements ExecutableFlow
 
         return retVal;
     }
-
+    
     @Override
     public boolean markCompleted()
     {

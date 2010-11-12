@@ -164,24 +164,24 @@ a:focus {
 	min-width: 300px;
 }
 
-.job-name-FAILED {
-	color: #CC1108;
+.jobtable .job-name-FAILED {
+	color: #B01108;
 }
 
-.job-name-READY {
+.jobtable .job-name-READY {
 	color: #808000;
 }
 
-.job-name-RUNNING {
+.jobtable .job-name-RUNNING {
 	color: blue;
 }
 
-.job-name-SUCCEEDED {
-	color: #006600;
+.jobtable .job-name-SUCCEEDED {
+	color: #00AA00;
 }
 
-.job-name-COMPLETED {
-	color: #006600;
+.jobtable .job-name-COMPLETED {
+	color: #00AA00;
 }
 
 #variableWidth {
@@ -426,5 +426,9 @@ table.tablesorter tbody td.error {
 .jobtable {
 	color: #FFFFFF;
 	font-size: 11pt;
-	text-shadow: rgba(0, 0, 0, .5) 0px 3px 6px;
+	text-shadow: rgba(0, 0, 0, .3) 0px 3px 6px;
+}
+
+.translucent {
+	background-color: rgba(255, 255, 255, .30);
 }

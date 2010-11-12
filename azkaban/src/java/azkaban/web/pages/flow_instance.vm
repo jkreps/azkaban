@@ -16,6 +16,10 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
    
     <script type="text/javascript">
     	var flowData = '${jsonflow}';
+    	var contextURL = '${context}';
+    	var flowID = '${id}';
+    	var action = '${action}';
+    	var name = '${name}';
     </script>
   </head>
   <body>
@@ -35,7 +39,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   	       </div>
   	       <div id="extra2">
 				<div id="buttonpanel">
-					<div id="executeButton">Execute</div>
+					<div id="executeButton" onclick="executeFlow()" >Execute</div>
 				</div>
 			</div>
 
@@ -43,8 +47,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   	 </div>
   	 <ul id="nodeMenu" class="contextMenu"> 
 		<li class="disable"><a href="#disable">Disable</a></li> 
-		<li class="enable"><a href="#enable">Enable</a></li> 
-		<li class="view"><a href="#view">View...</a></li> 
+		<li class="enable"><a href="#enable">Enable</a></li>
 	</ul>
   </body>
 </html>

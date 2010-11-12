@@ -315,7 +315,7 @@ function SVGGraph() {
 	this.createNode = function(id, label, x, y, type) {
 		var node = document.createElementNS(svgns, 'g');
 		nodeMap[id] = node;
-		
+		node["enabled"] = true;
 		node["type"] = type;
 		node.setAttributeNS(null, "id", id);
 		node.setAttributeNS(null, "class", "node");
@@ -506,6 +506,18 @@ function SVGGraph() {
 			var y = parseFloat(value.getAttribute("gy")).toFixed(1);
 			
 			retValue += key + ":" + type + ":" + x + "," + y  + ";";
+		}
+		
+		return retValue;
+	}
+	
+	this.getDisabledNodeValues = function() {
+		var retValue = "";
+		for (var key in nodeMap) {
+			var value = nodeMap[key];
+			if (!value['enabled']) {
+				retValue += key + ",";
+			}
 		}
 		
 		return retValue;

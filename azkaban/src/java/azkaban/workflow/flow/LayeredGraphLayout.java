@@ -214,7 +214,6 @@ public class LayeredGraphLayout extends DagLayout {
 			float average = findAverage(node.getDependents());
 			node.setPosition(average);
 			node.setNumOnLevel( numOnLevel );
-			System.out.println("getAverage " + average);
 		}
 	
 		Collections.sort(free);

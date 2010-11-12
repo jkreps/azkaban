@@ -40,6 +40,7 @@ function loadGraph() {
 	svgGraph.mapNodeTypeToColor("normal", "#000000");
 	svgGraph.mapNodeTypeToColor("disabled", "#000000");
 	svgGraph.mapNodeTypeToColor("ready", "#000000");
+	svgGraph.mapNodeTypeToColor("completed", "#000000");	
 	svgGraph.mapNodeTypeToColor("succeeded", "#006600");
 	svgGraph.mapNodeTypeToColor("failed", "#CC1108");
 	svgGraph.mapEdgeTypeToColor("running", "#0000FF");
@@ -184,7 +185,7 @@ function loadFlow(flowdata) {
 		var flowNode = flow.nodes[i];
 		if (flowNode != null) {
 			var node = svgGraph.createNode(flowNode.name, flowNode.name, flowNode.x, flowNode.y, flowNode.status);
-			if (flowNode.status == "succeeded") {
+			if (flowNode.status == "succeeded" || flowNode.status == "completed") {
 				currentGraph.setEnabledNode(node, false);
 			}
 			
@@ -218,6 +219,24 @@ $(function () {
 	$("#executeButton").button();
 });
 
+function executeFlow() {
+	var retval = currentGraph.getDisabledNodeValues();
+	jQuery.ajax( {
+		'type': 'POST',
+		'url': contextURL + "/flow", 
+		'async':false,
+		'data': {
+			"id":flowID,
+			"name": name,
+			"action" : action,
+			"disabled" : retval
+		},
+		'success': function(data) {
+			window.location = contextURL + "/";
+		}
+	});
+
+}
 
 window.onload = function() {
 	if (window.addEventListener) document.getElementById("content2").addEventListener('DOMMouseScroll', zoomGraph, false);
