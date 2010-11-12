@@ -149,6 +149,7 @@
 					.find( ">ul" )
 					// toggle them
 					.heightToggle( settings.animated, settings.toggle );
+
 				if ( settings.unique ) {
 					$(this).parent()
 						.siblings()

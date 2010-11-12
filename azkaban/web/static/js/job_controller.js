@@ -6,15 +6,6 @@ function JobControler() {
         collapsed: true,
         animated: "medium",
       //  persist: "cookie",
-		ajax: {
-		  	"url" : contextURL + "/manager",
-			data: {
-				"additional": function() {
-					return "yeah: " + new Date;
-				}
-			},
-			type: "post"
-		}
       });
     
     var treeElems = $(".execing-jobs");

@@ -11,8 +11,13 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			if(document.getElementById('path').value == '') {
 				var dir = document.getElementById('file').value;
 				var lastIndexOf = dir.lastIndexOf('.');
-
-				document.getElementById('path').value=dir.substring(0, lastIndexOf);
+				var lastIndexOfForwardSlash = dir.lastIndexOf('\\');
+				var lastIndexOfBackwardSlash = dir.lastIndexOf('/');
+				
+				var startIndex = Math.max(lastIndexOfForwardSlash, lastIndexOfBackwardSlash);
+				startIndex += 1;
+				
+				document.getElementById('path').value=dir.substring(startIndex, lastIndexOf);
 			}
 		}
 
@@ -27,6 +32,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		<div id="variableWidth">
 		    #messages()
 		   <div class="box">
+		   		<h3>Zip Package Uploader</h3>
 			    <div style="margin: auto; width: 500px;  ">
 			      <form enctype="multipart/form-data" method="post" action="$!context/api/jobs">
 			        <input type="hidden" name="redirect" value="/"/>
@@ -34,11 +40,11 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			        <input type="hidden" name="redirect_success" value="$!context/job-upload"/>
 			        <table style="text-align:left;">
 			          <tr>
-			            <td class="h3like">Path</td>
+			            <td class="h3like">Upload To Path:</td>
 			            <td><input id="path" name="path" type="text" size="20"/>
 			          </tr>
 			          <tr>
-			            <td class="h3like">Job flow zip file</td>
+			            <td class="h3like">Job Package Zip</td>
 			            <td><input id="file" name="file" type="file" onChange="changeFile()" /></td>
 			          </tr>
 			          <tr>

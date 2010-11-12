@@ -1,25 +1,4 @@
 
-
-#macro(jobnames $jobName)
-#if($flows.getFlow($jobName).hasChildren())
-  <li>
-#else
-  <li>
-#end
-    <input type="checkbox" name="jobs" value="${jobName}" class="sched-tree-checkbox"/>
-    <a class="job-name" href="${context}/job?id=${jobName}" name="sched-tree-link">
-      $jobName
-    </a>
-    
-    #if($flows.getFlow($jobName).hasChildren())
-      <ul>
-        #foreach($subjob in $flows.getFlow($jobName).children)
-          #jobnames($subjob.name)
-        #end
-      </ul>
-    #end
-  </li>
-#end
 #macro(execing_job $desc)
   <li>
     <a class="job-name" href="${context}/job?id=${desc.name}" title="${desc.name}">
@@ -62,6 +41,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"/>
     <link rel="stylesheet" type="text/css" href="${context}/static/css/job_controller.css"/>
     <script src="${context}/static/js/job_controller.js" type="text/javascript"></script>
+    <script src="${context}/static/js/azkaban-index.js" type="text/javascript"></script>
     <script type="text/javascript">
 		var contextURL = "${context}";
     </script>
@@ -186,11 +166,12 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			          </div>
 			        </div>
 			        <div>
-			          <ul class="sched-tree">
-			            #foreach($jobName in $rootJobNames)
-			              #jobnames($jobName)
-			            #end
-			          </ul>
+			          #foreach($folderName in $folderNames)
+			          	<div class="jobfolder" onclick="expandFlow(this)" id="$folderName">
+			          		<p>$folderName</p>
+			          	</div>
+			          	<div id="${folderName}-panel"></div>
+			          #end
 			        </div>
 			      </form>
 	    	   </div>

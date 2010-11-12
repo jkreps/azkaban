@@ -39,6 +39,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   	    <div id="variableWidth">
   	        #messages()
   	       <div class="box">
+  	       	  <h3>Job Description</h3>
 		  	  <form name="props_form" method="post" action="">
 		        <div class="jobdesc">
 		          <div>
@@ -51,6 +52,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		        </div>
 		   </div>
 		   <div class="box">
+		   		<h3>Job Parameters</h3>
 		        <table id="jobtable" class="jobtable">
 		          <tr>
 		            <th>Key</th>

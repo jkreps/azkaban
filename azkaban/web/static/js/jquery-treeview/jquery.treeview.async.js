@@ -32,11 +32,11 @@ function load(settings, root, child, container) {
 					classes: "placeholder",
 					text: "&nbsp;",
 					children:[]
-				}, branch);
+				});
 			}
-			if (this.children && this.children.length) {
-				$.each(this.children, createNode, [branch])
-			}
+	//		if (this.children && this.children.length) {
+	//			$.each(this.children, createNode, [branch])
+	//		}
 		}
 	}
 	$.ajax($.extend(true, {

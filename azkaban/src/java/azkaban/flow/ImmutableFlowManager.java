@@ -47,6 +47,8 @@ public class ImmutableFlowManager implements FlowManager
     private final Set<String> rootFlowNames;
     private final AtomicLong lastId;
 
+    private final Map<String, List<String>> folderToRoot;
+    
     private final File storageDirectory;
     private final FlowExecutionSerializer serializer;
     private final FlowExecutionDeserializer deserializer;
@@ -54,12 +56,14 @@ public class ImmutableFlowManager implements FlowManager
     public ImmutableFlowManager(
             Map<String, Flow> flowMap,
             Set<String> rootFlows,
+            Map<String, List<String>> folderToRoot, 
             FlowExecutionSerializer serializer,
             FlowExecutionDeserializer deserializer,
             File storageDirectory,
             long lastId
     )
     {
+    	this.folderToRoot = folderToRoot;
         this.flowsMap = flowMap;
         this.rootFlowNames = rootFlows;
         this.serializer = serializer;
@@ -70,6 +74,7 @@ public class ImmutableFlowManager implements FlowManager
         this.jsonToJava = new JSONToJava();
     }
 
+    
     @Override
     public boolean hasFlow(String name)
     {
@@ -179,4 +184,14 @@ public class ImmutableFlowManager implements FlowManager
     {
         throw new UnsupportedOperationException();
     }
+
+	@Override
+	public Set<String> getFolders() {
+		return folderToRoot.keySet();
+	}
+
+	@Override
+	public List<String> getRootNamesByFolder(String folder) {
+		return folderToRoot.get(folder);
+	}
 }

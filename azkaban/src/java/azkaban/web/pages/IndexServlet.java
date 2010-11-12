@@ -18,6 +18,9 @@ package azkaban.web.pages;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 
@@ -33,6 +36,8 @@ import org.joda.time.LocalDateTime;
 import org.joda.time.Minutes;
 import org.joda.time.ReadablePeriod;
 import org.joda.time.Seconds;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import azkaban.app.AzkabanApplication;
 import azkaban.app.JobDescriptor;
@@ -40,6 +45,8 @@ import azkaban.app.JobManager;
 import azkaban.app.Scheduler.ScheduledJobAndInstance;
 import azkaban.common.web.Page;
 import azkaban.flow.ExecutableFlow;
+import azkaban.flow.Flow;
+import azkaban.flow.FlowManager;
 import azkaban.web.AbstractAzkabanServlet;
 
 /**
@@ -71,6 +78,7 @@ public class IndexServlet extends AbstractAzkabanServlet {
         page.add("executing", app.getScheduler().getExecutingJobs());
         page.add("completed", app.getScheduler().getCompleted());
         page.add("rootJobNames", app.getAllFlows().getRootFlowNames());
+        page.add("folderNames", app.getAllFlows().getFolders());
         page.add("jobDescComparator", JobDescriptor.NAME_COMPARATOR);
         page.render();
     }
@@ -84,10 +92,10 @@ public class IndexServlet extends AbstractAzkabanServlet {
 
         AzkabanApplication app = getApplication();
         String action = getParam(req, "action");
-        if ("expand".equals(action)) {
-        	System.out.println("expand");
-        	
-        	resp.getWriter().print("response");
+        if ("loadjobs".equals(action)) {
+            resp.setContentType("application/json");
+        	String folder = getParam(req, "folder");
+        	resp.getWriter().print(getJSONJobsForFolder(app.getAllFlows(), folder));
         	resp.getWriter().flush();
         	return;
         }
@@ -108,6 +116,51 @@ public class IndexServlet extends AbstractAzkabanServlet {
         resp.sendRedirect(req.getContextPath());
     }
 
+    @SuppressWarnings("unchecked")
+	private String getJSONJobsForFolder(FlowManager manager, String folder) {
+    	List<String> rootJobs = manager.getRootNamesByFolder(folder);
+    	Collections.sort(rootJobs);
+
+    	JSONArray rootJobObj = new JSONArray();
+    	for (String root: rootJobs) {
+    		Flow flow = manager.getFlow(root);
+    		JSONObject flowObj = getJSONDependencyTree(flow);
+    		rootJobObj.add(flowObj);
+    	}
+    	
+    	return rootJobObj.toJSONString();
+    }
+    
+    @SuppressWarnings("unchecked")
+	private JSONObject getJSONDependencyTree(Flow flow) {
+    	JSONObject jobObject = new JSONObject();
+    	jobObject.put("name", flow.getName());
+    	
+    	if (flow.hasChildren()) {
+    		JSONArray dependencies = new JSONArray();
+    		for(Flow child : flow.getChildren()) {
+    			JSONObject childObj = getJSONDependencyTree(child);
+    			dependencies.add(childObj);
+    		}
+    		
+    		Collections.sort(dependencies, new FlowComparator());
+    		jobObject.put("dep", dependencies);
+    	}
+    	
+    	return jobObject;
+    }
+    
+    private class FlowComparator implements Comparator<JSONObject> {
+
+		@Override
+		public int compare(JSONObject arg0, JSONObject arg1) {
+			String first = (String)arg0.get("name");
+			String second = (String)arg1.get("name");
+			return first.compareTo(second);
+		}
+    	
+    }
+    
     private void cancelJob(AzkabanApplication app, HttpServletRequest req) throws ServletException {
 
         String jobId = getParam(req, "job");

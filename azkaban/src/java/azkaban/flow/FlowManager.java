@@ -21,6 +21,7 @@ import azkaban.flow.Flow;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import azkaban.common.utils.Props;
@@ -47,6 +48,20 @@ public interface FlowManager extends Iterable<Flow>
     Flow getFlow(String name);
 
     /**
+     * Returns all the base folders
+     * @return
+     */
+    Set<String> getFolders();
+    
+    /**
+     * Returns all the root names by folder
+     * 
+     * @param folder
+     * @return
+     */
+    List<String> getRootNamesByFolder(String folder);
+    
+    /**
      * Gets all known Flow objects
      *
      * @return a Collection of all known Flow objects
@@ -59,7 +74,7 @@ public interface FlowManager extends Iterable<Flow>
      * @return a Set of all root Flow objects
      */
     Set<String> getRootFlowNames();
-
+    
     /**
      * An Iterator over the set of all known Flows.  This is the same as calling
      * getFlows().iterator();
