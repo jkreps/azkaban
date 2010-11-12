@@ -75,6 +75,7 @@ h2 {
 }
 
 .all-jobs {
+	background-color: #FFF;
 	border: 1px solid black;
 	text-align: left;
 	padding: 10px;
@@ -175,8 +176,4 @@ a:hover {
 .key-input,.val-input {
 	border: 1px solid grey;
 	padding: 2px;
-}
-
-.all-jobs {
-	background-color: #FFF;
 }
