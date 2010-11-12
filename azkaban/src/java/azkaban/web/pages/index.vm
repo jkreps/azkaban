@@ -141,7 +141,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			            Run immediately
 			              (<input name="include_deps" type="checkbox" checked /> with dependencies)
 			              <input type="submit" name="run_now" value="Run"/>
-			              <input type="submit" name="flow_now" value="Flow"/>
+			              <input type="submit" name="flow_now" value="Flow (Beta)"/>
 			          </div>
 			          <div>
 			            <input type="hidden" name="action" value="schedule"/>

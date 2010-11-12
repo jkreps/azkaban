@@ -149,10 +149,10 @@ function zoomGraph(evt) {
 
 function setEditMode(mode) {
 	if (mode) {
-		editButton.setAttributeNS(xlinkns, 'xlink:href', '/static/edit-unlock.png');	
+		editButton.setAttributeNS(xlinkns, 'xlink:href', contextURL + '/static/editunlock.png');	
 	}
 	else {
-		editButton.setAttributeNS(xlinkns, 'xlink:href', '/static/edit-lock.png');
+		editButton.setAttributeNS(xlinkns, 'xlink:href', contextURL + '/static/editlock.png');
 	}
 	editMode = mode;
 }
@@ -166,7 +166,7 @@ function setupEditButton(svgElement) {
 	editButton.setAttribute("width", "32px");
 	editButton.setAttribute("height", "32px");
 	editButton.setAttribute("opacity", "0.5");	
-	editButton.setAttributeNS(xlinkns, "xlink:href", "/static/edit-lock.png");				
+	editButton.setAttributeNS(xlinkns, "xlink:href", contextURL + "/static/edit-lock.png");				
 	editButton.setAttribute("onmouseover", "this.setAttribute('opacity','1.0')");
 	editButton.setAttribute("onmouseout","this.setAttribute('opacity','0.5')");
 	editButton.setAttribute("onclick", "toggleEdit()");

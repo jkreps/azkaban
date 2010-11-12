@@ -3,7 +3,7 @@ package azkaban.workflow.flow;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.vecmath.Point2d;
+import java.awt.geom.Point2D;
 
 import azkaban.common.utils.Props;
 
@@ -21,7 +21,7 @@ public class FlowNode {
 	private Props prop = new Props();
 	private int level = 0;
 	private String status = NORMAL;
-	private Point2d position = new Point2d();
+	private Point2D position = new Point2D.Double();
 	
 	public FlowNode(String alias) {
 		this.alias = alias;
@@ -74,15 +74,15 @@ public class FlowNode {
 	}
 	
 	public void setPosition(double x, double y) {
-		position = new Point2d(x, y);
+		position = new Point2D.Double(x, y);
 	}
 	
 	public double getX() {
-		return position.x;
+		return position.getX();
 	}
 	
 	public double getY() {
-		return position.y;
+		return position.getY();
 	}
 	
 	public String getStatus() {
