@@ -51,7 +51,7 @@ public interface FlowManager extends Iterable<Flow>
      * Returns all the base folders
      * @return
      */
-    Set<String> getFolders();
+    List<String> getFolders();
     
     /**
      * Returns all the root names by folder

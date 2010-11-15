@@ -6,9 +6,11 @@ var svgElement;
 
 var editButton;
 var buttonRow;
+var zoomBar;
+var zoomPicker;
 var currentSelected;
 var editMode = false;
-
+var zoomMode = false;
 
 function cancelEvent(e) {
 	e = e ? e : window.event;
@@ -37,9 +39,9 @@ function toggleEdit() {
 function loadGraph() {
 	var svgGraph = new SVGGraph();
 	svgGraph.initGraph();
-	svgGraph.mapNodeTypeToColor("normal", "#000000");
-	svgGraph.mapNodeTypeToColor("disabled", "#000000");
-	svgGraph.mapNodeTypeToColor("ready", "#000000");
+	svgGraph.mapNodeTypeToColor("normal", "#222222");
+	svgGraph.mapNodeTypeToColor("disabled", "#222222");
+	svgGraph.mapNodeTypeToColor("ready", "#222222");
 	svgGraph.mapNodeTypeToColor("completed", "#000000");	
 	svgGraph.mapNodeTypeToColor("succeeded", "#006600");
 	svgGraph.mapNodeTypeToColor("failed", "#CC1108");
@@ -68,10 +70,17 @@ var isMouseDown = false;
 var mouseX;
 var mouseY;
 var moveNode = false;
+var saveYPos = 0;
 function moveGraph(element, evt, type) {
 	if (!evt) var evt = window.event;
 
-	if (type == "move") {
+	if (zoomMode && type == "move") {
+		if (!evt) var evt = window.event;
+		var deltaY = evt.clientY - mouseY;
+		
+		zoomPicker.setAttribute("y",deltaY + saveYPos);
+	}
+	else if (type == "move") {
     	if (isMouseDown) {
 			var deltaX = evt.clientX - mouseX;
 			var deltaY = evt.clientY - mouseY;
@@ -94,6 +103,8 @@ function moveGraph(element, evt, type) {
 	}
    else if (type == "up") {
 		isMouseDown = false;
+		zoomMode = false;
+		saveYPos = parseFloat(zoomPicker.getAttribute("y"));
 		element.setAttribute('onmousemove',null);
 	}
 
@@ -157,12 +168,17 @@ function setEditMode(mode) {
 	editMode = mode;
 }
 
+function zoomBarManipulate(mode) {
+	zoomMode = mode;
+	saveYPos = parseFloat(zoomPicker.getAttribute("y"));
+}
+
 function setupEditButton(svgElement) {
 	buttonRow = document.createElementNS(svgns, 'g');
-	buttonRow.setAttribute('id', 'postgraph');
+	buttonRow.setAttribute('id', 'postgraphButton');
 	editButton = document.createElementNS(svgns, 'image');
-	editButton.setAttribute("x", "0px");
-	editButton.setAttribute("y", "0px");
+	editButton.setAttribute("x", "0");
+	editButton.setAttribute("y", "0");
 	editButton.setAttribute("width", "32px");
 	editButton.setAttribute("height", "32px");
 	editButton.setAttribute("opacity", "0.5");	
@@ -175,6 +191,26 @@ function setupEditButton(svgElement) {
 	buttonRow.setAttribute("transform", "translate(3, 470)");
 	
 	svgElement.appendChild(buttonRow);
+}
+
+function setupZoomBar(svgElement) {
+	zoomBar = document.createElementNS(svgns, 'g');
+	zoomBar.setAttribute('id', 'zoomBar');
+	zoomPicker = document.createElementNS(svgns, 'rect');
+	zoomPicker.setAttribute("rx", "5px");
+	zoomPicker.setAttribute("opacity", "0.5");	
+	zoomPicker.setAttribute("x", "0px");
+	zoomPicker.setAttribute("y", "0px");
+	zoomPicker.setAttribute("width", "24px");
+	zoomPicker.setAttribute("height", "10px");
+	zoomPicker.setAttribute("onmouseover", "this.setAttribute('opacity','1.0')");
+	zoomPicker.setAttribute("onmouseout","this.setAttribute('opacity','0.5')");
+	zoomPicker.setAttribute("onmousedown", "zoomBarManipulate(true)");
+	zoomPicker.setAttribute("onmouseup", "zoomBarManipulate(false)");
+	
+	zoomBar.appendChild(zoomPicker);
+	zoomBar.setAttribute("transform", "translate(4, 10)");
+	svgElement.appendChild(zoomBar);
 }
 
 function loadFlow(flowdata) {
@@ -215,6 +251,8 @@ function loadFlow(flowdata) {
 $(function () {
 	svgElement = document.getElementById("graph");
 	setupEditButton(svgElement);
+	setupZoomBar(svgElement);
+
 	loadFlow(flowData);
 	$("#executeButton").button();
 });

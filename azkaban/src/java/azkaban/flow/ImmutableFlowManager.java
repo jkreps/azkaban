@@ -186,8 +186,10 @@ public class ImmutableFlowManager implements FlowManager
     }
 
 	@Override
-	public Set<String> getFolders() {
-		return folderToRoot.keySet();
+	public List<String> getFolders() {
+		ArrayList<String> folders = new ArrayList<String>(folderToRoot.keySet());
+		Collections.sort(folders);
+		return folders;
 	}
 
 	@Override

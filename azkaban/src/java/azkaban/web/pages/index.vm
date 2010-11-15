@@ -29,18 +29,12 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   <head>
     <title>#appname()</title>
     
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"/>
     <link rel="stylesheet" href="${context}/static/js/jquery-treeview/jquery.treeview.css" />
     <script src="${context}/static/js/jquery.js" type="text/javascript"></script>
     <script src="${context}/static/js/jquery.cookie.js" type="text/javascript"></script>
     <script src="${context}/static/js/jquery-treeview/jquery.treeview.js" type="text/javascript"></script>
-    <script src="${context}/static/js/jquery-treeview/jquery.treeview.edit.js" type="text/javascript"></script>
-    <script src="${context}/static/js/jquery-treeview/jquery.treeview.async.js" type="text/javascript"></script>
-    <script src="${context}/static/js/jquery-treeview/jquery.treeview.pack.js" type="text/javascript"></script>
     
-    <link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"/>
-    <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"/>
-    <link rel="stylesheet" type="text/css" href="${context}/static/css/job_controller.css"/>
-    <script src="${context}/static/js/job_controller.js" type="text/javascript"></script>
     <script src="${context}/static/js/azkaban-index.js" type="text/javascript"></script>
     <script type="text/javascript">
 		var contextURL = "${context}";
@@ -135,14 +129,15 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   	       <div class="box">
 	  	       <h3>All Jobs</h3>
 	    	   <div class="all-jobs">
-	    	         <form method="post" action="${context}/">
+	    	        <form method="post" action="${context}/">
 			        <div class="sched-form">
 			          <div>
 			            Run immediately
 			              (<input name="include_deps" type="checkbox" checked /> with dependencies)
 			              <input type="submit" name="run_now" value="Run"/>
-			              <input type="submit" name="flow_now" value="Flow (Beta)"/>
+			              <!-- input type="submit" name="flow_now" value="Flow (Beta)"/ -->
 			          </div>
+			          <hr>
 			          <div>
 			            <input type="hidden" name="action" value="schedule"/>
 			            Schedule to run at 
@@ -165,10 +160,10 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			            <input type="submit" name="schedule" value="Schedule"/>
 			          </div>
 			        </div>
-			        <div>
+			        <div class="joblist">
 			          #foreach($folderName in $folderNames)
-			          	<div class="jobfolder" onclick="expandFlow(this)" id="$folderName">
-			          		<p>$folderName</p>
+			          	<div class="jobfolder expand" onclick="expandFlow(this)" id="$folderName">
+			          		<span><div class="folderIcon"></div></span><p>$folderName</p>
 			          	</div>
 			          	<div id="${folderName}-panel"></div>
 			          #end

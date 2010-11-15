@@ -4,8 +4,22 @@ body {
 	font-size: 90%;
 	font-family: helvetica, arial, sans-serif;
 	background-color: #28282C;
-	color: #FFF;
+	color: #000;
 	min-width: 800px;
+}
+
+body h2 {
+	margin: 0;
+	padding: 0;
+}
+
+#container {
+	position: relative;
+	top: -50px;
+}
+
+a:focus {
+	outline: none;
 }
 
 .title {
@@ -15,11 +29,6 @@ body {
 	color: #FFFFFF;
 	text-shadow: #000000 3px 4px 2px;
 	padding: 20px 10px 6px 50px;
-	margin: 0px;
-}
-
-.translucent {
-	background-color: rgba(255, 255, 255, .35);
 }
 
 #header {
@@ -125,40 +134,11 @@ body {
 	color: #FFFF00;
 }
 
-a:visited:hover {
-	color:#50e8ff;
-}
-
-
-a:hover {
-	color:#50e8ff;
-}
-
-a:visited {
-	color:#3bacff;
-}
-
-a {
-	color:#60c4ff;
-}
-
-.box {
-	min-height: 125px;
-	-moz-border-radius: 5px;
-	-webkit-border-radius: 5px;
-
-	padding: 5px;
-	margin-bottom: 10px;
-	text-align: center;
-	color: #FFF;
-	background-image: url("../bggradient.png");
-	background-color: #000;
-	background-repeat:repeat-x;
-}
-
-.box hr {
-	width : 75%;
-	border-color: rgba(255,255,255, .2);
+.detailsPanel {
+	background-color: #888;
+	border-style: none;
+	margin: 5px;
+	height: 100%;
 }
 
 .box h3 {
@@ -171,6 +151,37 @@ a {
 	color: #FFFFFF;
 	font-size: 14pt;
 	text-shadow: rgba(0, 0, 0, .8) 0px 3px 6px;
+}
+
+.borderedPanel legend {
+	color: #FFFFFF;
+	font-size: 1.5em;
+	text-shadow: rgba(0, 0, 0, .4) 0px 3px 6px;
+}
+
+.popupWindow {
+	display: none;
+	min-width: 300px;
+}
+
+.jobtable .job-name-FAILED {
+	color: #B01108;
+}
+
+.jobtable .job-name-READY {
+	color: #808000;
+}
+
+.jobtable .job-name-RUNNING {
+	color: blue;
+}
+
+.jobtable .job-name-SUCCEEDED {
+	color: #00AA00;
+}
+
+.jobtable .job-name-COMPLETED {
+	color: #00AA00;
 }
 
 #variableWidth {
@@ -187,51 +198,18 @@ a {
                              color-stop(0.5, a1a1a1));
 }
 
-.jobtable {
-	margin: auto;
-	border-spacing: 0px;
-	border-collapse: collapse;
-	font-size: 100%;
-	
-	-moz-border-radius: 5px;
-	border-radius: 5px;
+#wrapper{float:left;width:100%}
+#content {
+	height:561px;
+	margin-left: 275px;
+	background-color:rgba(0,0,0,0.0);
 }
 
-.jobtable th {
-	text-shadow: rgba(0, 0, 0, .25) 0px 3px 6px;
-	padding: 5px;
-}
-
-.jobtable td {
-	border-style: solid;
-	border-width: 1px;
-	border-color: rgba(255,255,255, .3);
-	padding: 5px;
-}
-
-.jobfolder .folderIcon {
-	margin-top: 7px;
-	margin-left: 2px;
-	margin-right: 5px;
-	width:16px;
-	height:16px;
-	float: left;
-	cursor: pointer;
-}
-
-.jobfolder.expand .folderIcon {
-	background-image: url("../js/jqueryui/themes/custom-theme/images/ui-icons_cccccc_256x240.png");
-	background-position: -64px -16px;
-}
-
-.jobfolder.collapse .folderIcon{
-	background-image: url("../js/jqueryui/themes/custom-theme/images/ui-icons_cccccc_256x240.png");
-	background-position: 0 -16px;
-}
-
-.jobfolder.wait .folderIcon {
-	background-image: url("../js/jqueryui/themes/custom-theme/images/ui-icons_cccccc_256x240.png");
-	background-position: -64px -80px
+#graph{ 
+	width: 100%;
+	position: relative;
+	top: 0px;
+	left: 0px;
 }
 
 #graph{ 
@@ -244,6 +222,19 @@ a {
 #graphTab{
 	background: #FFFFFF;
 	height: 510px;
+}
+
+#jobParamTab{
+	background: #FFFFFF;
+	height: 510px;
+	overflow:auto;
+	font-size:10pt;
+}
+
+#flowParamTab {
+	background: #FFFFFF;
+	height: 510px;
+	overflow:auto;
 }
 
 #navigation {
@@ -267,6 +258,24 @@ a {
 	background: #777;
 }
 
+#copyButton {
+	font-size:8pt;
+	margin: 2px;
+	padding-left: 1px;
+}
+
+#referenceButton {
+	font-size:8pt;
+	margin: 2px;
+	padding-left: 1px;
+}
+
+#deleteButton {
+	font-size:8pt;
+	margin: 2px;
+	padding-left: 1px;
+}
+
 #buttonpanel {
 	font-size:8pt;
 	margin: 2px;
@@ -281,11 +290,48 @@ a {
 	margin-top: 50px;
 	background:#777;
 }
-
 #extra2{
 	clear:left;
 	height: 30px;
 	width:100%;
+}
+
+.jstree li.jstree-leaf[rel="job"] > a > ins.jstree-icon{  
+	background-image: url("../js/jquery/icons/job.png");
+	background-position:0px 0px;
+}
+
+.jstree li[rel="folder"] > a > ins.jstree-icon{  
+	background-image: url("../js/jquery/icons/folder.png");
+	background-position:0px 0px;
+}
+
+.jstree li.jstree-leaf[rel="flow"] > a > ins.jstree-icon{  
+	background-image: url("../js/jquery/icons/flow.png");
+	background-position:0px 0px;
+}
+
+.jstree li.jstree-leaf[rel="property"] > a > ins.jstree-icon{  
+	background-image: url("../js/jquery/icons/file.png");
+	background-position:0px 0px;
+}
+
+.properties {
+	color: #000000;
+}
+
+.paramHeader {
+	font-size:12pt;
+	height: 25px;
+	padding: 5px;
+	margin: 0px;
+}
+
+table .col1 {
+	width: 25%;
+}
+
+.col2 {
 }
 
 .editOverlay {
@@ -295,15 +341,10 @@ a {
 	bottom: 0px;
 }
 
-#editbutton {
-	margin-top: 10px;
-}
-
 .editButton.ui-button {
 	float: right;
 	font-size:8pt;
 	padding: 0px;
-	margin-top: 10px;
 	margin-left: 2px;
 }
 
@@ -314,76 +355,89 @@ a {
 	margin-left: 2px;
 }
 
+.slider {
+	margin: 0px;
+	padding-bottom: 30px;
+}
+
+table.tablesorter tbody td.col1 {
+	color: #000000;
+	font-weight: bold;
+}
+
+table .col1 .paramInput {
+	font-size:8pt;
+	margin: 0px;
+	width: 98%;
+	padding: 0px;
+}
+
+table .col2 .paramInput {
+	font-size:8pt;
+	margin: 0px;
+	width: 98%;
+	padding: 0px;
+}
+
+ui-dialog-buttonpane ui-widget-content {
+	background-color:rgba(0,0,0,0.0);
+}
+
+.refHeader {
+	color: #000000;
+	font-size:8pt;
+	padding-top: 20px;
+	padding-left: 10px;
+}
+
+.refTable {
+	color: #000000;
+}
+
+.strike {
+	text-decoration: line-through;
+	opacity: 0.5;
+}
+
+table.tablesorter tbody td.error {
+	color: #FF0000;
+}
+
+.box {
+	min-height: 125px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+
+	padding: 5px;
+	margin-bottom: 10px;
+	text-align: center;
+	color: #DDD;
+	background-image: url("../bggradient.png");
+	background-color: #000;
+	background-repeat:repeat-x;
+}
+
+
 .errorBox {
 	background-color: #ffaa66;
 	padding: 5px;
 }
 
-.flowViewButton  {
-	margin-left: 5px;
+.jobtable {
+	color: #FFFFFF;
+	font-size: 11pt;
+	text-shadow: rgba(0, 0, 0, .3) 0px 3px 6px;
 }
 
-.flowViewButton.hidden{
-	visibility: hidden;
-	font-size: 8pt;
-	text-decoration: underline;
+.translucent {
+	background-color: rgba(255, 255, 255, .30);
 }
 
-.flowViewButton.show{
-	font-size: 8pt;
-	text-decoration: underline;
-}
-
-.flowViewButton.show:hover{
-	font-size: 8pt;
-	text-decoration: underline;
-}
-
-/* Index page job list*/
-.joblist {
-	background-color: #FFF;
-	text-align: left;
-	margin-left: 20px;
-	margin-right: 20px;
-	margin-top: 15px;
-	margin-bottom: 15px;
-	-moz-border-radius: 10px;
-	-webkit-border-radius: 10px;
-}
-
-.joblist a {
-	color: #b80011;
-	font-size:110%;
-	padding-left:3px;
-	text-decoration:none;
-	vertical-align:top;
-}
-
-.joblist a:hover {
-	color: #F00000;
-	font-size:110%;
-	padding-left:3px;
-	text-decoration:none;
-	vertical-align:top;
-}
-
-.joblist li {
-	background-color: transparent;
-}
-
-.joblist li {
-	xlist-style-type: none;
-	xpadding: 1px;
-	xmargin: 1px;
-}
-
-/* Index page schedule*/
-
-.jobfolder p{
+.jobfolder p {
 	padding: 7px 10px 7px 10px;
 	margin: 2px;
-	cursor: pointer;
 }
+
 
 .jobfolder {
 	color: #FFFFFF;
@@ -395,56 +449,8 @@ a {
 
 	background: #A0A5AF; /* old browsers */
 	background: -moz-linear-gradient(top, #A0A5AF 0%, #828c95 36%, #28343b 100%); /* firefox */
+
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#A0A5AF), color-stop(36%,#828c95), color-stop(100%,#28343b)); /* webkit */
+
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#A0A5AF', endColorstr='#28343b',GradientType=0 ); /* ie */
 }
-
-.jobtable a {
-	text-decoration: none;
-	font-size: 13pt;
-}
-
-.jobtable .job-name-FAILED {
-	color: #b10a00;
-}
-
-.jobtable .job-name-READY {
-	color: #222;
-}
-
-.jobtable .job-name-RUNNING {
-	color: blue;
-}
-
-.jobtable .job-name-SUCCEEDED {
-	color: #00d400;
-}
-
-.jobtable .job-name-COMPLETED {
-	color: #00d400;
-}
-
-.jobtable .job-name-IGNORED {
-	color: #888;
-}
-
-.jobdesc {
-	font-size: 14pt;
-	margin: 10px;
-	color: #AAA;
-}
-
-.jobdesc a{
-	text-decoration: none;
-}
-
-.treeview ul {
-	background-color: transparent;
-	padding: 1 0 3 16px;
-}
-
-.treeview .hitarea {
-	background-color: transparent;
-	xpadding-right: 3px;
-}
-

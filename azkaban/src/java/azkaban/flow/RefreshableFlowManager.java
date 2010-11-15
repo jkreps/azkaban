@@ -173,7 +173,7 @@ public class RefreshableFlowManager implements FlowManager
     }
 
 	@Override
-	public Set<String> getFolders() {
+	public List<String> getFolders() {
 		return delegateManager.get().getFolders();
 	}
 

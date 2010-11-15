@@ -174,7 +174,7 @@ public class CachingFlowManager implements FlowManager
     }
 
 	@Override
-	public Set<String> getFolders() {
+	public List<String> getFolders() {
 		return baseManager.getFolders();
 	}
 

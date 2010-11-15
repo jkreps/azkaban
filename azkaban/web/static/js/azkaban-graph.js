@@ -11,6 +11,7 @@ function SVGGraph() {
 	var translateY = 0;
 	var scale = 1;
 	var maxScaleOnReset = 2;
+	var minScaleOnReset = 0.6;
 	var debugLabel;
 	var maxZoom = 10;
 	var minZoom = 0.2;
@@ -37,7 +38,7 @@ function SVGGraph() {
 	}
 	
 	function setNodeStyleFromType(node) {
-		var color = "#000000";
+		var color = "#222222";
 		var type = node.type;
 		if (type == "disabled") {
 			node.setAttributeNS(null, "opacity", 0.5);
@@ -118,6 +119,10 @@ function SVGGraph() {
 		if (scale > maxScaleOnReset) {
 			scale = maxScaleOnReset;
 		}
+		else if (scale < minScaleOnReset) {
+			scale = minScaleOnReset;
+		}
+
 		translateX = (width - graphWidth*scale)/2 - minX*scale;
 		translateY = minY + 30;
 		viewer.setAttributeNS(null, "transform", "translate(" + translateX + "," + translateY + ") scale(" + scale + ")");
@@ -336,7 +341,7 @@ function SVGGraph() {
 		rect1.setAttributeNS(null, "width", 20);
 		rect1.setAttributeNS(null, "height", 30);
 		rect1.setAttributeNS(null, "class", "button");
-		rect1.setAttributeNS(null, "style", "width:inherit;fill-opacity:1.0;stroke:#000000;stroke-opacity:1");
+		rect1.setAttributeNS(null, "style", "width:inherit;fill-opacity:1.0;stroke-opacity:1");
 		
 		var rect2 = document.createElementNS(svgns, 'rect');
 		rect2.setAttributeNS(null, "x", 6);
@@ -359,14 +364,15 @@ function SVGGraph() {
 		var guessLength = textLabel.length * 6;
 		text.appendChild(textLabel);
 		text.setAttributeNS(null, "fill", "#DDDDDD");
+		text.setAttributeNS(null, "stroke", "none")
 		text.setAttributeNS(null, "x", 12);
 		text.setAttributeNS(null, "y", 24);
 		text.setAttributeNS(null, "height", 10); 
 		
 		var innerG = document.createElementNS(svgns, 'g');
 		innerG.appendChild(rect1);
-		innerG.appendChild(rect2);
-		innerG.appendChild(rect3);
+	//	innerG.appendChild(rect2);
+	//	innerG.appendChild(rect3);
 		innerG.appendChild(text);
 		node.appendChild(innerG);
 		

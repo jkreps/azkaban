@@ -4,7 +4,6 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>#appname()</title>
-    <link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"></link>
     <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"></link>
     <link rel="stylesheet" type="text/css" href="${context}/static/js/jqueryui/themes/custom-theme/jquery-ui.custom.css"></link>
     <script type="text/javascript" src="${context}/static/js/jquery.js"></script>
