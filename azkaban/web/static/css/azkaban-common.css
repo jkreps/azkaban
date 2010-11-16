@@ -392,8 +392,8 @@ a {
 	font-size: 12pt;
 	text-shadow: rgba(0, 0, 0, .3) 0px 3px 6px;
 	
-	-moz-border-radius: 10px;
-	-webkit-border-radius: 10px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
 
 	background: #A0A5AF; /* old browsers */
 	background: -moz-linear-gradient(top, #A0A5AF 0%, #828c95 36%, #28343b 100%); /* firefox */
