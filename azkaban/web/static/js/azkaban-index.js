@@ -1,4 +1,18 @@
-
+$(function () {
+    var treeElems = $(".execing-jobs");
+    if (treeElems.length > 0)
+    {
+      var execingJobsTree;
+      for (i=0; i<treeElems.length; i++)
+      {
+        $("#"+treeElems[i].id).treeview({
+        collapsed: true,
+        animated: "medium",
+        persist: "cookie "
+      });    
+      }
+    }
+});
 
 function getList(data) {
 	var jobName = data.name;

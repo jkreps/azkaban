@@ -21,7 +21,7 @@ body {
 }
 
 .translucent {
-	background-color: rgba(255, 255, 255, .35);
+	background-color: rgba(255, 255, 255, .25);
 }
 
 #header {
@@ -407,11 +407,11 @@ a {
 }
 
 .jobtable .job-name-FAILED {
-	color: #b10a00;
+	color: #A00;
 }
 
 .jobtable .job-name-READY {
-	color: #222;
+	color: #CCC;
 }
 
 .jobtable .job-name-RUNNING {
@@ -446,6 +446,10 @@ a {
 
 .jobtable a:hover {
 	color: #FFF;
+}
+
+.treeview {
+	text-align: left;
 }
 
 .treeview ul {
@@ -530,3 +534,4 @@ rect.zoomLine {
 .fileTable a:hover {
   color: #F00000;
 }
+
