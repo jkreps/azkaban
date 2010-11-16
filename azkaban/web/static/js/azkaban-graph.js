@@ -13,7 +13,7 @@ function SVGGraph() {
 	var maxScaleOnReset = 2;
 	var minScaleOnReset = 0.6;
 	var debugLabel;
-	var maxZoom = 10;
+	var maxZoom = 2.5;
 	var minZoom = 0.2;
 	var minX = 100000000;
 	var minY = 100000000;
