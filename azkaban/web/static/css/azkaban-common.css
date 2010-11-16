@@ -481,6 +481,10 @@ rect.button {
 	stroke-width: 3px;
 }
 
+g.node {
+	cursor: pointer;
+}
+
 g.node text{
 	fill: #FFF;
 }
@@ -500,6 +504,7 @@ g.node.disabled {
 
 rect.zoomPicker {
 	fill: #666;
+	cursor: pointer;
 }
 
 rect.zoomLine {
@@ -510,6 +515,10 @@ rect.zoomLine {
 	stroke-width: 4;
 	stroke: #777;
 	stroke-dasharray: 3, 25;
+}
+
+.zoomButton {
+	cursor: pointer;
 }
 
 .zoomButton rect {

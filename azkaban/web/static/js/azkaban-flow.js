@@ -139,12 +139,12 @@ function zoomGraph(evt) {
 	var scale = 1;
 	if ( delta > 0 ) {
 		for (var i = 0; i < delta; ++i) {
-			scale *= 1.01;
+			scale *= 1.05;
 		}
 	}
 	else {
 		for (var i = 0; i < -delta; ++i) {
-			scale *= 0.99;
+			scale *= 0.95;
 		}
 	}
 
