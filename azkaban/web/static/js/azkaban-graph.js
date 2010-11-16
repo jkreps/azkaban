@@ -23,6 +23,7 @@ function SVGGraph() {
 	var nodeMap = {};
 	var nodeSelection = new Array();
 	var edgeList = new Array();
+
 	var divider;
 	var nodeEntered;
 	
@@ -37,30 +38,32 @@ function SVGGraph() {
 		edgeTypeToColor[type] = color;
 	}
 	
-	function setNodeStyleFromType(node) {
-		var color = "#222222";
-		var type = node.type;
-		if (type == "disabled") {
-			node.setAttributeNS(null, "opacity", 0.5);
-		}
-		else {
-			node.setAttributeNS(null, "opacity", 1.0);
-		}
-
-		if (nodeTypeToColor[type]) {
-			color = nodeTypeToColor[type];
-		}
-
-		node.topRect.setAttributeNS(null, "fill", color );
-	}
+//	function setNodeStyleFromType(node) {
+//		var color = "#222222";
+//		var type = node.type;
+//		if (type == "disabled") {
+//			node.setAttributeNS(null, "opacity", 0.5);
+//		}
+//		else {
+//			node.setAttributeNS(null, "opacity", 1.0);
+//		}
+//
+//		if (nodeTypeToColor[type]) {
+//			color = nodeTypeToColor[type];
+//		}
+//
+//		node.topRect.setAttributeNS(null, "fill", color );
+//	}
 
 	this.setEnabledNode = function(node, enable) {
 		node['enabled'] = enable;
 		if (enable) {
-			node.setAttributeNS(null, "opacity", 1.0);
+			this.removeClass(node, 'disabled');
+			//node.setAttributeNS(null, "opacity", 1.0);
 		}
 		else {
-			node.setAttributeNS(null, "opacity", 0.5);
+			this.addClass(node, 'disabled');
+			//node.setAttributeNS(null, "opacity", 0.5);
 		}
 	}
 	
@@ -69,20 +72,54 @@ function SVGGraph() {
 			var selectedNode = nodeSelection[i];
 			selectedNode['enabled'] = enable;
 			if (enable) {
-				selectedNode.setAttributeNS(null, "opacity", 1.0);
+				this.removeClass(selectedNode, 'disabled');
+				//selectedNode.setAttributeNS(null, "opacity", 1.0);
 			}
 			else {
-				selectedNode.setAttributeNS(null, "opacity", 0.5);
+				this.addClass(selectedNode, 'disabled');
+				//selectedNode.setAttributeNS(null, "opacity", 0.5);
 			}
 		}
 	}
 	
-	this.setSelectedNodeType = function(type) {	
+	var recurseId = 0;
+	this.disableAllAncestors = function() {
+		recurseId++;
 		for (var i = 0; i < nodeSelection.length; ++i) {
 			var selectedNode = nodeSelection[i];
-			selectedNode.type = type;
-			
-			setNodeStyleFromType(selectedNode);
+			this.disableRecursively(selectedNode, recurseId);
+		}
+	}
+	
+	// Slow but don't expect it to be done often
+	this.disableRecursively = function(node, recurseID) {
+		// Visited this node, so don't visit it again.
+		if (node['recurseID'] == recurseID) {
+			return;
+		}
+
+		node['recurseID'] = recurseID;
+		var children = new Array();
+		for (var i = 0; i < edgeList.length; i++) {
+			var edge = edgeList[i];
+			if (node.id == edge.toNode) {
+				var dependency = edge.fromNode;
+				var dependent = edge.toNode;
+				this.disableRecursively(nodeMap[dependency], recurseID);
+			}
+		}
+	
+		this.setEnabledNode(node, false);
+	}
+	
+	// if the item succeeded, then make sure all of its parents are aslo disabled.
+	this.initializeDisabled = function() {
+		recurseId++;
+		for (var key in nodeMap) {
+			var node = nodeMap[key];
+			if (node['type'] == 'selected') {
+				this.disableRecursively(node, recurseID);
+			}
 		}
 	}
 	
@@ -319,9 +356,11 @@ function SVGGraph() {
 
 	this.createNode = function(id, label, x, y, type) {
 		var node = document.createElementNS(svgns, 'g');
+		
 		nodeMap[id] = node;
 		node["enabled"] = true;
 		node["type"] = type;
+		node["recurseID"] = -1;
 		node.setAttributeNS(null, "id", id);
 		node.setAttributeNS(null, "class", "node");
 		node.setAttributeNS(null, "font-family", "helvetica");
@@ -340,7 +379,7 @@ function SVGGraph() {
 		rect1.setAttributeNS(null, "ry", 12);
 		rect1.setAttributeNS(null, "width", 20);
 		rect1.setAttributeNS(null, "height", 30);
-		rect1.setAttributeNS(null, "class", "button");
+		rect1.setAttributeNS(null, "class", "button " + type);
 		rect1.setAttributeNS(null, "style", "width:inherit;fill-opacity:1.0;stroke-opacity:1");
 		
 		var rect2 = document.createElementNS(svgns, 'rect');
@@ -363,8 +402,8 @@ function SVGGraph() {
 		var textLabel = document.createTextNode(label);
 		var guessLength = textLabel.length * 6;
 		text.appendChild(textLabel);
-		text.setAttributeNS(null, "fill", "#DDDDDD");
-		text.setAttributeNS(null, "stroke", "none")
+//		text.setAttributeNS(null, "fill", "#DDDDDD");
+//		text.setAttributeNS(null, "stroke", "none")
 		text.setAttributeNS(null, "x", 12);
 		text.setAttributeNS(null, "y", 24);
 		text.setAttributeNS(null, "height", 10); 
@@ -402,7 +441,7 @@ function SVGGraph() {
 			minY = y;
 		}
 		
-		setNodeStyleFromType(node);
+		// setNodeStyleFromType(node);
 		
 		return node;
 	}
@@ -415,21 +454,27 @@ function SVGGraph() {
 		}
 	}
 	
-	this.zoomGraph = function(s, x, y) {
+	this.getZoomPercent = function() {
+		return (scale-minZoom)/(maxZoom - minZoom);
+	}
+
+	this.zoomGraphFactor = function(s, x, y) {
 		if (viewer != null) {
 			//debugLabel.textContent = x+","+y;
 			
 			nx = x;
 			ny = y;
 			
-			if (scale > maxZoom && s > 1) {
+			scale = scale * s;
+			if (scale > maxZoom) {
+				scale = maxZoom;
 				return;
 			}
-			else if (minZoom > scale && s < 1) {
+			else if (minZoom > scale || isNaN(scale) ) {
+				scale = minZoom;
 				return;
 			}
 			
-			scale = scale * s;
 			translateX = s*translateX + nx - s*nx;
 			translateY = s*translateY + ny - s*ny;
 
@@ -437,16 +482,45 @@ function SVGGraph() {
 		}
 	}
 	
+	this.zoomGraphPercent = function(percent, x, y) {
+		if (viewer != null) {
+			var newScale = (maxZoom - minZoom)*percent + minZoom;
+			var scaleComponent = newScale/scale;
+			
+			this.zoomGraphFactor(scaleComponent, x, y);
+		}
+	}
+	
+	this.removeClass = function(node, className) {
+		var classAttribute = node.getAttribute("class");
+		node.setAttribute("class", classAttribute.replace(' ' + className,''));
+	}
+	
+	this.addClass = function(node, className) {
+		var classAttribute = node.getAttribute("class");
+		if (classAttribute.indexOf(className) == -1) {
+			node.setAttribute("class", classAttribute + " " + className);
+		}
+	}
+	
 	this.selectNode = function(node) {
 		for (var i = 0; i<nodeSelection.length; ++i) {
 			var selectedNode = nodeSelection[i];
-			selectedNode['selected'] = false;
-			selectedNode.setAttribute("stroke", "DDDDDD");
+			if (selectedNode['selected']) {
+				selectedNode['selected'] = false;
+				//selectedNode.setAttribute("stroke", "DDDDDD");
+				var classAttribute = selectedNode.getAttribute("class");
+				this.removeClass(selectedNode, 'selected');
+				//selectedNode.setAttribute("class", classAttribute.replace(' selected',''));
+			}
 		}
 		nodeSelection= new Array();
 		
 		node['selected'] = true;
-		node.setAttribute("stroke", "#FFFF00");
+		//node.setAttribute("stroke", "#FFFF00");
+		var classAttribute = node.getAttribute("class");
+		//node.setAttribute("class", classAttribute + " selected");
+		this.addClass(node, 'selected');
 		nodeSelection.push(node);
 	}
 	

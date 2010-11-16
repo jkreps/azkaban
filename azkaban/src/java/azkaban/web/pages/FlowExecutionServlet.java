@@ -18,12 +18,16 @@ package azkaban.web.pages;
 
 import azkaban.common.utils.Props;
 import azkaban.common.web.Page;
+import azkaban.flow.ComposedExecutableFlow;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowExecutionHolder;
 import azkaban.flow.FlowManager;
 import azkaban.flow.Flows;
+import azkaban.flow.GroupedExecutableFlow;
 import azkaban.flow.IndividualJobExecutableFlow;
+import azkaban.flow.MultipleDependencyExecutableFlow;
 import azkaban.flow.Status;
+import azkaban.flow.WrappingExecutableFlow;
 import azkaban.web.AbstractAzkabanServlet;
 import azkaban.workflow.Flow;
 import azkaban.workflow.flow.DagLayout;
@@ -229,12 +233,25 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
     
     private void traverseFlow(HashSet<String> disabledJobs, ExecutableFlow flow) {
     	String name = flow.getName();
+		System.out.println("at " + name);
     	flow.reset();
     	if (flow instanceof IndividualJobExecutableFlow && disabledJobs.contains(name)) {
     		IndividualJobExecutableFlow individualJob = (IndividualJobExecutableFlow)flow;
     		individualJob.setStatus(Status.IGNORED);
+    		System.out.println("ignore " + name);
     	}
     	else {
+    		if (flow instanceof ComposedExecutableFlow) {
+        		ExecutableFlow innerFlow = ((ComposedExecutableFlow) flow).getDepender();
+        		traverseFlow(disabledJobs, innerFlow);
+    		}
+    		else if (flow instanceof MultipleDependencyExecutableFlow) {
+        		traverseFlow(disabledJobs, ((MultipleDependencyExecutableFlow) flow).getActualFlow());
+    		}
+    		else if (flow instanceof WrappingExecutableFlow) {
+        		traverseFlow(disabledJobs, ((WrappingExecutableFlow) flow).getDelegateFlow());
+    		}
+    		
     		for(ExecutableFlow childFlow : flow.getChildren()) {
     			traverseFlow(disabledJobs, childFlow);
     		}

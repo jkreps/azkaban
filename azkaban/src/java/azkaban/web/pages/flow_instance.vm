@@ -44,9 +44,10 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 
   	    </div>
   	 </div>
-  	 <ul id="nodeMenu" class="contextMenu"> 
-		<li class="disable"><a href="#disable">Disable</a></li> 
+  	 <ul id="nodeMenu" class="contextMenu">  
 		<li class="enable"><a href="#enable">Enable</a></li>
+		<li class="disable"><a href="#disable">Disable</a></li>
+		<li class="disableAncestor"><a href="#disableAncestor">Disable All Dependencies</a></li>
 	</ul>
   </body>
 </html>

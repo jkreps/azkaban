@@ -4,16 +4,18 @@ body {
 	font-size: 90%;
 	font-family: helvetica, arial, sans-serif;
 	background-color: #28282C;
-	color: #FFF;
+	color: #CCC;
 	min-width: 800px;
 }
 
 .title {
 	font-family: helvetica, arial, sans-serif;
+	font-style: none;
 	font-size: 2.2em;
 	position: relative;
-	color: #FFFFFF;
-	text-shadow: #000000 3px 4px 2px;
+	color: #CCC;
+	
+	/*text-shadow: #000000 3px 4px 2px;*/
 	padding: 20px 10px 6px 50px;
 	margin: 0px;
 }
@@ -41,7 +43,7 @@ body {
 	left: 355px;
 	top: -45px;
 	color: #CCCCCC;
-	text-shadow: 0.07em 0.07em #333
+	/*text-shadow: 0.07em 0.07em #333*/
 }
 #header #label p {
 	height: 35px;
@@ -104,12 +106,12 @@ body {
 }
 
 #navmenu ul li a {
-	color: #808080;
+	color: #CCC;
 	padding: 10px;
 	margin: 0;
 	text-shadow: rgba(0, 0, 0, .4) 0px 3px 6px;
 	text-decoration: none;
-	font-size: 1.25em;
+	font-size: 1.4em;
 }
 
 #navmenu ul li em {
@@ -122,11 +124,11 @@ body {
 }
 
 #navmenu ul li a:hover {
-	color: #FFFF00;
+	color: #FFF;
 }
 
 a:visited:hover {
-	color:#50e8ff;
+	color:#FFF;
 }
 
 
@@ -135,11 +137,11 @@ a:hover {
 }
 
 a:visited {
-	color:#3bacff;
+	color:#a7ceff;
 }
 
 a {
-	color:#60c4ff;
+	color:#a7ceff;
 }
 
 .box {
@@ -151,8 +153,8 @@ a {
 	margin-bottom: 10px;
 	text-align: center;
 	color: #FFF;
-	background-image: url("../bggradient.png");
-	background-color: #000;
+	background-image: url("../background1.png");
+	background-color: #2c2f32;
 	background-repeat:repeat-x;
 }
 
@@ -162,13 +164,13 @@ a {
 }
 
 .box h3 {
-	color: #FFFFFF;
+	color: #CCC;
 	font-size: 16pt;
-	text-shadow: rgba(0, 0, 0, .8) 0px 3px 6px;
+	/*text-shadow: rgba(0, 0, 0, .8) 0px 3px 6px;*/
 }
 
 .box .h3like {
-	color: #FFFFFF;
+	color: #CCC;
 	font-size: 14pt;
 	text-shadow: rgba(0, 0, 0, .8) 0px 3px 6px;
 }
@@ -417,11 +419,11 @@ a {
 }
 
 .jobtable .job-name-SUCCEEDED {
-	color: #00d400;
+	color: #CCC;
 }
 
 .jobtable .job-name-COMPLETED {
-	color: #00d400;
+	color: #CCC;
 }
 
 .jobtable .job-name-IGNORED {
@@ -438,6 +440,14 @@ a {
 	text-decoration: none;
 }
 
+.jobtable a:visited:hover {
+	color: #FFF;
+}
+
+.jobtable a:hover {
+	color: #FFF;
+}
+
 .treeview ul {
 	background-color: transparent;
 	padding: 1 0 3 16px;
@@ -448,3 +458,75 @@ a {
 	xpadding-right: 3px;
 }
 
+
+rect.button.running  {
+	fill: #006;
+}
+
+rect.button.failed  {
+	fill: #A00;
+}
+
+rect.button.succeeded  {
+	fill: #070;
+}
+
+rect.button {
+	fill: #444;
+	stroke: #000;
+	stroke-width: 3px;
+}
+
+g.node text{
+	fill: #FFF;
+}
+
+g.node.selected text{
+	fill: #EE0;
+}
+
+g.node:hover {
+	stroke-width: 1px;
+	stroke: #EE0;
+}
+
+g.node.disabled {
+	opacity: 0.2;
+}
+
+rect.zoomPicker {
+	fill: #666;
+}
+
+rect.zoomLine {
+	fill: #AAA;
+}
+
+.zoomSlider line {
+	stroke-width: 4;
+	stroke: #777;
+	stroke-dasharray: 3, 25;
+}
+
+.zoomButton rect {
+	fill: #CCC;
+}
+
+.zoomButton circle {
+	fill: #666;
+}
+
+.zoomButton:hover rect{
+	fill: #FF0;
+}
+
+.fileTable a {
+  text-decoration: none;
+  color: darkred;
+  font-weight: bold;
+  font-size: 14pt;
+}
+
+.fileTable a:hover {
+  color: #F00000;
+}

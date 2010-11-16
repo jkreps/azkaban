@@ -22,7 +22,6 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
       
       .breadcrumbs a {
         color: white;
-        text-shadow: rgba(0, 0, 0, .5) 0px 3px 6px;
         text-decoration: none;
       }
       .subdirs {
@@ -32,7 +31,6 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         color: black;
         width: 600px;
         background-color: white;
-        text-shadow: rgba(0, 0, 0, .3) 0px 3px 6px;
         border: 1px solid black;
         margin: auto;
       }  
@@ -42,12 +40,6 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
       .fileTable td {
         padding-left: 10px;
         padding-right: 10px;
-      }
-      .fileTable a {
-        text-decoration: none;
-        color: darkred;
-        font-weight: bold;
-        font-size: 14pt;
       }
     </style>
   </head>

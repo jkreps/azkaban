@@ -6,10 +6,9 @@ var svgElement;
 
 var editButton;
 var buttonRow;
-var zoomBar;
-var zoomPicker;
+
 var currentSelected;
-var editMode = false;
+var editMode = true;
 var zoomMode = false;
 
 function cancelEvent(e) {
@@ -39,13 +38,13 @@ function toggleEdit() {
 function loadGraph() {
 	var svgGraph = new SVGGraph();
 	svgGraph.initGraph();
-	svgGraph.mapNodeTypeToColor("normal", "#222222");
-	svgGraph.mapNodeTypeToColor("disabled", "#222222");
-	svgGraph.mapNodeTypeToColor("ready", "#222222");
-	svgGraph.mapNodeTypeToColor("completed", "#000000");	
-	svgGraph.mapNodeTypeToColor("succeeded", "#006600");
-	svgGraph.mapNodeTypeToColor("failed", "#CC1108");
-	svgGraph.mapEdgeTypeToColor("running", "#0000FF");
+//	svgGraph.mapNodeTypeToColor("normal", "#222222");
+//	svgGraph.mapNodeTypeToColor("disabled", "#222222");
+//	svgGraph.mapNodeTypeToColor("ready", "#222222");
+//	svgGraph.mapNodeTypeToColor("completed", "#000000");	
+//	svgGraph.mapNodeTypeToColor("succeeded", "#006600");
+//	svgGraph.mapNodeTypeToColor("failed", "#CC1108");
+//	svgGraph.mapEdgeTypeToColor("running", "#0000FF");
 	return svgGraph;
 }
 
@@ -63,7 +62,7 @@ function attachGraph(svgGraph) {
 
 	currentGraph = svgGraph;
 	svgGraph.attachGraph(svgElement);
-	setEditMode(false);
+//	setEditMode(false);
 }
 
 var isMouseDown = false;
@@ -78,7 +77,7 @@ function moveGraph(element, evt, type) {
 		if (!evt) var evt = window.event;
 		var deltaY = evt.clientY - mouseY;
 		
-		zoomPicker.setAttribute("y",deltaY + saveYPos);
+		moveZoomPicker(deltaY + saveYPos);
 	}
 	else if (type == "move") {
     	if (isMouseDown) {
@@ -153,8 +152,8 @@ function zoomGraph(evt) {
 	var x = evt.pageX - content.offsetLeft;
 	var y = evt.pageY - content.offsetTop;
 	
-	currentGraph.zoomGraph(scale, x, y);	
-	
+	currentGraph.zoomGraphFactor(scale, x, y);	
+	updateZoomPicker();
 	return cancelEvent(evt);
 }
 
@@ -182,7 +181,7 @@ function setupEditButton(svgElement) {
 	editButton.setAttribute("width", "32px");
 	editButton.setAttribute("height", "32px");
 	editButton.setAttribute("opacity", "0.5");	
-	editButton.setAttributeNS(xlinkns, "xlink:href", contextURL + "/static/edit-lock.png");				
+	editButton.setAttributeNS(xlinkns, "xlink:href", contextURL + "/static/editlock.png");				
 	editButton.setAttribute("onmouseover", "this.setAttribute('opacity','1.0')");
 	editButton.setAttribute("onmouseout","this.setAttribute('opacity','0.5')");
 	editButton.setAttribute("onclick", "toggleEdit()");
@@ -193,25 +192,135 @@ function setupEditButton(svgElement) {
 	svgElement.appendChild(buttonRow);
 }
 
+function clickZoom(zoomFactor) {
+	var zoomAmount = 10 * zoomFactor;
+	var position = zoomAmount + pickerPos;
+	moveZoomPicker(position);
+}
+
+function updateZoomPicker() {
+	if (currentGraph) {
+		pickerPos = zoomHeight - zoomHeight * Math.sqrt(currentGraph.getZoomPercent());
+		zoomPicker.setAttribute("y", pickerPos - 5);
+	}
+}
+
+var pickerPos;
+function moveZoomPicker(newpos) {
+	pickerPos = newpos;
+	if (pickerPos > zoomHeight) {
+		pickerPos = zoomHeight;
+	}
+	else if (pickerPos < 1) {
+		pickerPos = 1;
+	}
+	zoomPicker.setAttribute("y", pickerPos - 5);
+	
+	if (currentGraph) {
+		var percent = 1.0 - (pickerPos / zoomHeight);
+		if (percent == 0) {
+			percent = 0.0001;
+		}
+		var content = document.getElementById("content2");
+		var py = content.clientHeight/2;
+		var px = content.clientWidth/2;
+		
+		currentGraph.zoomGraphPercent(percent*percent, px, py);
+	}
+}
+
+var zoomBar;
+var zoomPicker;
+var zoomLine;
+var zoomPlus;
+var zoomMinus;
+var zoomSlider;
+var zoomHeight = 200;
 function setupZoomBar(svgElement) {
 	zoomBar = document.createElementNS(svgns, 'g');
 	zoomBar.setAttribute('id', 'zoomBar');
+	
+	var radius = 12;
+	
+	// The upper plus button
+	zoomPlus = document.createElementNS(svgns, 'g');
+	var zoomPlusB = document.createElementNS(svgns, 'circle');
+	zoomPlusB.setAttribute("cx", 0);
+	zoomPlusB.setAttribute("cy", 0);
+	zoomPlusB.setAttribute("r", radius);
+	var plusRect1 = document.createElementNS(svgns, 'rect');
+	plusRect1.setAttribute("x", -8);
+	plusRect1.setAttribute("y", -2);
+	plusRect1.setAttribute("width", 16);
+	plusRect1.setAttribute("height", 4);
+	var plusRect2 = document.createElementNS(svgns, 'rect');
+	plusRect2.setAttribute("x", -2);
+	plusRect2.setAttribute("y", -8);
+	plusRect2.setAttribute("width", 4);
+	plusRect2.setAttribute("height", 16);
+	zoomPlus.setAttribute("transform", "translate(12.5, 0)");
+	zoomPlus.setAttribute("class", "zoomButton");
+	zoomPlus.setAttribute("onclick", "clickZoom(-1)");
+	zoomPlus.appendChild(zoomPlusB);
+	zoomPlus.appendChild(plusRect1);
+	zoomPlus.appendChild(plusRect2);
+	zoomBar.appendChild(zoomPlus);
+	
+	// The lower minus button
+	zoomMinus = document.createElementNS(svgns, 'g');
+	var zoomMinusB = document.createElementNS(svgns, 'circle');
+	zoomMinusB.setAttribute("cx",0);
+	zoomMinusB.setAttribute("cy",0);
+	zoomMinusB.setAttribute("r", radius);
+	var minusRect = document.createElementNS(svgns, 'rect');
+	minusRect.setAttribute("x", -8);
+	minusRect.setAttribute("y", -2);
+	minusRect.setAttribute("width", 16);
+	minusRect.setAttribute("height", 4);
+	zoomMinus.setAttribute("transform", "translate(12.5, " + (200 + radius*2) + " )");
+	zoomMinus.setAttribute("class", "zoomButton");
+	zoomMinus.setAttribute("onclick", "clickZoom(1)");
+	zoomMinus.appendChild(zoomMinusB);
+	zoomMinus.appendChild(minusRect);
+	zoomBar.appendChild(zoomMinus);
+	
+	var zoomSlider = document.createElementNS(svgns, 'g');
+	zoomSlider.setAttribute("transform", "translate(0, " + radius +")");
+	zoomSlider.setAttribute("class", "zoomSlider");
+	
+	zoomLine = document.createElementNS(svgns, 'rect');
+	zoomLine.setAttribute("class", "zoomLine");
+	zoomLine.setAttribute("x", 8);
+	zoomLine.setAttribute("y", 0);
+	zoomLine.setAttribute("height", zoomHeight);
+	zoomLine.setAttribute("width", 8);
+	zoomSlider.appendChild(zoomLine);
+	
+	var dottedLine = document.createElementNS(svgns, 'line');
+	dottedLine.setAttribute("x1", 12.5);
+	dottedLine.setAttribute("y1", 0);
+	dottedLine.setAttribute("x2", 12.5);
+	dottedLine.setAttribute("y2", zoomHeight);
+	zoomSlider.appendChild(dottedLine);
+	
+	// Set up the bar that moves
 	zoomPicker = document.createElementNS(svgns, 'rect');
-	zoomPicker.setAttribute("rx", "5px");
-	zoomPicker.setAttribute("opacity", "0.5");	
-	zoomPicker.setAttribute("x", "0px");
-	zoomPicker.setAttribute("y", "0px");
-	zoomPicker.setAttribute("width", "24px");
-	zoomPicker.setAttribute("height", "10px");
-	zoomPicker.setAttribute("onmouseover", "this.setAttribute('opacity','1.0')");
-	zoomPicker.setAttribute("onmouseout","this.setAttribute('opacity','0.5')");
+	zoomPicker.setAttribute("rx", 5);
+	zoomPicker.setAttribute("class", "zoomPicker");	
+	zoomPicker.setAttribute("x", 0);
+	zoomPicker.setAttribute("y", 0);
+	zoomPicker.setAttribute("width", 24);
+	zoomPicker.setAttribute("height", 10);
+
 	zoomPicker.setAttribute("onmousedown", "zoomBarManipulate(true)");
 	zoomPicker.setAttribute("onmouseup", "zoomBarManipulate(false)");
+	zoomSlider.appendChild(zoomPicker);
+	zoomBar.appendChild(zoomSlider);
 	
-	zoomBar.appendChild(zoomPicker);
-	zoomBar.setAttribute("transform", "translate(4, 10)");
+	zoomBar.setAttribute("transform", "translate(4, 14)");
 	svgElement.appendChild(zoomBar);
 }
+
 
 function loadFlow(flowdata) {
 	var svgGraph = loadGraph(); 
@@ -221,7 +330,7 @@ function loadFlow(flowdata) {
 		var flowNode = flow.nodes[i];
 		if (flowNode != null) {
 			var node = svgGraph.createNode(flowNode.name, flowNode.name, flowNode.x, flowNode.y, flowNode.status);
-			if (flowNode.status == "succeeded" || flowNode.status == "completed") {
+			if (flowNode.status == "succeeded" || flowNode.status == "completed" || flowNode.status == "disabled") {
 				currentGraph.setEnabledNode(node, false);
 			}
 			
@@ -229,12 +338,14 @@ function loadFlow(flowdata) {
 				menu: 'nodeMenu'
 			},
 			function(action, el, pos) {
-
 					if (action == 'disable' ) {
 						currentGraph.setEnabled(false);
 					}
 					else if (action == 'enable') {
 						currentGraph.setEnabled(true);
+					}
+					else if (action == 'disableAncestor') {
+						currentGraph.disableAllAncestors();
 					}
 			});
 		}
@@ -246,11 +357,12 @@ function loadFlow(flowdata) {
 	}
 	
 	resetTransform();
+	updateZoomPicker();
 }
 
 $(function () {
 	svgElement = document.getElementById("graph");
-	setupEditButton(svgElement);
+//	setupEditButton(svgElement);
 	setupZoomBar(svgElement);
 
 	loadFlow(flowData);
