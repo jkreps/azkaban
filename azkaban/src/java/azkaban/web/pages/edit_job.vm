@@ -8,25 +8,84 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     <style type="text/css">
       .jobtable td {border: none}
     </style>
-    <script type="text/javascript" src="${context}/static/js/jquery.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.js"></script>
     <script type="text/javascript">
-      function add_row() {
-        var table = $('#jobtable');
-        var rowNum = table[0].tBodies[0].rows.length - 1;
-        var row = $('#row0').clone();
-        row[0].id = "row" + rowNum;
-        var keyInput = row.find('.key-input')[0];
-        keyInput.name = 'key' + rowNum;
-        keyInput.value = "";
-        var valInput = row.find('.val-input')[0];
-        valInput.name = 'val' + rowNum;
-        valInput.value = "";
-        table.append(row);
-      }
+    	var data = ${jsonData};
+    	var rownum = 0;
+    
+    	$(function () {
+			var params = data;
+			
+			for (var key in params) {
+				var value = params[key];
+				addNewRow(key, value);
+			}
+			
+			addNewRow("", "");
+		});
+    
+    	function addNewRow(key, value) {
+			var tbody = document.getElementById("data_rows");
+			var tr = document.createElement("tr");
+			tr.setAttribute("id", "row" + rownum);
+		
+			var tdKey = document.createElement("td"); 
+			var keyInput = document.createElement("input");
+			keyInput.setAttribute("type", "text");
+			keyInput.setAttribute("name", "key" + rownum);
+			keyInput.setAttribute("class", "key-input");
+			$(keyInput).val(key);
+			tdKey.appendChild(keyInput);
+			
+			var tdValue = document.createElement("td"); 
+			var valInput = document.createElement("input");
+			valInput.setAttribute("type", "text");
+			valInput.setAttribute("name", "val" + rownum);
+			valInput.setAttribute("class", "val-input");
+			valInput.setAttribute("size", 50);
+			$(valInput).val(value);
+			tdValue.appendChild(valInput);
+			
+			tr.appendChild(tdKey);
+			tr.appendChild(tdValue);
+			
+			tbody.appendChild(tr);
+			rownum++;
+		}
+
+    	function addRow() {
+			addNewRow("", ""); 
+		}
+    
+    	function submitData() {
+			var params = {};
+			for (var i = 0; i < rownum; i++) {
+				var key = $("#key" + rownum).val();
+				var val = $("#val" + rownum).val();
+				params[key] = val;
+			}
+			
+			var postData = {
+				job_name: $("#jobname").val(),
+				job_path: $("#editPath").val(),
+				results: params 
+			};
+			
+			jQuery.post(
+				${context} + "/job",
+				{
+					job_name: $("#jobname").val(),
+					job_path: $("#editPath").val(),
+					results: params 
+				},
+				"json"
+			);
+			
+		}
     
       $(document).ready(
       function() {
-        document.getElementById("add_row_button").onclick=add_row;
+        $("#add_row_button").click(addRow);
       });
     </script>
   </head>
@@ -37,9 +96,9 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         <h2 class="title" >Edit Job</h2>
   	    <div id="variableWidth">
   	        #messages()
+  	       <form name="props_form" method="post" action="">
   	       <div class="box">
   	       	  <h3>Job Description</h3>
-		  	  <form name="props_form" method="post" action="">
 		        <div class="jobdesc">
 		          <div>
 		            <span class="h3like">Job Name</span> 
@@ -57,40 +116,21 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		            <th>Key</th>
 		            <th>Value</th>
 		          </tr>
-		          #set($props = $job.props)
-		          #set($row = 0)
-		          #foreach($key in $props.localKeySet())
-		            <tr id="row$row">
-		              <td>
-		                <input type="text" class="key-input" name="key$row" value="$key">
-		              </td>
-		              <td>
-		                <input type="text" class="val-input" name="val$row" value="$props.getString($key)" size="50">
-		              </td>
-		            </tr>
-		            #set($row = $row + 1)
-		          #end
-		          ## empty row
-		          <tr id="row$row">
-		            <td>
-		              <input type="text" class="key-input" name="key$row" value=""/>
-		            </td>
-		            <td>
-		              <input type="text" class="val-input" name="val$row" value="" size="50"/>
-		            </td>
-		          </tr>
+		 		  <tbody id="data_rows">
+		          </tbody>
+		   			
 		        </table>
 		        
 		        <table class="jobtable">
 		          <tr>
 		            <td style="text-align: right">
 		              <input id="add_row_button" type="button" value="Add Row">
-		              <input type="submit" value="Save">
+		              <input id="save_button" type="submit" value="Save">
 		            </td>
 		          </tr>
 		        </table>
-		      </form>
   	       </div>
+  	       </form>
   	    </div>
   	</div>
   </body>

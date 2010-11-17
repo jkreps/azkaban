@@ -56,10 +56,27 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     #end
     
     <script type='text/javascript'>
-          $(document).ready(
-	      	function() {
-	        $('#editbutton').button();
-	      });
+	     var data = ${jsonData};
+         $(function () {
+         	$('#editbutton').button();
+         
+			var params = data;
+			
+			var table = document.getElementById("params");
+			for (var key in params) {
+				var value = params[key];
+				var tr = document.createElement("tr");
+				var tdKey = document.createElement("td"); 
+				var tdVal = document.createElement("td"); 
+				$(tdKey).text(key);
+				$(tdVal).text(value);
+				
+				tr.appendChild(tdKey);
+				tr.appendChild(tdVal);
+				table.appendChild(tr);
+			}
+		});
+    
     </script>
   </head>
   <body>
@@ -161,17 +178,11 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			    
 			    <div class="box">
 			        <h3>Job Properties</h3>
-			    	<table class="jobtable translucent">
+			    	<table id="params" class="jobtable translucent">
 			        <tr>
 			          <th>Key</th>
 			          <th>Value</th>
 			        </tr>
-			        #foreach($key in $job.props.localKeySet())
-			        <tr>
-			          <td>$key</td>
-			          <td>$job.props.get($key)</td>
-			        </tr>
-			        #end
 			      </table>
 			    </div>
   	       </div>

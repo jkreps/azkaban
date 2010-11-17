@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
 
 import azkaban.app.AzkabanApplication;
 import azkaban.app.JobDescriptor;
@@ -58,15 +59,22 @@ public class JobDetailServlet extends AbstractAzkabanServlet {
         boolean isEditing = req.getParameter("edit") != null;
         if(jobId == null) {
             Page page = newPage(req, resp, "azkaban/web/pages/edit_job.vm");
+            page.add("jsonData", getJSONText(new Props()));
             page.render();
         } else if(isEditing) {
             Page page = newPage(req, resp, "azkaban/web/pages/edit_job.vm");
-            page.add("job", descriptors.get(jobId));
+            JobDescriptor jdesc = descriptors.get(jobId);
+
+            page.add("job", jdesc);
+            page.add("jsonData", getJSONText(jdesc.getProps()));
             page.render();
         } else {
             Page page = newPage(req, resp, "azkaban/web/pages/job_detail.vm");
-            page.add("job", descriptors.get(jobId));
+            JobDescriptor jdesc = descriptors.get(jobId);
+            page.add("job", jdesc);
             page.add("descriptors", descriptors);
+            page.add("jsonData", getJSONText(jdesc.getProps()));
+            
             List<JobExecution> execs = jobManager.loadJobExecutions(jobId);
             int successes = 0;
             for(JobExecution exec: execs)
@@ -106,4 +114,14 @@ public class JobDetailServlet extends AbstractAzkabanServlet {
         }
     }
 
+    @SuppressWarnings("unchecked")
+	private String getJSONText(Props prop) {
+    	JSONObject jsonObj = new JSONObject();
+    	for( String key : prop.localKeySet() ) {
+    		Object value = prop.get(key);
+    		jsonObj.put(key, value);
+    	}
+    	
+    	return jsonObj.toJSONString();
+    }
 }

@@ -60,7 +60,6 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         final FlowManager allFlows = this.getApplication().getAllFlows();
      
         if (hasParam(req, "job_id")) {
-        	
         	String jobID = getParam(req, "job_id");
         	ExecutableFlow flow = allFlows.createNewExecutableFlow(jobID);
         	
