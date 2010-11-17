@@ -72,7 +72,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			};
 			
 			jQuery.post(
-				${context} + "/job",
+				"${context}" + "/job",
 				{
 					job_name: $("#jobname").val(),
 					job_path: $("#editPath").val(),
