@@ -369,6 +369,7 @@ function SVGGraph() {
 		node.setAttributeNS(null, "onmousedown", "this.obj.nodeClicked('"  + id + "')");
 		node.setAttributeNS(null, "onmouseover", "this.obj.nodeOver('"  + id + "','over')");
 		node.setAttributeNS(null, "onmouseout", "this.obj.nodeOver('"  + id + "','out')");
+		node.setAttributeNS(null, "title", label + ": " + type);
 		
 		node['obj'] = this; 
 		node['selected'] = false;

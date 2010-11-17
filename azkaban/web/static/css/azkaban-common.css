@@ -127,17 +127,8 @@ body {
 	color: #FFF;
 }
 
-a:visited:hover {
-	color:#FFF;
-}
-
-
 a:hover {
-	color:#50e8ff;
-}
-
-a:visited {
-	color:#a7ceff;
+	color:#FFF;
 }
 
 a {
@@ -149,7 +140,10 @@ a {
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 
-	padding: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
+	padding-top: 5px;
+	padding-bottom: 20px;
 	margin-bottom: 10px;
 	text-align: center;
 	color: #FFF;
@@ -166,13 +160,11 @@ a {
 .box h3 {
 	color: #CCC;
 	font-size: 16pt;
-	/*text-shadow: rgba(0, 0, 0, .8) 0px 3px 6px;*/
 }
 
 .box .h3like {
 	color: #CCC;
 	font-size: 14pt;
-	text-shadow: rgba(0, 0, 0, .8) 0px 3px 6px;
 }
 
 #variableWidth {
@@ -200,7 +192,6 @@ a {
 }
 
 .jobtable th {
-	text-shadow: rgba(0, 0, 0, .25) 0px 3px 6px;
 	padding: 5px;
 }
 
@@ -343,18 +334,18 @@ a {
 
 /* Index page job list*/
 .joblist {
-	background-color: #FFF;
+	background-color: #CCC;
 	text-align: left;
 	margin-left: 20px;
 	margin-right: 20px;
 	margin-top: 15px;
-	margin-bottom: 15px;
+	padding: 2px 3px;
 	-moz-border-radius: 10px;
 	-webkit-border-radius: 10px;
 }
 
 .joblist a {
-	color: #b80011;
+	color: darkred;
 	font-size:110%;
 	padding-left:3px;
 	text-decoration:none;
@@ -390,7 +381,6 @@ a {
 .jobfolder {
 	color: #FFFFFF;
 	font-size: 12pt;
-	text-shadow: rgba(0, 0, 0, .3) 0px 3px 6px;
 	
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
@@ -407,19 +397,19 @@ a {
 }
 
 .jobtable .job-name-FAILED {
-	color: #A00;
+	color: darkred;
 }
 
 .jobtable .job-name-READY {
-	color: #CCC;
+	color: #CCC; 
 }
 
 .jobtable .job-name-RUNNING {
-	color: blue;
+	color: #008;
 }
 
 .jobtable .job-name-SUCCEEDED {
-	color: #CCC;
+	color: #0C5;
 }
 
 .jobtable .job-name-COMPLETED {
@@ -436,12 +426,12 @@ a {
 	color: #AAA;
 }
 
-.jobdesc a{
-	text-decoration: none;
+.jobdesc input {
+	margin-bottom: 10px;
 }
 
-.jobtable a:visited:hover {
-	color: #FFF;
+.jobdesc a{
+	text-decoration: none;
 }
 
 .jobtable a:hover {
@@ -516,7 +506,7 @@ rect.zoomLine {
 	stroke: #777;
 	stroke-dasharray: 3, 25;
 }
-
+job
 .zoomButton {
 	cursor: pointer;
 }
@@ -544,3 +534,6 @@ rect.zoomLine {
   color: #F00000;
 }
 
+#file {
+	color: #AAA;	
+}

@@ -5,13 +5,15 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   <head>
     <title>#appname()</title>
     <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"></link>
+    <link rel="stylesheet" type="text/css" href="${context}/static/js/jquery/jquery.contextMenu.css"></link>
     <link rel="stylesheet" type="text/css" href="${context}/static/js/jqueryui/themes/custom-theme/jquery-ui.custom.css"></link>
-    <script type="text/javascript" src="${context}/static/js/jquery.js"></script>
+ 
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jqueryui/jquery-ui.custom.min.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.contextMenu.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.tools.min.js"></script>
     <script type="text/javascript" src="${context}/static/js/azkaban-graph.js"></script>
     <script type="text/javascript" src="${context}/static/js/azkaban-flow.js"></script>
-    <script src="${context}/static/js/jqueryui/jquery-ui.custom.min.js"></script>
-    <script src="${context}/static/js/jquery/jquery.contextMenu.js"></script>
-    <link rel="stylesheet" type="text/css" href="${context}/static/js/jquery/jquery.contextMenu.css"></link>
    
     <script type="text/javascript">
     	var flowData = '${jsonflow}';
@@ -20,6 +22,22 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     	var action = '${action}';
     	var name = '${name}';
     </script>
+    <style>
+    	.tooltip {
+			background-color:#000;
+			border:1px solid #fff;
+			padding:10px 15px;
+			width:125px;
+			display:none;
+			color:#fff;
+			text-align:left;
+			font-size:12px;
+		
+			/* outline radius for mozilla/firefox only */
+			-moz-box-shadow:0 0 10px #000;
+			-webkit-box-shadow:0 0 10px #000;
+		}
+    </style>
   </head>
   <body>
     #appnamebox()
@@ -28,7 +46,11 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   	    <div id="variableWidth">
   	        #messages()
   	       <div class="box">
-  	       		<h3>Name: ${name} ID: ${id}</h3>
+  	       		#if($id == 0)
+  	       		<h3>Name: ${name}</h3>
+  	       		#else
+  	       		<h3>Name: ${name}   Flow ID: ${id}</h3>
+  	       		#end
   	       		<div id="content2">
 	  	       	   	<div id="graphTab" onmousedown="moveGraph(this, event, 'down')" onmouseup="moveGraph(this, event, 'up')" onmouseover="mouseFocus('true')" onmouseout="mouseFocus('false')" >
 						<svg id="graph" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 100% 100%" > 

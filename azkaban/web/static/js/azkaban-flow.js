@@ -358,6 +358,7 @@ function loadFlow(flowdata) {
 	
 	resetTransform();
 	updateZoomPicker();
+
 }
 
 $(function () {

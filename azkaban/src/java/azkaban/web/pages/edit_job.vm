@@ -42,11 +42,11 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		  	  <form name="props_form" method="post" action="">
 		        <div class="jobdesc">
 		          <div>
-		            <span class="h3like">Job Name:</span> 
-		            <input name="job_name" type="text" value="$!job.id"><br/>
+		            <span class="h3like">Job Name</span> 
+		            <input id="jobname" name="job_name" type="text" value="$!job.id"/><br/>
 		          </div>
 		          <div>
-		            <span class="h3like">Path:</span> <input name="job_path" type="text" value="$!job.path">
+		            <span class="h3like">Path</span> <input id="editPath" name="job_path" type="text" value="$!job.path" />
 		          </div>
 		        </div>
 		   </div>
@@ -73,10 +73,10 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		          ## empty row
 		          <tr id="row$row">
 		            <td>
-		              <input type="text" class="key-input" name="key$row" value="">
+		              <input type="text" class="key-input" name="key$row" value=""/>
 		            </td>
 		            <td>
-		              <input type="text" class="val-input" name="val$row" value="" size="50">
+		              <input type="text" class="val-input" name="val$row" value="" size="50"/>
 		            </td>
 		          </tr>
 		        </table>

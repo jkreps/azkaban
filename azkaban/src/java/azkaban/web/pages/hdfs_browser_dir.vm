@@ -11,17 +11,17 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
       .breadcrumbs {
      	text-align:center;
         font-size: 24pt;
-        color: #EEEEEE;
+        color: #CCC;
         font-weight: bold;
         padding: 10px;
       }
       
       .breadcrumbs a:hover {
-      	color: yellow;
+      	color: #FFF;
       }
       
       .breadcrumbs a {
-        color: white;
+        color: #CCC;
         text-decoration: none;
       }
       .subdirs {

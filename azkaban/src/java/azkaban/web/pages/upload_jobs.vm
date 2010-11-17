@@ -5,6 +5,9 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   <head>
     <title>#appname()</title>
     <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"></link>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.tools.min.js"></script>
+
 	<script type='text/javascript'>
 		function changeFile() {
 			if(document.getElementById('path').value == '') {
@@ -19,8 +22,37 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 				document.getElementById('path').value=dir.substring(startIndex, lastIndexOf);
 			}
 		}
-
+		
+		$(function () {
+			$("#path").tooltip({
+				position: "center right",
+				offset: [0, 10],
+				effect: "fade",
+				opacity: 0.9,
+				predelay: 250
+			});
+		});
+		
 	</script>
+	<style>
+
+		.tooltip {
+			background-color:#000;
+			border:1px solid #fff;
+			padding:10px 15px;
+			width:250px;
+			display:none;
+			color:#fff;
+			text-align:left;
+			font-size:12px;
+		
+			/* outline radius for mozilla/firefox only */
+			-moz-box-shadow:0 0 10px #000;
+			-webkit-box-shadow:0 0 10px #000;
+		}
+
+      </style>
+	
   </head>
   
   <body>
@@ -39,8 +71,9 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			        <input type="hidden" name="redirect_success" value="$!context/job-upload"/>
 			        <table style="text-align:left;">
 			          <tr>
-			            <td class="h3like">Upload To Path:</td>
-			            <td><input id="path" name="path" type="text" size="20"/>
+			            <td class="h3like">Job Upload Path</td>
+			            <td><input id="path" name="path" type="text" size="20" 
+							title="The destination path that the zip file will be uncompressed to on Azkaban. If the path already exists in Azkaban, it will be overwritten."/>
 			          </tr>
 			          <tr>
 			            <td class="h3like">Job Package Zip</td>
