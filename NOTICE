@@ -4,8 +4,11 @@
    =========================================================================
 
 This product includes the libraries
+  avro
+  commons-cli
   commons-codec
   commons-collections
+  commons-dbcp
   commons-fileupload
   commons-httpclient
   commons-io
@@ -14,17 +17,20 @@ This product includes the libraries
   commons-pool
   catalina-ant
   hadoop
-  joda-time
   log4j
   servlet-api
   velocity
   all of which are software developed by The Apache Software Foundation (http://www.apache.org/)
-  
+
 This product includes google-collections and protocol buffers, two libraries developed by Google (http://www.google.com, http://code.google.com/p/google-collections/ and http://code.google.com/apis/protocolbuffers/).
 
 This product includes jdom, a library developed by jdom.org.
 
 This product includes jopt-simple, a library for parsing command line options (http://jopt-simple.sourceforge.net/).
+
+This product includes json-simple, a simplified library for json parsing (http://code.google.com/p/json-simple/).
+
+This product includes json, a library for json parsin (http://code.google.com/p/json-simple/).
 
 This product includes Jackson, a JSON processor (http://jackson.codehaus.org/).
 
@@ -38,7 +44,7 @@ This product includes voldemort, developed by project-voldemort.org
 
 This product includes joda-time, developed by joda-time.sourceforge.net
 
-This project include objenesis, developed by objenesis.org
+This project includes objenesis, developed by objenesis.org
 
 This project includes slf4j, developed by slf4j.org
  Copyright (c) 2004-2008 QOS.ch
@@ -62,5 +68,30 @@ This project includes slf4j, developed by slf4j.org
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
- 
- 
+
+
+This project includes jquery, a javascript library under the MIT license (jquery.org))
+This project includes jtreeview, a jquery tree plugin under the MIT license (http://bassistance.de/jquery-plugins/jquery-plugin-treeview/))
+This project includes jstree, a jquery tree plugin under the MIT license (http://www.jstree.com/))
+This project includes tablesorter, a jquery tree plugin under the MIT license (http://tablesorter.com/docs/))
+ Copyright (c) 2010 John Resig, http://jquery.com/
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
