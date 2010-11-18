@@ -38,23 +38,6 @@ function SVGGraph() {
 		edgeTypeToColor[type] = color;
 	}
 	
-//	function setNodeStyleFromType(node) {
-//		var color = "#222222";
-//		var type = node.type;
-//		if (type == "disabled") {
-//			node.setAttributeNS(null, "opacity", 0.5);
-//		}
-//		else {
-//			node.setAttributeNS(null, "opacity", 1.0);
-//		}
-//
-//		if (nodeTypeToColor[type]) {
-//			color = nodeTypeToColor[type];
-//		}
-//
-//		node.topRect.setAttributeNS(null, "fill", color );
-//	}
-
 	this.setEnabledNode = function(node, enable) {
 		node['enabled'] = enable;
 		if (enable) {
@@ -73,12 +56,17 @@ function SVGGraph() {
 			selectedNode['enabled'] = enable;
 			if (enable) {
 				this.removeClass(selectedNode, 'disabled');
-				//selectedNode.setAttributeNS(null, "opacity", 1.0);
 			}
 			else {
 				this.addClass(selectedNode, 'disabled');
-				//selectedNode.setAttributeNS(null, "opacity", 0.5);
 			}
+		}
+	}
+	
+	this.enableAll = function() {
+		for (var key in nodeMap) {
+			var node = nodeMap[key];
+			this.setEnabledNode(node, true);
 		}
 	}
 	
@@ -139,9 +127,12 @@ function SVGGraph() {
 		}
 		
 		debugText = document.createElementNS(svgns, 'text');
-		debugText.setAttributeNS(null, "y", 15);
+		debugText.setAttributeNS(null, "class", "nodeDesc");
+		debugText.setAttributeNS(null, "y", svgElement.parentNode.clientHeight - 15);
 		debugText.setAttributeNS(null, "x", 15);
 		debugText.setAttributeNS(null, "fill", "#000000");
+		debugText.setAttributeNS(null, "font-size", 20);
+		debugText.setAttributeNS(null, "font-family", "helvetica, arial, sans-serif");
 		debugLabel = document.createTextNode("");
 		var test = debugLabel;
 		debugText.appendChild(debugLabel);
@@ -360,6 +351,7 @@ function SVGGraph() {
 		nodeMap[id] = node;
 		node["enabled"] = true;
 		node["type"] = type;
+		node["id"] = id;
 		node["recurseID"] = -1;
 		node.setAttributeNS(null, "id", id);
 		node.setAttributeNS(null, "class", "node");
@@ -382,37 +374,17 @@ function SVGGraph() {
 		rect1.setAttributeNS(null, "height", 30);
 		rect1.setAttributeNS(null, "class", "button " + type);
 		rect1.setAttributeNS(null, "style", "width:inherit;fill-opacity:1.0;stroke-opacity:1");
-		
-		var rect2 = document.createElementNS(svgns, 'rect');
-		rect2.setAttributeNS(null, "x", 6);
-		rect2.setAttributeNS(null, "y", 18);
-		rect2.setAttributeNS(null, "ry", 15);
-		rect2.setAttributeNS(null, "width", 12);
-		rect2.setAttributeNS(null, "height", 12);
-		rect2.setAttributeNS(null, "fill", "url(#linearGradient5380)");
-		rect2.setAttributeNS(null, "style", "fill:url(#buttonGradient);fill-opacity:1;stroke:none");
 
-		var rect3 = document.createElementNS(svgns, 'rect');
-		rect3.setAttributeNS(null, "x", 10);
-		rect3.setAttributeNS(null, "y", 4);
-		rect3.setAttributeNS(null, "ry", 1);
-		rect3.setAttributeNS(null, "height", 1.5);
-		rect3.setAttributeNS(null, "style", "fill:#d9d9d9;fill-opacity:0.5;stroke:none");
-		
 		var text = document.createElementNS(svgns, 'text');
 		var textLabel = document.createTextNode(label);
 		var guessLength = textLabel.length * 6;
 		text.appendChild(textLabel);
-//		text.setAttributeNS(null, "fill", "#DDDDDD");
-//		text.setAttributeNS(null, "stroke", "none")
 		text.setAttributeNS(null, "x", 12);
 		text.setAttributeNS(null, "y", 24);
 		text.setAttributeNS(null, "height", 10); 
 		
 		var innerG = document.createElementNS(svgns, 'g');
 		innerG.appendChild(rect1);
-	//	innerG.appendChild(rect2);
-	//	innerG.appendChild(rect3);
 		innerG.appendChild(text);
 		node.appendChild(innerG);
 		
@@ -420,8 +392,6 @@ function SVGGraph() {
 
 		var computeText = text.getComputedTextLength();
 		rect1.setAttributeNS(null, "width", 20 + computeText);
-		rect2.setAttributeNS(null, "width", 12 + computeText);
-		rect3.setAttributeNS(null, "width", 4 + computeText);
 		
 		var halfHeight = 15;
 		var halfWidth = computeText/2 + 10;
@@ -461,7 +431,6 @@ function SVGGraph() {
 
 	this.zoomGraphFactor = function(s, x, y) {
 		if (viewer != null) {
-			//debugLabel.textContent = x+","+y;
 			
 			nx = x;
 			ny = y;
@@ -534,9 +503,11 @@ function SVGGraph() {
 		var node = nodeMap[id];
 		if (over == 'over') {
 			nodeEntered = node;
+			debugLabel.textContent = node.getAttribute("title");
 		}
 		else if (over == 'out') {
 			nodeEntered = null;
+			debugLabel.textContent = "";
 		}
 	};
 	

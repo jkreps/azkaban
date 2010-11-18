@@ -57,32 +57,6 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			addNewRow("", ""); 
 		}
     
-    	function submitData() {
-			var params = {};
-			for (var i = 0; i < rownum; i++) {
-				var key = $("#key" + rownum).val();
-				var val = $("#val" + rownum).val();
-				params[key] = val;
-			}
-			
-			var postData = {
-				job_name: $("#jobname").val(),
-				job_path: $("#editPath").val(),
-				results: params 
-			};
-			
-			jQuery.post(
-				"${context}" + "/job",
-				{
-					job_name: $("#jobname").val(),
-					job_path: $("#editPath").val(),
-					results: params 
-				},
-				"json"
-			);
-			
-		}
-    
       $(document).ready(
       function() {
         $("#add_row_button").click(addRow);

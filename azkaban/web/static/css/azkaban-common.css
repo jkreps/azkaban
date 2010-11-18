@@ -453,8 +453,24 @@ a {
 }
 
 
+span.running {
+	color: #037;
+}
+
+span.failed {
+	color: #A00;
+}
+
+span.succeeded {
+	color: #070;
+}
+
+span.ready {
+	color: #444;
+}
+
 rect.button.running  {
-	fill: #006;
+	fill: #037;
 }
 
 rect.button.failed  {
@@ -506,7 +522,7 @@ rect.zoomLine {
 	stroke: #777;
 	stroke-dasharray: 3, 25;
 }
-job
+
 .zoomButton {
 	cursor: pointer;
 }
@@ -536,4 +552,24 @@ job
 
 #file {
 	color: #AAA;	
+}
+
+#helpbutton {
+	width: 32px;
+	height: 32px;
+	float: left;
+	background: url('../help.png') 0 0;
+	cursor: pointer;
+}
+
+#helpbutton:hover {
+	background-position: 0px 63px;
+}
+
+#helpbutton.selected {
+	background-position: 0px 32px;
+}
+
+.message {
+	color: black;
 }

@@ -229,12 +229,6 @@ public class Scheduler {
         ExecutableFlow flow = holder.getFlow();
         logger.info("Scheduling job '" + flow.getName() + "' for now");
 
-        ScheduledJob oldScheduledJob = _scheduled.get(flow.getName());
-        // Invalidate any old scheduled job of the same name.
-        if(oldScheduledJob != null) {
-            throw new RuntimeException("Schedule for flow already exists " + flow.getName());
-        }
-
         final ScheduledJob schedJob = new ScheduledJob(flow.getName(),
                                                        _jobManager,
                                                        new DateTime(),
@@ -255,12 +249,6 @@ public class Scheduler {
         final Props parentProps = produceParentProperties(flow);
         FlowExecutionHolder holder = new FlowExecutionHolder(flow, parentProps);
         logger.info("Scheduling job '" + flow.getName() + "' for now");
-
-        ScheduledJob oldScheduledJob = _scheduled.get(flow.getName());
-        // Invalidate any old scheduled job of the same name.
-        if(oldScheduledJob != null) {
-            throw new RuntimeException("Schedule for flow already exists " + flow.getName());
-        }
 
         final ScheduledJob schedJob = new ScheduledJob(flow.getName(),
                                                        _jobManager,
@@ -333,12 +321,6 @@ public class Scheduler {
     private ScheduledFuture<?> schedule(final ScheduledJob schedJob, boolean saveResults) {
         // fail fast if there is a problem with this job
         _jobManager.validateJob(schedJob.getId());
-
-        ScheduledJob oldScheduledJob = _scheduled.get(schedJob.getId());
-        // Invalidate any old scheduled job of the same name.
-        if(oldScheduledJob != null) {
-            throw new RuntimeException("Schedule for job already exists " + schedJob.getId());
-        }
 
         Duration wait = new Duration(new DateTime(), schedJob.getScheduledExecution());
         if(wait.getMillis() < -1000) {

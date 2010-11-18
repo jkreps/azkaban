@@ -347,8 +347,33 @@ function loadFlow(flowdata) {
 					else if (action == 'disableAncestor') {
 						currentGraph.disableAllAncestors();
 					}
+					else if (action == 'enableAll') {
+						currentGraph.enableAll();
+					}
+					else if (action == 'jobdetails') {
+						var selection = currentGraph.getSelectedNodes()
+						if (selection.length > 0) {
+							var id = selection[0].id;
+							window.location.href= contextURL + "/job?id=" + id;
+						}
+					}
 			});
 		}
+		
+		$(svgGraph).tooltip({
+			position: "bottom right",
+			offset: [0, 10],
+			effect: "fade",
+			opacity: 0.9,
+			predelay: 500,
+			tipClass: flowNode.name + " tooltip",
+			onBeforeShow: function(evt, pos) {
+				var event = evt;
+			},
+			onShow: function(evt) {
+				var event = evt;
+			}
+		});
 	}
 	
 	for (var i=0; i < flow.dependencies.length; i++) {
@@ -383,10 +408,19 @@ function executeFlow() {
 			"disabled" : retval
 		},
 		'success': function(data) {
-			window.location = contextURL + "/";
+			window.location.href = contextURL + "/";
 		}
 	});
 
+}
+
+function showHelpScreen() {
+	$("#nonModelDialog").dialog(
+		{
+			width: '600px',
+			dialogClass: 'helpdialog'
+		}
+	);
 }
 
 window.onload = function() {

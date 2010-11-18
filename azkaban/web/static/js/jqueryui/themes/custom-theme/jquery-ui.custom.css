@@ -439,8 +439,8 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
  *
  * http://docs.jquery.com/UI/Dialog#theming
  */
-.ui-dialog { position: absolute; padding: .2em; width: 300px; overflow: hidden; background-color:rgba(0, 0, 0, 0.7); }
-.ui-dialog .ui-dialog-titlebar { padding: .5em 1em .3em; position: relative; background-color:rgba(0, 0, 0, 0.8); }
+.ui-dialog { position: absolute; padding: .2em; width: 300px; overflow: hidden; background-color:rgba(0, 0, 0, 0.95); }
+.ui-dialog .ui-dialog-titlebar { padding: .5em 1em .3em; position: relative; background-color: #333; }
 .ui-dialog .ui-dialog-title { float: left; margin: .1em 16px .2em 0; } 
 .ui-dialog .ui-dialog-titlebar-close { position: absolute; right: .3em; top: 50%; width: 19px; margin: -10px 0 0 0; padding: 1px; height: 18px; }
 .ui-dialog .ui-dialog-titlebar-close span { display: block; margin: 1px; }
