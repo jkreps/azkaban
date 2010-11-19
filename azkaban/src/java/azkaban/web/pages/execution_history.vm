@@ -86,7 +86,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		            <th>Ended</th>
 		            <th>Elapsed</th>
 		            <th>Status</th>
-		            <th>Restart</th>
+		            <th>Action</th>
 		          </tr>
 		          #foreach($flow in $executions)
 		            <tr>
@@ -117,7 +117,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		                $flow.status
 		              </td>
 		              <td class="blue">
-		                <a href="${context}/flow?action=restart&id=${flow.id}">restart</a>
+		                <a href="${context}/flow?action=restart&id=${flow.id}">view&#47;restart</a>
 		              </td>
 		            </tr>
 		          #end

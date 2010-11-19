@@ -152,6 +152,10 @@ a {
 	background-repeat:repeat-x;
 }
 
+.box.message {
+	min-height: 10px;
+}
+
 .box hr {
 	width : 75%;
 	border-color: rgba(255,255,255, .2);
@@ -376,6 +380,7 @@ a {
 	padding: 7px 10px 7px 10px;
 	margin: 2px;
 	cursor: pointer;
+	text-shadow: rgba(0,0,0, 0.4) 0px 0px 0.2em;
 }
 
 .jobfolder {
@@ -571,5 +576,6 @@ rect.zoomLine {
 }
 
 .message {
-	color: black;
+	font-size: 14pt;
+	padding: 5px;
 }
