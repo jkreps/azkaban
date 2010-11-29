@@ -120,5 +120,4 @@ public class JavaProcessJob extends ProcessJob {
 
 		return "";
 	}
-
 }

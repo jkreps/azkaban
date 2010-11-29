@@ -109,11 +109,11 @@ public abstract class AbstractProcessJob extends AbstractJob {
 
     
     public Map<String, String> getEnvironmentVariables( ) {
-        return _props.getMapByPrefix(ENV_PREFIX);
+        return getProps().getMapByPrefix(ENV_PREFIX);
     }
     
     public String getWorkingDirectory() {
-        return  _props.getString(WORKING_DIR,  new File(_jobPath).getParent());
+        return  getProps().getString(WORKING_DIR,  new File(_jobPath).getParent());
     }
     
     public Props loadOutputFileProps( File outputPropertiesFile)
