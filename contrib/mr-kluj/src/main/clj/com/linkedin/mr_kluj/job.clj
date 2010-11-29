@@ -81,18 +81,9 @@
 
     It is acceptable for this method to do nothing and just return reducer-fn."))
 
-(defrecord StagedHadoopJob [job-name staging-location]
+(defrecord EmptyHadoopJob []
   HadoopJob
-  (starter [this]
-    (println "Creating job" job-name)
-    (fn []
-      (let [logger (Logger/getLogger (str job-name))]
-        (doto (StagedOutputJob. (format "%s/%s" staging-location job-name) logger)
-          (.setJobName job-name)
-          (.setJarByClass GenericClojureJob)
-          (.setMapperClass ClojureMapper)
-          (.setReducerClass ClojureReducer)
-          (FileInputFormat/setInputPathFilter HiddenFilePathFilter)))))
+  (starter [this] (fn [] nil))
   (mapper [this] (fn [key value context] [[key value]]))
   (combiner [this] (fn [key values context] (map (partial vector key) values)))
   (reducer [this] (fn [key values context] (map (partial vector key) values))))
@@ -429,22 +420,73 @@
           (.stringPropertyNames properties)))
       job)))
 
+(defn basic-job-creator
+  [job-name]
+  (fn [_]
+    (println "Creating job" job-name)
+    (doto (Job.)
+      (.setJobName job-name))))
+
+(defn staged-job-creator
+  [job-name staging-location]
+  (fn [_]
+    (println "Creating job" job-name)
+    (doto (StagedOutputJob. (format "%s/%s" staging-location job-name) (Logger/getLogger (str job-name)))
+      (.setJobName job-name))))
+
+(defn default-clojure-job-setup
+  [^Job job]
+  (doto job
+    (.setJarByClass GenericClojureJob)
+    (.setMapperClass ClojureMapper)
+    (.setReducerClass ClojureReducer)
+    (FileInputFormat/setInputPathFilter HiddenFilePathFilter)))
+
+
 (defmacro run
   "Sets up the jobs to run.  Takes a sequence of jobs that are run in the order specified"
   [& jobs]
   `(def ~(symbol "the-jobs")
     ~(vec jobs)))
 
+(defmacro run-jobs
+  "Sets up the jobs to run.  Takes a sequence of jobs that are run in the order specified"
+  [jobs]
+  `(def ~(symbol "the-jobs")
+    ~jobs))
+
+(defmacro make-job
+  "Makes a job.
+
+  job-maker is a no-arg function that creates an instance of org.apache.hadoop.mapreduce.Job
+  wrappers is a sequence of wrappers that are used to define the MapReduce job.  They are applied in top-down order."
+  [job-maker & wrappers]
+  `(WrappedHadoopJob.
+    (EmptyHadoopJob.)
+    (compose-wrappers ~@(reverse
+			 (concat `[(add-config ~job-maker)
+				   (add-config default-clojure-job-setup)]
+				 wrappers)))))
+
+(defmacro job
+  "Sets up a staged job.
+
+  job-name is the name of the job as will appear on the JobTracker.
+  wrappers is as defined by make-job"
+  [job-name & wrappers]
+  `(make-job (basic-job-creator ~job-name)
+	     ~@wrappers))
+
 (defmacro staged-job
   "Sets up a staged job.
 
   job-name is the name of the job as will appear on the JobTracker.
   staging-location is a path where the job should stage its output.
-  wrappers is a sequence of wrappers that are used to define the MapReduce job.  They are applied in top-down order."
+  wrappers is as defined by make-job"
   [[job-name staging-location] & wrappers]
-  `(WrappedHadoopJob.
-    (StagedHadoopJob. ~job-name ~staging-location)
-    (compose-wrappers ~@(reverse wrappers))))
+  `(make-job (fn [] (staged-job-creator ~job-name ~staging-location))
+	     ~@wrappers))
+    
 
 (defn map-function
   "Creates an actual map function that uses the Context object to write things out.  This is used by ClojureMapper and
