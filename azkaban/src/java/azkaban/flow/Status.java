@@ -24,5 +24,6 @@ public enum Status {
     SUCCEEDED,
     FAILED,
     READY,
-    COMPLETED
+    COMPLETED,
+    IGNORED
 }

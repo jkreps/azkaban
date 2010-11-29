@@ -7,13 +7,10 @@
 		<listener-class>azkaban.web.AzkabanServletContextListener</listener-class>
 	</listener>
 
-	<!--
-		<servlet> <servlet-name>default</servlet-name> <servlet-class>
-		org.apache.catalina.servlets.DefaultServlet</servlet-class>
-		<init-param> <param-name>listings</param-name>
-		<param-value>true</param-value> </init-param>
-		<load-on-startup>1</load-on-startup> </servlet>
-	-->
+	<mime-mapping>
+        <extension>ico</extension>
+        <mime-type>image/x-icon</mime-type>
+    </mime-mapping>
 
 	<servlet>
 		<servlet-name>main</servlet-name>
@@ -36,6 +33,11 @@
 	</servlet>
 
 	<servlet>
+		<servlet-name>flow-execution</servlet-name>
+		<servlet-class>azkaban.web.pages.FlowExecutionServlet</servlet-class>
+	</servlet>
+
+	<servlet>
 		<servlet-name>job-manager</servlet-name>
 		<servlet-class>azkaban.web.JobManagerServlet</servlet-class>
 	</servlet>
@@ -54,6 +56,11 @@
 		<servlet-name>fs</servlet-name>
 		<servlet-class>azkaban.web.pages.HdfsBrowserServlet</servlet-class>
 	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>/favicon.ico</url-pattern>
+	</servlet-mapping>
 
 	<servlet-mapping>
 		<servlet-name>main</servlet-name>
@@ -86,6 +93,11 @@
 	</servlet-mapping>
 
 	<servlet-mapping>
+		<servlet-name>flow-execution</servlet-name>
+		<url-pattern>/flow</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
 		<servlet-name>job-manager</servlet-name>
 		<url-pattern>/api/jobs</url-pattern>
 	</servlet-mapping>
@@ -94,7 +106,6 @@
 		<servlet-name>fs</servlet-name>
 		<url-pattern>/fs/*</url-pattern>
 	</servlet-mapping>
-
 
 	<servlet-mapping>
 		<servlet-name>default</servlet-name>

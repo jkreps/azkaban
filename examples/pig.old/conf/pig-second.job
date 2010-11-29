@@ -1,5 +1,0 @@
-type=java
-job.class=azkaban.examples.pig.PigRunnerJob
-dependencies=pig-first
-pig.script=script2-hadoop.pig
-hadoop.job.ugi=user,group

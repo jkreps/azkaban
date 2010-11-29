@@ -118,13 +118,15 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                 case RUNNING:
                     callbacksToCall.add(callback);
                     return;
+                case IGNORED:
+                	jobState = Status.COMPLETED;
                 case COMPLETED:
                 case SUCCEEDED:
                     callback.completed(Status.SUCCEEDED);
                     return;
                 case FAILED:
                     callback.completed(Status.FAILED);
-                    return;
+                    return;     	
             }
         }
 
@@ -216,6 +218,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                 case COMPLETED:
                 case SUCCEEDED:
                 case FAILED:
+                case IGNORED:
                     return true;
                 default:
                     jobState = Status.FAILED;
@@ -304,7 +307,15 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         return exceptions;
     }
 
-    IndividualJobExecutableFlow setStatus(Status newStatus) {
+    /**
+     * This use to be package protected, but I've made it public to handle
+     * a more robust case of disabled jobs. This will be replaced with the
+     * new flow code soon.
+     * 
+     * @param newStatus
+     * @return
+     */
+    public IndividualJobExecutableFlow setStatus(Status newStatus) {
         synchronized(sync) {
             switch(jobState) {
                 case READY:
@@ -383,7 +394,7 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
         returnProps = null;
         startTime = null;
         endTime = null;
-        exceptions.clear();;
+        exceptions.clear();
     }
 
     IndividualJobExecutableFlow setReturnProperties(Props returnProps)

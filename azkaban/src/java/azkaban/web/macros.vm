@@ -31,17 +31,21 @@
   #set($errors = $session.getAttribute('errors'))
   #if($errors)
     #foreach($error in $errors)
-      <div class="error">
-        ERROR: $error
-      </div>
+      <div class="box message">
+	      <div class="error">
+	        ERROR: $error
+	      </div>
+	  </div>
     #end
   #end
   #set($messages = $session.getAttribute('messages'))
   #if($messages)
     #foreach($message in $messages)
-      <div class="message">
-        $message
-      </div>
+          <div class="box message">
+		      <div class="message">
+		        $message
+		      </div>
+		  </div>
     #end
   #end
   $session.removeAttribute('messages')

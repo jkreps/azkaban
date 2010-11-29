@@ -1,16 +1,3 @@
-body {
-	background-color: darkred;
-}
-
-h1 {
-	color: black;
-	font-size: 30pt;
-}
-
-h2 {
-	color: black;
-	font-size: 20pt;
-}
 
 #header-box {
 	margin: 10px;
@@ -43,23 +30,6 @@ h2 {
 	border: 3px solid black;
 }
 
-.jobtable {
-	margin: auto;
-	border-spacing: 0px;
-	border-collapse: collapse;
-	font-size: 100%;
-}
-
-.jobtable td {
-	border: 1px solid black;
-	padding: 5px;
-}
-
-.jobtable td td {
-	border: none;
-	padding: 0px;
-}
-
 .execing-jobs-table {
 	width: 90%;
 }
@@ -74,7 +44,10 @@ h2 {
 	text-align: center;
 }
 
+
+
 .all-jobs {
+	background-color: #FFF;
 	border: 1px solid black;
 	text-align: left;
 	padding: 10px;
@@ -99,6 +72,18 @@ h2 {
 	margin: 1px;
 }
 
+a {
+	color: #1199ff;
+}
+
+a:visited {
+	color: #1199ff;
+}
+
+a:hover {
+	color: yellow;
+}
+
 .job-name {
 	font-size: 110%;
 	text-decoration: none;
@@ -107,15 +92,32 @@ h2 {
 	padding-left: 3px;
 }
 
+.job-name:visited {
+	color: darkred;
+}
+
+.job-name-white:hover {
+	color: yellow;
+}
+
+.job-name-white {
+	font-size: 110%;
+	text-decoration: none;
+	color: white;
+	vertical-align: top;
+	padding-left: 3px;
+}
+
 .sched-form {
 	background-color: lightgrey;
+	color: #222;
 	padding: 0.5em;
 	border: 1px solid black;
 }
 
 .jobdesc {
 	font-size: 13pt;
-	text-align: left;
+	text-align: center;
 	width: 400px;
 	padding: 10px;
 	margin: auto;
@@ -148,14 +150,4 @@ h2 {
 	padding: 2px;
 }
 
-.job-name-FAILED {
-	color: red;
-}
-
-.job-name-READY {
-	color: green;
-}
-
-.job-name-RUNNING {
-	color: blue;
-}
+.

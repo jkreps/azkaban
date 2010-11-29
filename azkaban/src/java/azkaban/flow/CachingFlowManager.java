@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -175,4 +176,14 @@ public class CachingFlowManager implements FlowManager
             );
         }
     }
+
+	@Override
+	public List<String> getFolders() {
+		return baseManager.getFolders();
+	}
+
+	@Override
+	public List<String> getRootNamesByFolder(String folder) {
+		return baseManager.getRootNamesByFolder(folder);
+	}
 }

@@ -1,0 +1,113 @@
+<!DOCTYPE html
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>#appname()</title>
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"></link>
+    <link rel="stylesheet" type="text/css" href="${context}/static/js/jquery/jquery.contextMenu.css"></link>
+    <link rel="stylesheet" type="text/css" href="${context}/static/js/jqueryui/themes/custom-theme/jquery-ui.custom.css"></link>
+ 
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jqueryui/jquery-ui.custom.min.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.contextMenu.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.tools.min.js"></script>
+    <script type="text/javascript" src="${context}/static/js/azkaban-graph.js"></script>
+    <script type="text/javascript" src="${context}/static/js/azkaban-flow.js"></script>
+   
+    <script type="text/javascript">
+    	var flowData = '${jsonflow}';
+    	var contextURL = '${context}';
+    	var flowID = '${id}';
+    	var action = '${action}';
+    	var name = '${name}';
+    </script>
+    <style>
+    	.tooltip {
+			background-color:#000;
+			border:1px solid #fff;
+			padding:10px 15px;
+			width:125px;
+			display:none;
+			color:#fff;
+			text-align:left;
+			font-size:12px;
+		
+			/* outline radius for mozilla/firefox only */
+			-moz-box-shadow:0 0 10px #000;
+			-webkit-box-shadow:0 0 10px #000;
+		}	
+		
+    </style>
+  </head>
+  <body>
+    #appnamebox()
+    <div id="main">
+        <h2 class="title" >Flow Instance</h2>
+  	    <div id="variableWidth">
+  	        #messages()
+  	       <div class="box">
+  	       		#if($id == 0)
+  	       		<h3>Name: ${name}</h3>
+  	       		#else
+  	       		<h3>Name: ${name}   Flow ID: ${id}</h3>
+  	       		#end
+  	       		<div id="content2">
+	  	       	   	<div id="graphTab" onmousedown="moveGraph(this, event, 'down')" onmouseup="moveGraph(this, event, 'up')" onmouseover="mouseFocus('true')" onmouseout="mouseFocus('false')" >
+						<svg id="graph" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 100% 100%" > 
+						</svg>
+					</div>
+				</div>
+  	       </div>
+  	       <div id="extra2">
+  	       		<div id="helpbutton" onclick="showHelpScreen()"></div>
+				<div id="buttonpanel">
+					<div id="executeButton" onclick="executeFlow()" >Execute</div>
+				</div>
+			</div>
+
+  	    </div>
+  	 </div>
+  	 <ul id="nodeMenu" class="contextMenu">  
+  	 	<li class="jobdetails"><a href="#jobdetails">Job Details...</a></li>
+		<li class="enable"><a href="#enable">Enable</a></li>
+		<li class="enableAll"><a href="#enableAll">Enable All</a></li>
+		<li class="disable"><a href="#disable">Disable</a></li>
+		<li class="disableAncestor"><a href="#disableAncestor">Disable All Dependencies</a></li>
+	</ul>
+	<div id="nonModelDialog" style="display: none; " title="Help">
+		This page shows the dependency graph for your job.
+		<br/>
+		<br/>
+		<b>Flow</b><br/>
+		Dependencies are displayed as nodes with arrows connecting them. The arrows direction points to the job
+		that is the dependent. The dependencies must complete successfully before the dependent job starts. 
+		<br/>
+		<br/>
+		<b>Navigation</b><br/>
+		Click and Hold the left mouse button to drag nodes and pan the graph view. <br/>
+		Use the mouse wheel or the zoom bar to zoom in and out of the graph.
+		<br/>
+		<br/>
+		<b>Node Status</b><br/>
+		When restarting a flow, some nodes will have special colors to denote its status. <br/>
+		<span class="running">Running</span>, <span class="failed">Failed</span>, <span class="button succeeded">Succeeded</span>,
+		<span class="ready">Ready, Completed</span>. <br/>
+		The Ready status is the state of the job before it is run.<br/>
+		Completed status is a legacy status which means that the job is done without being a success or failure. It is treated like a ready job.
+		<br/>
+		<br/>
+		<b>Enabled/Disabled</b><br/>
+		Jobs that are faded-out are disabled. Disabled nodes act as no-op jobs and will always complete successfully.
+		A disabled job's dependencies will always run. <br/> 
+		Right click on a Node to disable and enable it.
+		<br/>
+		<br/>	
+		<b>Execute Flow</b><br/>
+		Clicking the Execute button will submit this flow for immediate execution. Disabled nodes will be observed.
+	</div>
+	<div id="graphToolTip" class="tooltip" style="display: none;">
+	</div>
+  </body>
+</html>
+ 

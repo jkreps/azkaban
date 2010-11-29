@@ -129,6 +129,7 @@ public class RefreshableFlowManager implements FlowManager
     private final void reloadInternal(Long lastId)
     {
         Map<String, Flow> flowMap = new HashMap<String, Flow>();
+        Map<String, List<String>> folderToRoot = new LinkedHashMap<String, List<String>>();
         Set<String> rootFlows = new TreeSet<String>();
         final Map<String, JobDescriptor> allJobDescriptors = jobManager.loadJobDescriptors();
         for (JobDescriptor rootDescriptor : jobManager.getRootJobDescriptors(allJobDescriptors)) {
@@ -136,6 +137,23 @@ public class RefreshableFlowManager implements FlowManager
                 // This call of magical wonderment ends up pushing all Flow objects in the dependency graph for the root into flowMap
                 Flows.buildLegacyFlow(jobManager, flowMap, rootDescriptor, allJobDescriptors);
                 rootFlows.add(rootDescriptor.getId());
+                
+                // For folder path additions
+                String jobPath = rootDescriptor.getPath();
+                String[] split = jobPath.split("/");
+                if (split[0].isEmpty()) {
+                	jobPath = split[1];
+                }
+                else {
+                	jobPath = split[0];
+                }
+                
+                List<String> root = folderToRoot.get(jobPath);
+                if (root == null) {
+                	root = new ArrayList<String>();
+                	folderToRoot.put(jobPath, root);
+                }
+                root.add(rootDescriptor.getId());
             }
         }
 
@@ -144,6 +162,7 @@ public class RefreshableFlowManager implements FlowManager
                     new ImmutableFlowManager(
                             flowMap,
                             rootFlows,
+                    		folderToRoot,
                             serializer,
                             deserializer,
                             storageDirectory,
@@ -152,4 +171,14 @@ public class RefreshableFlowManager implements FlowManager
             );
         }
     }
+
+	@Override
+	public List<String> getFolders() {
+		return delegateManager.get().getFolders();
+	}
+
+	@Override
+	public List<String> getRootNamesByFolder(String folder) {
+		return delegateManager.get().getRootNamesByFolder(folder);
+	}
 }

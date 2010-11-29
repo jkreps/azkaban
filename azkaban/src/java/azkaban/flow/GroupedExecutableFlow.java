@@ -201,6 +201,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
                     return;
                 case COMPLETED:
                 case SUCCEEDED:
+                case IGNORED:
                     callback.completed(Status.SUCCEEDED);
                     return;
                 case FAILED:
@@ -303,7 +304,7 @@ public class GroupedExecutableFlow implements ExecutableFlow
 
         return true;
     }
-
+    
     @Override
     public boolean markCompleted()
     {

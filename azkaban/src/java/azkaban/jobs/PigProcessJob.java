@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import azkaban.app.JobDescriptor;
+import azkaban.util.StringUtils;
 
 public class PigProcessJob extends JavaProcessJob {
     
@@ -66,7 +67,7 @@ public class PigProcessJob extends JavaProcessJob {
 		Map<String, String> map = getPigParams();
 		if (map != null) {
 			for (Map.Entry<String, String> entry : map.entrySet()) {
-				list.add("-param " + entry.getKey() + "=" + entry.getValue());
+				list.add("-param " + StringUtils.shellQuote(entry.getKey() + "=" + entry.getValue(), StringUtils.SINGLE_QUOTE));
 			}
 		}
 

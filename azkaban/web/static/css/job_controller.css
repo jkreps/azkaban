@@ -9,15 +9,20 @@
 }
 
 #sched-tree {
-	background: #fff;
+	background-color: transparent;
 	padding: .5em;
 }
 
-.treeview li {
+.historytree {
+	}
+
+.treeview ul {
+	background-color: transparent;
 	padding: 1 0 3 16px;
 }
 
 .treeview .hitarea {
+	background-color: transparent;
 	xpadding-right: 3px;
 }
 
