@@ -16,6 +16,7 @@
 
 package azkaban.web.pages;
 
+import azkaban.app.PropsUtils;
 import azkaban.common.utils.Props;
 import azkaban.common.web.Page;
 import azkaban.flow.ComposedExecutableFlow;
@@ -191,7 +192,7 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         	long id = Long.parseLong(getParam(req, "id"));
            	FlowExecutionHolder holder = allFlows.loadExecutableFlow(id);
         	//Flows.resetFailedFlows(holder.getFlow());
-        	
+
         	// Disable all proper values
         	ExecutableFlow executableFlow = holder.getFlow();
         	traverseFlow(disabledJobs, executableFlow);
@@ -220,7 +221,12 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
            	traverseFlow(disabledJobs, flow);
            	
         	try {
-        		this.getApplication().getScheduler().scheduleNow(flow);
+        		this.getApplication().getScheduler().scheduleNow(
+                        new FlowExecutionHolder(
+                                flow,
+                                PropsUtils.produceParentProperties(flow)
+                        )
+                );
             	addMessage(req, String.format("Flow[%s] running.", name));
         	} catch(Exception e) {
         	}
@@ -250,7 +256,7 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
     		else if (flow instanceof WrappingExecutableFlow) {
         		traverseFlow(disabledJobs, ((WrappingExecutableFlow) flow).getDelegateFlow());
     		}
-    		
+
     		for(ExecutableFlow childFlow : flow.getChildren()) {
     			traverseFlow(disabledJobs, childFlow);
     		}
