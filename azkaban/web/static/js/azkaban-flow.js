@@ -7,7 +7,6 @@ var svgElement;
 var editButton;
 var buttonRow;
 
-var currentSelected;
 var editMode = true;
 var zoomMode = false;
 
@@ -38,13 +37,6 @@ function toggleEdit() {
 function loadGraph() {
 	var svgGraph = new SVGGraph();
 	svgGraph.initGraph();
-//	svgGraph.mapNodeTypeToColor("normal", "#222222");
-//	svgGraph.mapNodeTypeToColor("disabled", "#222222");
-//	svgGraph.mapNodeTypeToColor("ready", "#222222");
-//	svgGraph.mapNodeTypeToColor("completed", "#000000");	
-//	svgGraph.mapNodeTypeToColor("succeeded", "#006600");
-//	svgGraph.mapNodeTypeToColor("failed", "#CC1108");
-//	svgGraph.mapEdgeTypeToColor("running", "#0000FF");
 	return svgGraph;
 }
 
@@ -62,7 +54,6 @@ function attachGraph(svgGraph) {
 
 	currentGraph = svgGraph;
 	svgGraph.attachGraph(svgElement);
-//	setEditMode(false);
 }
 
 var isMouseDown = false;
@@ -388,11 +379,19 @@ function loadFlow(flowdata) {
 
 $(function () {
 	svgElement = document.getElementById("graph");
-//	setupEditButton(svgElement);
 	setupZoomBar(svgElement);
 
 	loadFlow(flowData);
 	$("#executeButton").button();
+	
+	$("#jobsearch")
+		.autocomplete(jobList)
+		.result(function(event, item) {
+			  if (currentGraph) {
+				  currentGraph.selectAndCenter(item);
+			  }
+			});
+	
 });
 
 function executeFlow() {
@@ -421,6 +420,11 @@ function showHelpScreen() {
 			dialogClass: 'helpdialog'
 		}
 	);
+}
+
+function resizeSVG(item) {
+	svgElement = document.getElementById("graph");
+	alert(item.getHeight() + ","+ item.getWidth())
 }
 
 window.onload = function() {

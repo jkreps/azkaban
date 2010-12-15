@@ -40,13 +40,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.hadoop.fs.Path;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.joda.time.Period;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -80,6 +81,7 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         	String flowJSON = createJsonFlow(displayFlow);
         	page.add("jsonflow", flowJSON);
         	page.add("action", "run");
+        	page.add("joblist", createJsonJobList(displayFlow));
         }
         else if (hasParam(req, "id")) {
         	long id = Long.parseLong(getParam(req, "id"));
@@ -94,8 +96,21 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         	String flowJSON = createJsonFlow(displayFlow);
         	page.add("jsonflow", flowJSON);
         	page.add("id", id);
+        	if (executableFlow.getStartTime() != null) {
+        		page.add("startTime", executableFlow.getStartTime());
+        		if (executableFlow.getEndTime() != null) {
+            		page.add("endTime", executableFlow.getEndTime());
+        			page.add("period", new Duration(executableFlow.getStartTime(), executableFlow.getEndTime()).toPeriod());
+        		}
+        		else {
+        			page.add("period", new Duration(executableFlow.getStartTime(), new DateTime()).toPeriod());
+        		}
+        	}
+
+        	page.add("showTimes", true);
         	page.add("name", executableFlow.getName());
         	page.add("action", "restart");
+        	page.add("joblist", createJsonJobList(displayFlow));
         }
 
         page.render();
@@ -130,6 +145,16 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
     
     	
     	return "normal";
+    }
+    
+	@SuppressWarnings("unchecked")
+	private String createJsonJobList(Flow flow) {
+		JSONArray jsonArray = new JSONArray();
+    	for (FlowNode node : flow.getFlowNodes()) {
+    		jsonArray.add(node.getAlias());
+    	}
+		
+    	return jsonArray.toJSONString();
     }
     
 	@SuppressWarnings("unchecked")

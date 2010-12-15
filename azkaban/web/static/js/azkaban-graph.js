@@ -425,6 +425,14 @@ function SVGGraph() {
 		}
 	}
 	
+	this.positionGraph = function(x,y) {
+		if (viewer!= null) {
+			translateX = x;
+			translateY = y;
+			viewer.setAttributeNS(null, "transform", "translate(" + translateX + "," + translateY + ") scale(" + scale + ")");
+		}
+	}
+	
 	this.getZoomPercent = function() {
 		return (scale-minZoom)/(maxZoom - minZoom);
 	}
@@ -496,8 +504,21 @@ function SVGGraph() {
 	
 	this.nodeClicked = function(id) {
 		var node = nodeMap[id];
-		node.obj.selectNode(node);
+		if (node) {
+			this.selectNode(node);
+		}
 	};
+	
+	this.selectAndCenter = function(id) {
+		var node = nodeMap[id];
+		if (node) {
+			this.nodeClicked(id);
+			//var x = parseFloat(node.getAttribute("gx"));
+			//var y = parseFloat(node.getAttribute("gy"));
+			
+			//this.positionGraph(-x, -y);
+		}
+	}
 	
 	this.nodeOver = function(id, over) {
 		var node = nodeMap[id];
