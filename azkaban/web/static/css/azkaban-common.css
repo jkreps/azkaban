@@ -579,3 +579,12 @@ rect.zoomLine {
 	font-size: 14pt;
 	padding: 5px;
 }
+
+.pagination a {
+    font-size: 150%;
+	text-decoration: none;
+}
+
+.pagination {
+	padding: 10px;
+}

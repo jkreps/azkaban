@@ -186,4 +186,27 @@ public class GuiUtils {
         return l;
     }
 
+    public Integer add(Integer n, Integer m) {
+    	return n + m;
+    }
+    
+    public Integer sub(Integer n, Integer m) {
+    	return n - m;
+    }
+    
+    public Integer div(Integer n, Integer m) {
+    	return n / m;
+    }
+    
+    public Integer mul(Integer n, Integer m) {
+    	return n * m;
+    }
+    
+    public Integer mod(Integer n, Integer m) {
+    	return n % m;
+    }
+    
+    public Integer max(Integer n, Integer m) {
+    	return Math.max(n, m);
+    }
 }

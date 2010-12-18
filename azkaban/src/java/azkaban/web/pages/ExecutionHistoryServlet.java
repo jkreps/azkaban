@@ -67,26 +67,27 @@ public class ExecutionHistoryServlet extends AbstractAzkabanServlet {
 
         long currMaxId = allFlows.getCurrMaxId();
 
-        int size = 25;
+        String beginParam = req.getParameter("begin");
+        int begin = beginParam == null? 0 : Integer.parseInt(beginParam);
+        
         String sizeParam = req.getParameter("size");
-        if(sizeParam != null)
-            size = Integer.parseInt(sizeParam);
+        int size = sizeParam == null? 20 : Integer.parseInt(sizeParam);
 
         List<ExecutableFlow> execs = new ArrayList<ExecutableFlow>(size);
-        for (int i = 0; i < size; ++i) {
+        for (int i = begin; i < begin + size; i++) {
             final FlowExecutionHolder holder = allFlows.loadExecutableFlow(currMaxId - i);
             ExecutableFlow flow = null;
-            if (holder != null) {
+            if (holder != null)
                 flow = holder.getFlow();
-            }
 
-            if (flow != null) {
+            if (flow != null)
                 execs.add(flow);
-            }
         }
 
         Page page = newPage(req, resp, "azkaban/web/pages/execution_history.vm");
         page.add("executions", execs);
+        page.add("begin", begin);
+        page.add("size", size);
         page.render();
     }
 

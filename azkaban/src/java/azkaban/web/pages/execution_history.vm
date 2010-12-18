@@ -122,6 +122,16 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		            </tr>
 		          #end
 		        </table>
+		        <div class="pagination">
+		          #if($begin > 0)
+		            <a href="/history?begin=$utils.max(0, $utils.sub($begin, $size))&amp;size=${size}">
+		              Previous &middot;
+		            </a>
+		          #end
+		          <a href="/history?begin=${utils.add($begin, $size)}&size=${size}">
+		            Next
+		          </a> 
+		        </div>
 		      #else
 		        No recorded executions
 		      #end
