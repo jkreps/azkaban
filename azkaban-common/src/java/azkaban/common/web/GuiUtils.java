@@ -66,6 +66,10 @@ public class GuiUtils {
                                                                                                   " minutes")
                                                                                     .toFormatter();
 
+    public DateTime now() {
+    	return new DateTime();
+    }
+    
     public String formatDate(DateTime date) {
         return formatDate(date, "MM-dd-yyyy");
     }

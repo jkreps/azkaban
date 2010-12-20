@@ -35,8 +35,10 @@ import org.joda.time.Days;
 import org.joda.time.Hours;
 import org.joda.time.LocalDateTime;
 import org.joda.time.Minutes;
+import org.joda.time.ReadablePartial;
 import org.joda.time.ReadablePeriod;
 import org.joda.time.Seconds;
+import org.joda.time.format.DateTimeFormat;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -218,20 +220,31 @@ public class IndexServlet extends AbstractAzkabanServlet {
 	                int hour = getIntParam(req, "hour");
 	                int minutes = getIntParam(req, "minutes");
 	                boolean isPm = getParam(req, "am_pm").equalsIgnoreCase("pm");
+	                String scheduledDate = req.getParameter("date");
+	                DateTime day = null;
+	                if(scheduledDate == null || scheduledDate.trim().length() == 0) {
+	                	day = new LocalDateTime().toDateTime();
+	                } else {
+		                try {
+		                	day = DateTimeFormat.forPattern("MM-dd-yyyy").parseDateTime(scheduledDate);
+		                } catch(IllegalArgumentException e) {
+		                	addError(req, "Invalid date: '" + scheduledDate + "'");
+		                	return "";
+		                }
+	                }
 	
 	                ReadablePeriod thePeriod = null;
-	                if(hasParam(req, "is_recurring")) {
+	                if(hasParam(req, "is_recurring"))
 	                    thePeriod = parsePeriod(req);
-	                }
 	
 	                if(isPm && hour < 12)
 	                    hour += 12;
 	                hour %= 24;
 	
 	                app.getScheduler().schedule(job,
-	                                            new LocalDateTime().withHourOfDay(hour)
-	                                                               .withMinuteOfHour(minutes)
-	                                                               .withSecondOfMinute(0),
+	                                            day.withHourOfDay(hour)
+	                                               .withMinuteOfHour(minutes)
+	                                               .withSecondOfMinute(0),
 	                                            thePeriod,
 	                                            false);
 	                addMessage(req, job + " scheduled.");

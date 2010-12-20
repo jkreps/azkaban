@@ -35,11 +35,19 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     <script type="text/javascript" src="${context}/static/js/jquery/jquery.js"></script>
     <script type="text/javascript" src="${context}/static/js/jquery/jquery.cookie.js"></script>
     <script type="text/javascript" src="${context}/static/js/jquery/jquery.tools.min.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jqueryui/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jqueryui/jquery.ui.datepicker.min.js"></script>
     <script type="text/javascript" src="${context}/static/js/jquery-treeview/jquery.treeview.js"></script>
     <script type="text/javascript" src="${context}/static/js/azkaban-index.js"></script>
     <script type="text/javascript">
 		var contextURL = "${context}";
     </script>
+    <script>
+	  $(function() {
+		$(".scheduled_date").datepicker({dateFormat: 'mm-dd-yy'});
+	  });
+	</script>
+    
   </head>
   <body>
   #appnamebox()    
@@ -148,6 +156,8 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			              <option>pm</option>
 			              <option>am</option>
 			            </select>
+			            on
+			            <input class="scheduled_date" type="text" name="date" size="10" value="$utils.formatDate($utils.now())"/>
 			            and 
 			            <input name="is_recurring" type="checkbox" checked  />
 			            repeat every

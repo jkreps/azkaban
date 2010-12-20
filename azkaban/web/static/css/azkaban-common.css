@@ -588,3 +588,39 @@ rect.zoomLine {
 .pagination {
 	padding: 10px;
 }
+
+.ui-datepicker-div {
+	float: bottom;
+}
+
+.ui-datepicker-calendar a:hover, .ui-datepicker-header a:hover {
+	color: #AAA;
+}
+
+.ui-datepicker-title span, .ui-datepicker-calendar thead {
+	color: #AAA;
+	font-weight: bold;
+}
+
+.ui-datepicker {
+	background: white;
+	border: 3px solid #AAA;
+	padding: 4px;
+}
+
+.ui-datepicker-prev, .ui-datepicker-next {
+	cursor: pointer;
+	display: block;
+}
+
+.ui-datepicker-prev {
+	float: left;
+}
+
+.ui-datepicker-next {
+	float: right;
+}
+
+.ui-datepicker-calendar a {
+	text-decoration: none;
+}
