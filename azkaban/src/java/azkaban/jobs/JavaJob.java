@@ -69,7 +69,7 @@ public class JavaJob extends JavaProcessJob {
 	    File file = new File(containedClass.getProtectionDomain().getCodeSource().getLocation().getPath());
 	    
         if (!file.isDirectory() && file.getName().endsWith(".class")) {
-            String name = JavaJobRunnerMain.class.getName();
+            String name = containedClass.getName();
             StringTokenizer tokenizer = new StringTokenizer(name, ".");
             while(tokenizer.hasMoreTokens()) {
                 tokenizer.nextElement();
@@ -80,7 +80,7 @@ public class JavaJob extends JavaProcessJob {
             return file.getPath();  
         }
         else {
-            return JavaJobRunnerMain.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            return containedClass.getProtectionDomain().getCodeSource().getLocation().getPath();
         }
 	}
 	

@@ -16,7 +16,6 @@
 package azkaban.jobs;
 
 import azkaban.common.utils.Props;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Logger;
@@ -26,6 +25,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -161,7 +161,10 @@ public class JavaJobRunnerMain {
             new RuntimeException("Unable to store output properties to: " + outputFileStr);
         }
         finally {
-            IOUtils.closeQuietly(writer);
+        	try {
+				writer.close();
+			} catch (IOException e) {			
+			}
         }
     }
 
