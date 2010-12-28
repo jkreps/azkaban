@@ -110,11 +110,12 @@
       (fn [#^BytesWritable key values context]
         [(.toObject key-serializer (.getBytes key)) (map (fn [#^BytesWritable val] (.toObject value-serializer (.getBytes val))) values)]))))
 
-(defn group-by [fields projections]
+(defn group-by
   "Performs a group-by using voldemort serialization for the intermediate serialization format.
 
   fields is a [[field-name data-type] ...] sequence
   projections is a [[name default-fn accumulator-fn data-type] ...] sequence"
+  [fields projections]
   (let [field-names (map (fn [[field-name serialization-type]] field-name) fields)
         key-schema (format "{%s}" (str-utils/join ", " (map (fn [[field-name serialization-type]] (format "'%s':%s" field-name serialization-type)) fields)))
         value-schema (format "{%s}" (str-utils/join ", " (map (fn [[name default-fn acc-fn data-type]] (format "'%s':%s" name data-type)) projections)))

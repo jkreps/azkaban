@@ -64,12 +64,13 @@
    index-spec - a [[index name deserialization-fn] ...]"
   [#^String delimiter index-spec]
   (let [indexes (map first index-spec)
-	names (map second index-spec)]
+	names (map second index-spec)
+	deserialization-fns (map #(% 2) index-spec)]
     (job/compose-wrappers
      (job/map-mapper
       (fn [key value _]
 	[[key (zipmap names value)]]))
-     (deserialize (map vector (map first index-spec) (map #(% 2) index-spec)))
+     (deserialize (map-indexed vector deserialization-fns))
      (cut delimiter indexes))))
   
 

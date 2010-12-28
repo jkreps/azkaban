@@ -113,7 +113,7 @@ public class GenericClojureJob extends AbstractJob
         final String theActualFunction = String.format(
                 "(require '[com.linkedin.mr-kluj.job :as job])\n\n" +
                 "%s\n" +
-                "(map (comp #(%%) job/starter) the-jobs)\n",
+                "(map job/starter the-jobs)\n",
                 cljSource
         );
 
@@ -133,10 +133,11 @@ public class GenericClojureJob extends AbstractJob
                     )
             );
 
-            Iterable<Job> jobs = (Iterable<Job>) clojure.lang.Compiler.load(new StringReader(theActualFunction), "start-job-input", "clj-job");
+            Iterable<IFn> jobs = (Iterable<IFn>) clojure.lang.Compiler.load(new StringReader(theActualFunction), "start-job-input", "clj-job");
 
             int count = 0;
-            for (Job job : jobs) {
+            for (IFn ifn : jobs) {
+                Job job = (Job) ifn.invoke();
                 job.getConfiguration().set(LI_CLJ_SOURCE, cljSource);
                 job.getConfiguration().set(LI_CLJ_JOB_INDEX, String.valueOf(count));
 

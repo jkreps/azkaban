@@ -469,7 +469,7 @@
 				 wrappers)))))
 
 (defmacro job
-  "Sets up a staged job.
+  "Sets up a job.
 
   job-name is the name of the job as will appear on the JobTracker.
   wrappers is as defined by make-job"
@@ -484,7 +484,7 @@
   staging-location is a path where the job should stage its output.
   wrappers is as defined by make-job"
   [[job-name staging-location] & wrappers]
-  `(make-job (fn [] (staged-job-creator ~job-name ~staging-location))
+  `(make-job (staged-job-creator ~job-name ~staging-location)
 	     ~@wrappers))
     
 

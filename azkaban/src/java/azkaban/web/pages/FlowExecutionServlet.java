@@ -41,6 +41,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -53,6 +54,8 @@ import java.util.List;
 
 public class FlowExecutionServlet extends AbstractAzkabanServlet {
 
+    private static final Logger log = Logger.getLogger(FlowExecutionServlet.class);
+    
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
@@ -237,30 +240,20 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
     }
     
     private void traverseFlow(HashSet<String> disabledJobs, ExecutableFlow flow) {
-    	String name = flow.getName();
-		System.out.println("at " + name);
-    	flow.reset();
-    	if (flow instanceof IndividualJobExecutableFlow && disabledJobs.contains(name)) {
-    		IndividualJobExecutableFlow individualJob = (IndividualJobExecutableFlow)flow;
-    		individualJob.setStatus(Status.IGNORED);
-    		System.out.println("ignore " + name);
-    	}
-    	else {
-    		if (flow instanceof ComposedExecutableFlow) {
-        		ExecutableFlow innerFlow = ((ComposedExecutableFlow) flow).getDepender();
-        		traverseFlow(disabledJobs, innerFlow);
-    		}
-    		else if (flow instanceof MultipleDependencyExecutableFlow) {
-        		traverseFlow(disabledJobs, ((MultipleDependencyExecutableFlow) flow).getActualFlow());
-    		}
-    		else if (flow instanceof WrappingExecutableFlow) {
-        		traverseFlow(disabledJobs, ((WrappingExecutableFlow) flow).getDelegateFlow());
-    		}
-
-    		for(ExecutableFlow childFlow : flow.getChildren()) {
-    			traverseFlow(disabledJobs, childFlow);
-    		}
-    	}
-    	
+    	if (disabledJobs.contains(flow.getName())) {
+            switch (flow.getStatus()) {
+                case READY:
+                case FAILED:
+                    flow.markCompleted();
+            }
+        }
+        else {
+            if (flow.getStatus() == Status.FAILED) {
+                flow.reset();
+            }
+            for (ExecutableFlow executableFlow : flow.getChildren()) {
+                traverseFlow(disabledJobs, executableFlow);
+            }
+        }
     }
 }
