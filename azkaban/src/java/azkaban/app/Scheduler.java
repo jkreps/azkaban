@@ -17,14 +17,19 @@
 package azkaban.app;
 
 import azkaban.util.process.ProcessFailureException;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -511,12 +516,28 @@ public class Scheduler {
                         /* append last N lines of the log file */
                         String logFilePath = this._jobManager.getLogDir() + File.separator
                                              + logPath;
-                        Vector<String> lastNLines = Utils.tail(logFilePath, 60);
 
-                        if(lastNLines != null) {
-                            for(String line: lastNLines) {
-                                body.append(line + "\n");
+                        List<String> lastNLines;
+
+                        try {
+                            LinkedList<String> retVal = new LinkedList<String>();
+
+                            BufferedReader reader = new BufferedReader(new FileReader(logFilePath));
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                while (retVal.size() >= 60) {
+                                    retVal.removeFirst();
+                                }
+                                retVal.addLast(line);
                             }
+
+                            lastNLines = retVal;
+                        } catch(Exception e) {
+                            lastNLines = Collections.emptyList();
+                        }
+
+                        for(String line: lastNLines) {
+                            body.append(line + "\n");
                         }
                     }
 

@@ -62,7 +62,7 @@ public class PigProcessJob extends JavaProcessJob {
 	}
 
 	@Override
-	protected List<String> getMainArguments() {
+	protected String getMainArguments() {
 		ArrayList<String> list = new ArrayList<String>();
 		Map<String, String> map = getPigParams();
 		if (map != null) {
@@ -84,7 +84,7 @@ public class PigProcessJob extends JavaProcessJob {
 
 		list.add(getScript());
 
-		return list;
+		return org.apache.commons.lang.StringUtils.join(list, " ");
 	}
 
 	@Override
