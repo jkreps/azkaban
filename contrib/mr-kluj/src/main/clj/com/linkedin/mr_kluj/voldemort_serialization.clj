@@ -114,29 +114,39 @@
   "Performs a group-by using voldemort serialization for the intermediate serialization format.
 
   fields is a [[field-name data-type] ...] sequence
-  projections is a [[name default-fn accumulator-fn data-type] ...] sequence"
-  [fields projections]
-  (let [field-names (map (fn [[field-name serialization-type]] field-name) fields)
-        key-schema (format "{%s}" (str-utils/join ", " (map (fn [[field-name serialization-type]] (format "'%s':%s" field-name serialization-type)) fields)))
-        value-schema (format "{%s}" (str-utils/join ", " (map (fn [[name default-fn acc-fn data-type]] (format "'%s':%s" name data-type)) projections)))
-        aggregation-fn
-        (fn [key values context]
-          [[key
-            (clojure.core/reduce
-              (fn [old-val new-val]
-                (clojure.core/reduce conj {}
-                  (map (fn [[name default-fn acc-fn]] {name (acc-fn (get old-val name) (get new-val name))}) projections)))
-              values)]])]
-    (job/compose-wrappers
-      (job/map-reduce-output (fn [key value context] [[false (conj {} key value)]]))
-      (voldemort-intermediate-data key-schema value-schema)
-      (job/create-reducer aggregation-fn)
-      (job/create-combiner aggregation-fn)
-      (job/use-combiner)
-      (job/map-mapper
-        (fn [key value context]
-          [[(select-keys value field-names)
-            (clojure.core/reduce conj {} (map (fn [[name default-fn acc-fn]] {name (default-fn value)}) projections))]])))))
+  projections is a [[name default-fn accumulator-fn data-type] ...] sequence
+
+  key-expansion-fn is optional and gives you a chance to emit multiple keys for a given key grouping.
+    it is a function (fn [key-map] ...) that returns a sequence of maps of the keys"
+  ([fields projections]
+     (group-by fields projections vector))
+  ([fields projections key-expansion-fn]
+     (let [field-names (map (fn [[field-name serialization-type]] field-name) fields)
+	   key-schema (format "{%s}" (str-utils/join ", " (map (fn [[field-name serialization-type]] (format "'%s':%s" field-name serialization-type)) fields)))
+	   value-schema (format "{%s}" (str-utils/join ", " (map (fn [[name default-fn acc-fn data-type]] (format "'%s':%s" name data-type)) projections)))
+	   aggregation-fn
+	   (fn [key values context]
+	     [[key
+	       (clojure.core/reduce
+		(fn [old-val new-val]
+		  (clojure.core/reduce conj {}
+				       (map (fn [[name default-fn acc-fn]]
+					      {name (acc-fn (get old-val name) (get new-val name))})
+					    projections)))
+		values)]])]
+       (job/compose-wrappers
+	(job/map-reduce-output (fn [key value context] [[false (conj {} key value)]]))
+	(voldemort-intermediate-data key-schema value-schema)
+	(job/create-reducer aggregation-fn)
+	(job/create-combiner aggregation-fn)
+	(job/use-combiner)
+	(job/map-mapper
+	 (fn [key value context]
+	   (let [ret-value (clojure.core/reduce conj {}
+						(map (fn [[name default-fn acc-fn]]
+						       {name (default-fn value)})
+						     projections))]
+	     (map #(vector % ret-value) (key-expansion-fn (select-keys value field-names))))))))))
 
 (defn group-by-no-combine [fields projections]
   "Performs a group-by using voldemort serialization for the intermediate serialization format.

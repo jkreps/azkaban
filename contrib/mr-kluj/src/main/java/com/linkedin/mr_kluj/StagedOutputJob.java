@@ -102,7 +102,9 @@ public class StagedOutputJob extends Job
                 Path thisActualOutputPath = new Path(fileStatus.getPath().toString().replace(stagedPath.toString(), actualOutputPath.toString()));
 
                 log.info(String.format("Moving from staged path[%s] to final resting place[%s]", thisStagedPath, thisActualOutputPath));
+                fs.mkdirs(thisActualOutputPath.getParent());
                 if (! fs.rename(thisStagedPath, thisActualOutputPath)) {
+                    log.info("Rename failed!");
                     return false;
                 }
             }
