@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>mr-kluj</groupId>
   <artifactId>mr-kluj</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.1-SNAPSHOT</version>
   <name>mr-kluj</name>
   <description>A project to make map reduce jobs in clojure simple(r)</description>
   <packaging>clojure</packaging>
