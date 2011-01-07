@@ -48,7 +48,6 @@ public class AzkabanApp
 {
   private static final Logger logger = Logger.getLogger(AzkabanApp.class);
   private static final String DEFAULT_STATIC_DIR = "azkaban/web/static";
-  private static final String DEFAULT_PLUGIN_DIR = "azkaban/plugin";
 
   public static void main(String[] arguments) throws Exception {
       OptionParser parser = new OptionParser();

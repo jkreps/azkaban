@@ -45,6 +45,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     <script>
 	  $(function() {
 		$(".scheduled_date").datepicker({dateFormat: 'mm-dd-yy'});
+		$("#ui-datepicker-div").css("display", "none");
 	  });
 	</script>
     
@@ -71,7 +72,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			            <td>
 			              <a class="job-name" href="${context}/job?id=${sched.id}">$sched.id</a>
 			            </td>
-			            <td>$utils.formatDateTime($sched.scheduledExecution)</td>
+			            <td>$utils.formatDateTimeAndZone($sched.scheduledExecution)</td>
 			            <td>
 			              #formatPeriod($sched.period)
 			            </td>
@@ -184,6 +185,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	    	</div>
   	   </div>
   </div>
+  <div><p class="currentTime">Current Time: $utils.formatDateTimeAndZone($utils.now)</p></div>
   </body>
 </html>
 

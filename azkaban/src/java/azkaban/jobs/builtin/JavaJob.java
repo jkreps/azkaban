@@ -14,7 +14,7 @@
  * the License.
  */
 
-package azkaban.jobs;
+package azkaban.jobs.builtin;
 
 import java.io.File;
 import java.util.List;
@@ -65,6 +65,7 @@ public class JavaJob extends JavaProcessJob {
         return classPath;
 	}
 
+	@SuppressWarnings("unchecked")
 	private static String getSourcePathFromClass(Class containedClass) {
 	    File file = new File(containedClass.getProtectionDomain().getCodeSource().getLocation().getPath());
 	    

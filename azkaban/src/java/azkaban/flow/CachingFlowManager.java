@@ -19,6 +19,8 @@ package azkaban.flow;
 import azkaban.common.utils.Props;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flow;
+import azkaban.jobs.Status;
+
 import org.apache.log4j.Logger;
 
 import java.util.Collection;

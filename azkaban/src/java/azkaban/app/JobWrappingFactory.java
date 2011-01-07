@@ -25,6 +25,8 @@ import azkaban.jobcontrol.impl.jobs.locks.JobLock;
 import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
 import azkaban.jobcontrol.impl.jobs.locks.PermitLock;
 import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
+import azkaban.jobs.JobExecutionException;
+
 import com.google.common.base.Function;
 
 import java.util.ArrayList;

@@ -24,7 +24,6 @@ import java.util.Set;
 
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
-import azkaban.common.utils.Utils;
 
 /**
  * A job descriptor represents the configuration information for a job This

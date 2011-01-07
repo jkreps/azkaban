@@ -21,6 +21,7 @@ import java.util.Set;
 
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobManager;
+import azkaban.jobs.Status;
 
 /**
  *

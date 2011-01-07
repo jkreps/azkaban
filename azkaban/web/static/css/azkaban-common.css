@@ -624,3 +624,8 @@ rect.zoomLine {
 .ui-datepicker-calendar a {
 	text-decoration: none;
 }
+
+.currentTime {
+	margin-right: 50px;
+	text-align: right;
+}

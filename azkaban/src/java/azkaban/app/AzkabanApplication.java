@@ -37,14 +37,18 @@ import azkaban.flow.FlowManager;
 import azkaban.flow.RefreshableFlowManager;
 import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
 import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
-import azkaban.jobs.JavaJob;
-import azkaban.jobs.JavaProcessJob;
-import azkaban.jobs.NoopJob;
-import azkaban.jobs.PigProcessJob;
-import azkaban.jobs.ProcessJob;
-import azkaban.jobs.PythonJob;
-import azkaban.jobs.RubyJob;
-import azkaban.jobs.ScriptJob;
+
+import azkaban.jobs.JobExecutorManager;
+import azkaban.jobs.builtin.JavaJob;
+import azkaban.jobs.builtin.JavaProcessJob;
+import azkaban.jobs.builtin.NoopJob;
+import azkaban.jobs.builtin.PigProcessJob;
+import azkaban.jobs.builtin.ProcessJob;
+import azkaban.jobs.builtin.PythonJob;
+import azkaban.jobs.builtin.RubyJob;
+import azkaban.jobs.builtin.ScriptJob;
+import azkaban.scheduler.LocalFileScheduleLoader;
+import azkaban.scheduler.ScheduleManager;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
 import azkaban.serialization.ExecutableFlowSerializer;
 import azkaban.serialization.FlowExecutionSerializer;
@@ -72,14 +76,16 @@ public class AzkabanApplication
     private final List<File> _jobDirs;
     private final File _logsDir;
     private final File _tempDir;
-    private final Scheduler _scheduler;
     private final VelocityEngine _velocityEngine;
     private final JobManager _jobManager;
     private final Mailman _mailer;
     private final ClassLoader _baseClassLoader;
     private final String _hdfsUrl;
     private final FlowManager _allFlows;
-
+    
+    private final JobExecutorManager _jobExecutorManager;
+    private final ScheduleManager _schedulerManager;
+    
     public AzkabanApplication(List<File> jobDirs, File logDir, File tempDir, boolean enableDevMode) throws IOException {
         this._jobDirs = Utils.nonNull(jobDirs);
         this._logsDir = Utils.nonNull(logDir);
@@ -166,24 +172,25 @@ public class AzkabanApplication
         );
         _jobManager.setFlowManager(_allFlows);
 
-        this._scheduler = new Scheduler(_jobManager,
-                                        _allFlows,
-                                        _mailer,
-                                        failureEmail,
-                                        successEmail,
-                                        _baseClassLoader,
-                                        schedule,
-                                        backup,
-                                        schedulerThreads);
+        _jobExecutorManager = new JobExecutorManager(
+				        		_allFlows, 
+				        		_jobManager, 
+				        		_mailer, 
+				        		failureEmail, 
+				        		successEmail,
+				        		schedulerThreads
+				        	);
         
+        this._schedulerManager = new ScheduleManager(_jobExecutorManager, new LocalFileScheduleLoader(schedule, backup));
+
         /* set predefined log url prefix 
         */
         String server_url = defaultProps.getString("server.url", null) ;
         if (server_url != null) {
             if (server_url.endsWith("/"))
-                _scheduler.setRuntimeProperty(AppCommon.DEFAULT_LOG_URL_PREFIX, server_url + "logs?file=" );
+            	_jobExecutorManager.setRuntimeProperty(AppCommon.DEFAULT_LOG_URL_PREFIX, server_url + "logs?file=" );
             else 
-                _scheduler.setRuntimeProperty(AppCommon.DEFAULT_LOG_URL_PREFIX, server_url + "/logs?file=" );
+            	_jobExecutorManager.setRuntimeProperty(AppCommon.DEFAULT_LOG_URL_PREFIX, server_url + "/logs?file=" );
         }
 
         this._velocityEngine = configureVelocityEngine(enableDevMode);
@@ -230,10 +237,14 @@ public class AzkabanApplication
         return _jobDirs;
     }
 
-    public Scheduler getScheduler() {
-        return _scheduler;
+    public JobExecutorManager getJobExecutorManager() {
+        return _jobExecutorManager;
     }
-
+    
+    public ScheduleManager getScheduleManager() {
+        return _schedulerManager;
+    }
+    
     public VelocityEngine getVelocityEngine() {
         return _velocityEngine;
     }
@@ -273,7 +284,7 @@ public class AzkabanApplication
             retVal = getClass().getClassLoader();
         } else {
             logger.info("Using hadoop config found in " + hadoopHome);
-            retVal = new URLClassLoader(new URL[] { new File(hadoopHome, "conf").toURL() },
+            retVal = new URLClassLoader(new URL[] { new File(hadoopHome, "conf").toURI().toURL() },
                                         getClass().getClassLoader());
         }
 
@@ -338,10 +349,10 @@ public class AzkabanApplication
 
     
     public String getRuntimeProperty(String name) {
-        return _scheduler.getRuntimeProperty(name);
+        return _jobExecutorManager.getRuntimeProperty(name);
     }
 
     public void setRuntimeProperty(String key, String value) {
-        _scheduler.setRuntimeProperty(key, value);
+    	_jobExecutorManager.setRuntimeProperty(key, value);
     }
 }

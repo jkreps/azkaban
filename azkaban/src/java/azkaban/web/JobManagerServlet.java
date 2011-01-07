@@ -30,7 +30,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import azkaban.flow.FlowManager;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
@@ -86,7 +85,6 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
         try {
             final AzkabanApplication app = getApplication();
             final JobManager jobManager = app.getJobManager();
-            final FlowManager allFlows = app.getAllFlows();
 
             FileItem item = (FileItem) params.get("file");
             String deployPath = (String) params.get("path");
@@ -107,10 +105,9 @@ public class JobManagerServlet extends AbstractAzkabanServlet {
 
     private void setMessagedUrl(HttpServletResponse response, String redirectUrl, String message) throws IOException {
         String url = redirectUrl + "/" + message;
-        response.sendRedirect(response.encodeRedirectUrl(url));
+        response.sendRedirect(response.encodeRedirectURL(url));
     }
     
-    @SuppressWarnings("unchecked")
     private File unzipFile(FileItem item) throws ServletException, IOException {
         File temp = File.createTempFile("job-temp", ".zip");
         temp.deleteOnExit();

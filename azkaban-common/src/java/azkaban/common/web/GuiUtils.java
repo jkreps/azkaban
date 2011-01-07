@@ -78,6 +78,10 @@ public class GuiUtils {
         return formatDate(date, "MM-dd-yyyy HH:mm:ss");
     }
 
+    public String formatDateTimeAndZone(DateTime date) {
+        return formatDate(date, "MM-dd-yyyy HH:mm:ss z");
+    }
+    
     public String formatDate(DateTime date, String format) {
         DateTimeFormatter f = DateTimeFormat.forPattern(format);
         return f.print(date);

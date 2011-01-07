@@ -22,9 +22,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,7 +33,6 @@ import org.joda.time.Days;
 import org.joda.time.Hours;
 import org.joda.time.LocalDateTime;
 import org.joda.time.Minutes;
-import org.joda.time.ReadablePartial;
 import org.joda.time.ReadablePeriod;
 import org.joda.time.Seconds;
 import org.joda.time.format.DateTimeFormat;
@@ -45,11 +42,11 @@ import org.json.simple.JSONObject;
 import azkaban.app.AzkabanApplication;
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobManager;
-import azkaban.app.Scheduler.ScheduledJobAndInstance;
 import azkaban.common.web.Page;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flow;
 import azkaban.flow.FlowManager;
+import azkaban.jobs.JobExecutorManager.ExecutingJobAndInstance;
 import azkaban.web.AbstractAzkabanServlet;
 
 /**
@@ -76,9 +73,9 @@ public class IndexServlet extends AbstractAzkabanServlet {
         Page page = newPage(req, resp, "azkaban/web/pages/index.vm");
         page.add("logDir", app.getLogDirectory());
         page.add("flows", app.getAllFlows());
-        page.add("scheduled", app.getScheduler().getScheduledJobs());
-        page.add("executing", app.getScheduler().getExecutingJobs());
-        page.add("completed", app.getScheduler().getCompleted());
+        page.add("scheduled", app.getScheduleManager().getSchedule());
+        page.add("executing", app.getJobExecutorManager().getExecutingJobs());
+        page.add("completed", app.getJobExecutorManager().getCompleted());
         page.add("rootJobNames", app.getAllFlows().getRootFlowNames());
         page.add("folderNames", app.getAllFlows().getFolders());
         page.add("jobDescComparator", JobDescriptor.NAME_COMPARATOR);
@@ -102,8 +99,8 @@ public class IndexServlet extends AbstractAzkabanServlet {
         	return;
         }
         else if("unschedule".equals(action)) {
-            String job = getParam(req, "job");
-            app.getScheduler().unschedule(job);
+            String jobid = getParam(req, "job");
+            app.getScheduleManager().removeScheduledJob(jobid);
         } else if("cancel".equals(action)) {
             cancelJob(app, req);
         } else if("schedule".equals(action)) {
@@ -166,8 +163,14 @@ public class IndexServlet extends AbstractAzkabanServlet {
     private void cancelJob(AzkabanApplication app, HttpServletRequest req) throws ServletException {
 
         String jobId = getParam(req, "job");
-        Collection<ScheduledJobAndInstance> executing = app.getScheduler().getExecutingJobs();
-        for(ScheduledJobAndInstance curr: executing) {
+        try {
+			app.getJobExecutorManager().cancel(jobId);
+		} catch (Exception e1) {
+			logger.error("Error cancelling job " + e1);
+		}
+        
+        Collection<ExecutingJobAndInstance> executing = app.getJobExecutorManager().getExecutingJobs();
+        for(ExecutingJobAndInstance curr: executing) {
             ExecutableFlow flow = curr.getExecutableFlow();
             final String flowId = flow.getId();
             if(flowId.equals(jobId)) {
@@ -241,17 +244,18 @@ public class IndexServlet extends AbstractAzkabanServlet {
 	                    hour += 12;
 	                hour %= 24;
 	
-	                app.getScheduler().schedule(job,
-	                                            day.withHourOfDay(hour)
-	                                               .withMinuteOfHour(minutes)
-	                                               .withSecondOfMinute(0),
-	                                            thePeriod,
-	                                            false);
+	                app.getScheduleManager().schedule(job,
+                            day.withHourOfDay(hour)
+                            .withMinuteOfHour(minutes)
+                            .withSecondOfMinute(0),
+                         thePeriod,
+                         false);
+
 	                addMessage(req, job + " scheduled.");
 	            } else if(hasParam(req, "run_now")) {
 	                boolean ignoreDeps = !hasParam(req, "include_deps");
-	                @SuppressWarnings("unused")
-	                ScheduledFuture<?> f = app.getScheduler().schedule(job, new DateTime(), ignoreDeps);
+	                
+	                app.getJobExecutorManager().execute(job, ignoreDeps);
 	                addMessage(req, "Running " + job);
 	            }
 	            else {

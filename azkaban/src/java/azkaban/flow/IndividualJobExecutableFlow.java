@@ -29,6 +29,7 @@ import azkaban.app.JobManager;
 import azkaban.common.jobs.DelegatingJob;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
+import azkaban.jobs.Status;
 
 /**
  * An implemention of the ExecutableFlow interface that just

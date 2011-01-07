@@ -14,11 +14,13 @@
  * the License.
  */
 
-package azkaban.jobs;
+package azkaban.jobs.builtin;
 
 import azkaban.app.JobDescriptor;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
+import azkaban.jobs.AbstractProcessJob;
+
 import org.apache.log4j.Level;
 import java.io.BufferedReader;
 import java.io.File;

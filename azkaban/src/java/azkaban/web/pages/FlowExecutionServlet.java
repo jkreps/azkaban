@@ -22,12 +22,10 @@ import azkaban.flow.ComposedExecutableFlow;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowExecutionHolder;
 import azkaban.flow.FlowManager;
-import azkaban.flow.Flows;
-import azkaban.flow.GroupedExecutableFlow;
 import azkaban.flow.IndividualJobExecutableFlow;
 import azkaban.flow.MultipleDependencyExecutableFlow;
-import azkaban.flow.Status;
 import azkaban.flow.WrappingExecutableFlow;
+import azkaban.jobs.Status;
 import azkaban.web.AbstractAzkabanServlet;
 import azkaban.workflow.Flow;
 import azkaban.workflow.flow.DagLayout;
@@ -39,10 +37,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
-import org.joda.time.Period;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -52,8 +48,9 @@ import java.util.HashSet;
 import java.util.List;
 
 public class FlowExecutionServlet extends AbstractAzkabanServlet {
+	private static final long serialVersionUID = 7234050895543142356L;
 
-    @Override
+	@Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
         resp.setContentType("application/xhtml+xml");
@@ -222,7 +219,7 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         	traverseFlow(disabledJobs, executableFlow);
         	
         	try {
-        		this.getApplication().getScheduler().scheduleNow(holder);
+        		this.getApplication().getJobExecutorManager().execute(holder);
             	addMessage(req, String.format("Flow[%s] restarted.", id));
         	} catch(Exception e) {
         	}
@@ -245,7 +242,7 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
            	traverseFlow(disabledJobs, flow);
            	
         	try {
-        		this.getApplication().getScheduler().scheduleNow(flow);
+        		this.getApplication().getJobExecutorManager().execute(flow);
             	addMessage(req, String.format("Flow[%s] running.", name));
         	} catch(Exception e) {
         	}

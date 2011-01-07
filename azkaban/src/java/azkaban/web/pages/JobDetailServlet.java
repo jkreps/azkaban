@@ -30,12 +30,12 @@ import org.json.simple.JSONObject;
 
 import azkaban.app.AzkabanApplication;
 import azkaban.app.JobDescriptor;
-import azkaban.app.JobExecution;
 import azkaban.app.JobManager;
 import azkaban.web.AbstractAzkabanServlet;
 
 import azkaban.common.utils.Props;
 import azkaban.common.web.Page;
+import azkaban.jobs.JobExecution;
 
 /**
  * Show the details of a job

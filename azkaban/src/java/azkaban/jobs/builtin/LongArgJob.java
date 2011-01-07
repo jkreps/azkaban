@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package azkaban.jobs;
+package azkaban.jobs.builtin;
 
 import java.io.File;
 import java.util.HashSet;
@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import azkaban.app.JobDescriptor;
 import azkaban.common.utils.Props;
+import azkaban.jobs.AbstractProcessJob;
 import azkaban.util.process.AzkabanProcess;
 import azkaban.util.process.AzkabanProcessBuilder;
 
