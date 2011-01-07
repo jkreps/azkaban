@@ -38,7 +38,8 @@ public class MultipartParser {
         _uploadItemFactory.setSizeThreshold(spillToDiskSize);
     }
 
-    public Map<String, Object> parseMultipart(HttpServletRequest request) throws IOException,
+    @SuppressWarnings("unchecked")
+	public Map<String, Object> parseMultipart(HttpServletRequest request) throws IOException,
             ServletException {
         ServletFileUpload upload = new ServletFileUpload(_uploadItemFactory);
         List<FileItem> items = null;

@@ -87,7 +87,8 @@ public class JobDetailServlet extends AbstractAzkabanServlet {
         }
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         AzkabanApplication app = getApplication();

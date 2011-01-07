@@ -412,6 +412,7 @@ public class JobExecutorManager {
                             }
                         } catch(RuntimeException e) {
                             logger.warn("Exception caught while saving flow/sending emails", e);
+                            executing.remove(runningJob.getId());
                             throw e;
                         } finally {
                             // mark the job as completed
@@ -423,18 +424,14 @@ public class JobExecutorManager {
 
                 allKnownFlows.saveExecutableFlow(holder);
             } catch(Throwable t) {
-                if(emailList != null) {
+            	executing.remove(runningJob.getId());
+            	if(emailList != null) {
                     sendErrorEmail(runningJob, t, senderAddress, emailList);
                 }
-                executing.remove(runningJob.getId());
+                
                 logger.warn(String.format("An exception almost made it back to the ScheduledThreadPool from job[%s]",
                 		runningJob),
                             t);
-            }
-            finally {
-            	// Just in-case. We need to clean up.
-            	completed.put(runningJob.getId(), runningJob);
-            	executing.remove(runningJob.getId());
             }
         }
     }
