@@ -82,9 +82,10 @@ public class JobExecutorManager {
         if(instance == null) {
             throw new IllegalArgumentException("'" + name + "' is not currently running.");
         }
+        
         instance.getExecutableFlow().cancel();
     }
-    
+
     /**
      * Run job file given the id
      * 
@@ -94,6 +95,10 @@ public class JobExecutorManager {
     public void execute(String id, boolean ignoreDep) {
     	final ExecutableFlow flowToRun = allKnownFlows.createNewExecutableFlow(id);
 
+    	if (isExecuting(id)) {
+    		throw new JobExecutionException("Job " + id + " is already running.");
+    	}
+    	
         if(ignoreDep) {
             for(ExecutableFlow subFlow: flowToRun.getChildren()) {
                 subFlow.markCompleted();
@@ -109,6 +114,10 @@ public class JobExecutorManager {
      * @param holder The execution of the flow to run
      */
     public void execute(ExecutableFlow flow) {
+    	if (isExecuting(flow.getName())) {
+    		throw new JobExecutionException("Job " + flow.getName() + " is already running.");
+    	}
+    	
         final Props parentProps = produceParentProperties(flow);
         FlowExecutionHolder holder = new FlowExecutionHolder(flow, parentProps);
         logger.info("Executing job '" + flow.getName() + "' now");
@@ -127,6 +136,11 @@ public class JobExecutorManager {
      */
     public void execute(FlowExecutionHolder holder) {
         ExecutableFlow flow = holder.getFlow();
+        
+    	if (isExecuting(flow.getName())) {
+    		throw new JobExecutionException("Job " + flow.getName() + " is already running.");
+    	}
+        
         logger.info("Executing job '" + flow.getName() + "' now");
 
         final JobExecution executingJob = new JobExecution(flow.getName(),

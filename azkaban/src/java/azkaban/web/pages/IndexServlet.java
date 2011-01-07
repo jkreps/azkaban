@@ -46,6 +46,7 @@ import azkaban.common.web.Page;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flow;
 import azkaban.flow.FlowManager;
+import azkaban.jobs.JobExecutionException;
 import azkaban.jobs.JobExecutorManager.ExecutingJobAndInstance;
 import azkaban.web.AbstractAzkabanServlet;
 
@@ -92,7 +93,7 @@ public class IndexServlet extends AbstractAzkabanServlet {
         AzkabanApplication app = getApplication();
         String action = getParam(req, "action");
         if ("loadjobs".equals(action)) {
-            resp.setContentType("application/json");
+        	resp.setContentType("application/json");
         	String folder = getParam(req, "folder");
         	resp.getWriter().print(getJSONJobsForFolder(app.getAllFlows(), folder));
         	resp.getWriter().flush();
@@ -254,8 +255,13 @@ public class IndexServlet extends AbstractAzkabanServlet {
 	                addMessage(req, job + " scheduled.");
 	            } else if(hasParam(req, "run_now")) {
 	                boolean ignoreDeps = !hasParam(req, "include_deps");
-	                
-	                app.getJobExecutorManager().execute(job, ignoreDeps);
+	                try {
+	                	app.getJobExecutorManager().execute(job, ignoreDeps);
+	                }
+	                catch (JobExecutionException e) {
+	                	addError(req, e.getMessage());	
+	                	return "";
+	                }
 	                addMessage(req, "Running " + job);
 	            }
 	            else {

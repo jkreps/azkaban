@@ -21,6 +21,7 @@ import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowExecutionHolder;
 import azkaban.flow.FlowManager;
 import azkaban.flow.Flows;
+import azkaban.jobs.JobExecutionException;
 import azkaban.web.AbstractAzkabanServlet;
 
 import javax.servlet.ServletException;
@@ -61,6 +62,9 @@ public class ExecutionHistoryServlet extends AbstractAzkabanServlet {
                 }
                 catch (NumberFormatException e) {
                     addMessage(req, String.format("Apparently [%s] is not a valid long.", getParam(req, "id")));
+                }
+                catch (JobExecutionException e) {
+                	addMessage(req, "Error restarting " + getParam(req, "id") + ". " + e.getMessage());
                 }
             }
         }

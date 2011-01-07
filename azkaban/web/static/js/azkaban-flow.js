@@ -407,7 +407,36 @@ function executeFlow() {
 			"disabled" : retval
 		},
 		'success': function(data) {
-			window.location.href = contextURL + "/";
+			//window.location.href = contextURL + "/";
+			if (data.success) {
+				$("#modelDialog").text(data.message);
+				$("#modelDialog").dialog(
+					{
+						width: '300px',
+						modal: true,
+						close: function(event, ui) {
+							window.location.href = contextURL + "/flow?id=" + data.id;
+						}
+					}
+				);
+			}
+			else if (data.error) {
+				$("#modelDialog").text(data.message);
+				$("#modelDialog").dialog(
+					{
+						width: '300px',
+						modal: true,
+						close: function(event, ui) {
+							if (data.id) {
+								window.location.href = contextURL + "/flow?id=" + data.id;
+							}
+							else {
+								window.location.href = contextURL + "/flow?job_id=" + name;
+							}
+						}
+					}
+				);
+			}
 		}
 	});
 

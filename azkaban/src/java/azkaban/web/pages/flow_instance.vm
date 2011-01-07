@@ -127,6 +127,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		<li class="disable"><a href="#disable">Disable</a></li>
 		<li class="disableAncestor"><a href="#disableAncestor">Disable All Dependencies</a></li>
 	</ul>
+	<div id="modelDialog" style="display: none;" title="Info" />
 	<div id="nonModelDialog" style="display: none; " title="Help">
 		This page shows the dependency graph for your job.
 		<br/>

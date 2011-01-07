@@ -15,6 +15,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.PeriodFormat;
 
+import azkaban.jobs.JobExecutionException;
 import azkaban.jobs.JobExecutorManager;
 
 
@@ -180,49 +181,60 @@ public class ScheduleManager {
         public void run() {
         	while(stillAlive.get()) {
         		synchronized (this) {
-    	    		ScheduledJob job = schedule.peek();
-    	    		if (job == null) {
-    	    			// If null, wake up every minute or so to see if there's something to do.
-    	    			// Most likely there will not be.
-    	    			try {
-    	    				this.wait(TIMEOUT_MS);
-    	    			} catch (InterruptedException e) {
-    	    				// interruption should occur when items are added or removed from the queue.
-    	    			}
-    	    		}
-    	    		else {
-    	    			// We've passed the job execution time, so we will run.
-    	    			if (job.getScheduledExecution().isBeforeNow()) {
-    	    				// Run job. The invocation of jobs should be quick.
-    	    				ScheduledJob runningJob = schedule.poll();
-    	    				logger.info("Scheduler attempting to run " + runningJob.getId());
-
-    	    				// Execute the job here
-    	    				executionManager.execute(runningJob.getId(), runningJob.isDependencyIgnored());
-    	    				
-    	    				// Immediately reschedule if it's possible. Let the execution manager
-    	    				// handle any duplicate runs.
-    	    				if (runningJob.isRecurring()) {
-    	    					runningJob.updateTime();
-    	    					
-    	    					schedule.add(runningJob);
-    	    					saveSchedule();
-    	    				}
-    	    				else {
-    	    					// No need to keep it in the schedule.
-    	    					removeScheduledJob(runningJob);
-    	    				}
-    	    			}
-    	    			else {
-    	    				// wait until job run
-    	    				long millisWait = job.getScheduledExecution().getMillis() - (new DateTime()).getMillis();
-    	    				try {
-    							this.wait(Math.min(millisWait, TIMEOUT_MS));
-    						} catch (InterruptedException e) {
-    							// interruption should occur when items are added or removed from the queue.
-    						}
-    	    			}
-    	    		}
+        			try {
+	    	    		ScheduledJob job = schedule.peek();
+	    	    		if (job == null) {
+	    	    			// If null, wake up every minute or so to see if there's something to do.
+	    	    			// Most likely there will not be.
+	    	    			try {
+	    	    				this.wait(TIMEOUT_MS);
+	    	    			} catch (InterruptedException e) {
+	    	    				// interruption should occur when items are added or removed from the queue.
+	    	    			}
+	    	    		}
+	    	    		else {
+	    	    			// We've passed the job execution time, so we will run.
+	    	    			if (job.getScheduledExecution().isBeforeNow()) {
+	    	    				// Run job. The invocation of jobs should be quick.
+	    	    				ScheduledJob runningJob = schedule.poll();
+	    	    				logger.info("Scheduler attempting to run " + runningJob.getId());
+	
+	    	    				// Execute the job here
+	    	    				try {
+	    	    					executionManager.execute(runningJob.getId(), runningJob.isDependencyIgnored());
+	    	    				} catch (JobExecutionException e) {
+	    	    					logger.info("Could not run job. " + e.getMessage());
+	    	    				}
+	    	    				// Immediately reschedule if it's possible. Let the execution manager
+	    	    				// handle any duplicate runs.
+	    	    				if (runningJob.isRecurring()) {
+	    	    					runningJob.updateTime();
+	    	    					
+	    	    					schedule.add(runningJob);
+	    	    					saveSchedule();
+	    	    				}
+	    	    				else {
+	    	    					// No need to keep it in the schedule.
+	    	    					removeScheduledJob(runningJob);
+	    	    				}
+	    	    			}
+	    	    			else {
+	    	    				// wait until job run
+	    	    				long millisWait = job.getScheduledExecution().getMillis() - (new DateTime()).getMillis();
+	    	    				try {
+	    							this.wait(Math.min(millisWait, TIMEOUT_MS));
+	    						} catch (InterruptedException e) {
+	    							// interruption should occur when items are added or removed from the queue.
+	    						}
+	    	    			}
+	    	    		}
+        			}
+        			catch (Exception e) {
+        				logger.error("Unexpected exception has been thrown in scheduler", e);
+        			}
+        			catch (Throwable e) {
+        				logger.error("Unexpected throwable has been thrown in scheduler", e);
+        			}
         		}
         	}
         }

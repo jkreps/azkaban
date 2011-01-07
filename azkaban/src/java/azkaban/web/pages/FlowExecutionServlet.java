@@ -26,6 +26,7 @@ import azkaban.flow.IndividualJobExecutableFlow;
 import azkaban.flow.MultipleDependencyExecutableFlow;
 import azkaban.flow.WrappingExecutableFlow;
 import azkaban.jobs.Status;
+import azkaban.util.json.JSONUtils;
 import azkaban.web.AbstractAzkabanServlet;
 import azkaban.workflow.Flow;
 import azkaban.workflow.flow.DagLayout;
@@ -43,7 +44,9 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -195,12 +198,12 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        resp.setContentType("application/xhtml+xml");
+        resp.setContentType("application/json");
 
         final FlowManager allFlows = this.getApplication().getAllFlows();
         String action = getParam(req, "action");
         
-        if (action.equals("restart")) {   	
+        if (action.equals("restart")) {
         	String value = req.getParameter("disabled");
         	String[] disabledValues = value.split(",");
         	HashSet<String> disabledJobs = new HashSet<String>();
@@ -218,11 +221,23 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         	ExecutableFlow executableFlow = holder.getFlow();
         	traverseFlow(disabledJobs, executableFlow);
         	
+    		PrintWriter writer = resp.getWriter();
+    		JSONUtils jsonUtils = new JSONUtils();
+    		HashMap<String,Object> results = new HashMap<String,Object>();
+    		
         	try {
         		this.getApplication().getJobExecutorManager().execute(holder);
-            	addMessage(req, String.format("Flow[%s] restarted.", id));
+        		results.put("id", holder.getFlow().getId());
+        		results.put("success", true);
+        		results.put("message", String.format("Executing Flow[%s].", id));
         	} catch(Exception e) {
+        		results.put("id", holder.getFlow().getId());
+        		results.put("error", true);
+        		results.put("message", String.format("Error running Flow[%s]. " + e.getMessage(), id));
         	}
+        	
+        	writer.print(jsonUtils.toJSONString(results));
+        	writer.flush();
         }
         else if (action.equals("run")) {
         	String name = getParam(req, "name");
@@ -240,16 +255,26 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         		addError(req, "Job " + name + " not found.");
            	}
            	traverseFlow(disabledJobs, flow);
-           	
+    		PrintWriter writer = resp.getWriter();
+    		JSONUtils jsonUtils = new JSONUtils();
+    		HashMap<String,Object> results = new HashMap<String,Object>();
+    		
         	try {
         		this.getApplication().getJobExecutorManager().execute(flow);
-            	addMessage(req, String.format("Flow[%s] running.", name));
+        		results.put("success", true);
+        		results.put("message", String.format("Executing Flow[%s].", name));
+        		results.put("id", flow.getId());
+            	
         	} catch(Exception e) {
+        		results.put("error", true);
+        		results.put("message", String.format("Error running Flow[%s]. " + e.getMessage(), name));
         	}
+        	
+        	writer.print(jsonUtils.toJSONString(results));
+        	writer.flush();
         }
- 
         
-        resp.sendRedirect(req.getContextPath());
+       
     }
     
     private void traverseFlow(HashSet<String> disabledJobs, ExecutableFlow flow) {
