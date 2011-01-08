@@ -50,11 +50,17 @@ public class ScheduleManager {
     	
     	List<ScheduledJob> scheduleList = loader.loadSchedule();
     	for (ScheduledJob job: scheduleList) {
-    		scheduleIDMap.put(job.getId(), job);
-    		schedule(job);
+    		internalSchedule(job);
     	}
     	
     	this.runner.start();
+    }
+    
+    /**
+     * Shutdowns the scheduler thread. After shutdown, it may not be safe to use it again.
+     */
+    public void shutdown() {
+    	this.runner.shutdown();
     }
     
     /**
@@ -110,11 +116,10 @@ public class ScheduleManager {
     }
     
     /**
-     * Adds a job to the schedule.
-     * 
+     * Schedules the job, but doesn't save the schedule afterwards.
      * @param job
      */
-    public synchronized void schedule(ScheduledJob job) {
+    private synchronized void internalSchedule(ScheduledJob job) {
     	ScheduledJob existing = scheduleIDMap.get(job.getId());
     	job.updateTime();
     	if (existing != null) {
@@ -123,10 +128,22 @@ public class ScheduleManager {
     	
 		this.runner.addScheduledJob(job);
     	scheduleIDMap.put(job.getId(), job);
-    	loader.saveSchedule(getSchedule());
     }
     
-    public synchronized void saveSchedule() {
+    /**
+     * Adds a job to the schedule.
+     * 
+     * @param job
+     */
+    public synchronized void schedule(ScheduledJob job) {
+    	internalSchedule(job);
+    	saveSchedule();
+    }
+    
+    /**
+     * Save the schedule
+     */
+    private void saveSchedule() {
     	loader.saveSchedule(getSchedule());
     }
     
@@ -146,6 +163,12 @@ public class ScheduleManager {
     	
     	public ScheduleRunner() {
     		schedule = new PriorityBlockingQueue<ScheduledJob>(1, new ScheduleComparator());
+    	}
+    	
+    	public void shutdown() {
+    		logger.error("Shutting down scheduler thread");
+    		stillAlive.set(false);
+    		this.interrupt();
     	}
     	
     	/**
@@ -182,7 +205,8 @@ public class ScheduleManager {
         	while(stillAlive.get()) {
         		synchronized (this) {
         			try {
-	    	    		ScheduledJob job = schedule.peek();
+        				ScheduledJob job = schedule.peek();
+	    	    		
 	    	    		if (job == null) {
 	    	    			// If null, wake up every minute or so to see if there's something to do.
 	    	    			// Most likely there will not be.
@@ -194,7 +218,7 @@ public class ScheduleManager {
 	    	    		}
 	    	    		else {
 	    	    			// We've passed the job execution time, so we will run.
-	    	    			if (job.getScheduledExecution().isBeforeNow()) {
+	    	    			if (!job.getScheduledExecution().isAfterNow()) {
 	    	    				// Run job. The invocation of jobs should be quick.
 	    	    				ScheduledJob runningJob = schedule.poll();
 	    	    				logger.info("Scheduler attempting to run " + runningJob.getId());
@@ -207,9 +231,7 @@ public class ScheduleManager {
 	    	    				}
 	    	    				// Immediately reschedule if it's possible. Let the execution manager
 	    	    				// handle any duplicate runs.
-	    	    				if (runningJob.isRecurring()) {
-	    	    					runningJob.updateTime();
-	    	    					
+	    	    				if (runningJob.updateTime()) {
 	    	    					schedule.add(runningJob);
 	    	    					saveSchedule();
 	    	    				}
@@ -220,7 +242,7 @@ public class ScheduleManager {
 	    	    			}
 	    	    			else {
 	    	    				// wait until job run
-	    	    				long millisWait = job.getScheduledExecution().getMillis() - (new DateTime()).getMillis();
+	    	    				long millisWait = Math.max(0, job.getScheduledExecution().getMillis() - (new DateTime()).getMillis());
 	    	    				try {
 	    							this.wait(Math.min(millisWait, TIMEOUT_MS));
 	    						} catch (InterruptedException e) {
@@ -247,7 +269,7 @@ public class ScheduleManager {
         private class ScheduleComparator implements Comparator<ScheduledJob>{
     		@Override
     		public int compare(ScheduledJob arg0, ScheduledJob arg1) {
-    			DateTime first = arg0.getScheduledExecution();
+    			DateTime first = arg1.getScheduledExecution();
     			DateTime second = arg0.getScheduledExecution();
     			
     			if (first.isEqual(second)) {

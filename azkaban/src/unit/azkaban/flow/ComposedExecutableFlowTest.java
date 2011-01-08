@@ -1,6 +1,8 @@
 package azkaban.flow;
 
 import azkaban.common.utils.Props;
+import azkaban.jobs.Status;
+
 import org.easymock.Capture;
 import org.easymock.IAnswer;
 import org.easymock.classextension.EasyMock;
@@ -13,7 +15,6 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**

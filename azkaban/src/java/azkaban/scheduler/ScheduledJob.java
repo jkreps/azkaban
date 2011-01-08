@@ -78,7 +78,9 @@ public class ScheduledJob {
     	}
     	
         if (period != null) {
-    		this.nextScheduledExecution = getNextRuntime(nextScheduledExecution, period);
+        	DateTime other = getNextRuntime(nextScheduledExecution, period);
+    		
+    		this.nextScheduledExecution = other;
     		return true;
     	}
 
@@ -97,7 +99,7 @@ public class ScheduledJob {
         DateTime now = new DateTime();
         DateTime date = new DateTime(scheduledDate);
         int count = 0;
-        while (now.isAfter(date)) {
+        while (!now.isBefore(date)) {
             if (count > 100000) {
                 throw new IllegalStateException("100000 increments of period did not get to present time.");
             }

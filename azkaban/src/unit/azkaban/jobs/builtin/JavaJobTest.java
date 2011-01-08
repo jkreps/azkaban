@@ -1,10 +1,6 @@
-package azkaban.jobs;
+package azkaban.jobs.builtin;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.Date;
 import java.util.Properties;
 
@@ -17,6 +13,7 @@ import org.junit.Test;
 
 import azkaban.app.JobDescriptor;
 import azkaban.common.utils.Props;
+import azkaban.jobs.AbstractProcessJob;
 
 public class JavaJobTest
 {
@@ -102,7 +99,7 @@ public class JavaJobTest
   @Test
   public void testJavaJob() {
     /* initialize the Props */
-    props.put(JavaJob.JOB_CLASS, "azkaban.test.WordCountLocal");
+    props.put(JavaJob.JOB_CLASS, "azkaban.jobs.builtin.WordCountLocal");
     props.put(ProcessJob.WORKING_DIR, ".");
     props.put("input", inputFile);
     props.put("output", outputFile);
@@ -112,7 +109,7 @@ public class JavaJobTest
   
   @Test
   public void testFailedJavaJob() {
-    props.put(JavaJob.JOB_CLASS, "azkaban.test.WordCountLocal");
+    props.put(JavaJob.JOB_CLASS, "azkaban.jobs.builtin.WordCountLocal");
     props.put(ProcessJob.WORKING_DIR, ".");
     props.put("input", errorInputFile);
     props.put("output", outputFile);

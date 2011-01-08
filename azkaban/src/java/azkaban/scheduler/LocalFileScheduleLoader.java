@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 import org.joda.time.DurationFieldType;
 import org.joda.time.Hours;
@@ -46,6 +47,7 @@ public class LocalFileScheduleLoader implements ScheduleLoader {
 	private static final String ID = "id";
 	private static final String SCHEDULE = "schedule";
 	private static final String TIME = "time";
+	private static final String TIMEZONE = "timezone";
 	private static final String RECURRENCE = "recurrence";
 	private static final String IGNORE_DEPENDENCY = "ignoreDependency";
 	
@@ -153,6 +155,7 @@ public class LocalFileScheduleLoader implements ScheduleLoader {
     private ScheduledJob createScheduledJob(HashMap<String, Object> obj) {
     	String id = (String)obj.get(ID);
     	String time = (String)obj.get(TIME);
+    	String timezone = (String)obj.get(TIMEZONE);
     	String recurrence = (String)obj.get(RECURRENCE);
     	Boolean dependency = (Boolean)obj.get(IGNORE_DEPENDENCY);
     	if (dependency == null) {
@@ -160,10 +163,13 @@ public class LocalFileScheduleLoader implements ScheduleLoader {
     	}
     	
     	DateTime dateTime = FILE_DATEFORMAT.parseDateTime(time);
-    	
+
     	if (dateTime == null) {
     		logger.error("No time has been set");
     		return null;
+    	}
+    	if (timezone != null) {
+    		dateTime = dateTime.withZoneRetainFields(DateTimeZone.forID(timezone));
     	}
 
         ReadablePeriod period = null;
@@ -184,6 +190,7 @@ public class LocalFileScheduleLoader implements ScheduleLoader {
     	HashMap<String,Object> object = new HashMap<String,Object>();
     	object.put(ID, job.getId());
     	object.put(TIME, FILE_DATEFORMAT.print(job.getScheduledExecution()));
+    	object.put(TIMEZONE, job.getScheduledExecution().getZone().getID());
     	object.put(RECURRENCE, createPeriodString(job.getPeriod()));
     	object.put(IGNORE_DEPENDENCY, job.isDependencyIgnored());
     	

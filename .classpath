@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="azkaban-common/src/java"/>
+	<classpathentry kind="src" path="azkaban/src/unit"/>
 	<classpathentry kind="src" path="azkaban/src/java"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.15.jar"/>
 	<classpathentry kind="lib" path="lib/commons-cli-2.0-SNAPSHOT.jar"/>
