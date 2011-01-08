@@ -110,7 +110,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			                </ul>
 			            </td>
 			            <td>
-			              $utils.formatDateTime($exec.executableFlow.startTime)
+			              $utils.formatDateTimeAndZone($exec.executableFlow.startTime)
 			              <br/>
 			              ($utils.formatPeriod($utils.period($exec.executableFlow.startTime, $util.now)) ago)
 			            </td>
@@ -157,6 +157,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			              <option>pm</option>
 			              <option>am</option>
 			            </select>
+			            $utils.shortTimeZone
 			            on
 			            <input class="scheduled_date" type="text" name="date" size="10" value="$utils.formatDate($utils.now())"/>
 			            and 

@@ -23,11 +23,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.log.Log4JLogChute;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.joda.time.DateTimeZone;
 
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
@@ -71,6 +73,7 @@ public class AzkabanApplication
 
     private static final Logger logger = Logger.getLogger(AzkabanApplication.class);
     private static final String INSTANCE_NAME = "instance.name";
+    private static final String DEFAULT_TIMEZONE_ID = "default.timezone.id";
     
     private final String _instanceName;
     private final List<File> _jobDirs;
@@ -111,6 +114,12 @@ public class AzkabanApplication
 
         _baseClassLoader = getBaseClassloader();
 
+        String defaultTimezoneID = defaultProps.getString(DEFAULT_TIMEZONE_ID, null);
+        if (defaultTimezoneID != null) {
+        	DateTimeZone.setDefault(DateTimeZone.forID(defaultTimezoneID));
+        	TimeZone.setDefault(TimeZone.getTimeZone(defaultTimezoneID));
+        }
+        
         NamedPermitManager permitManager = getNamedPermitManager(defaultProps);
         JobWrappingFactory factory = new JobWrappingFactory(
                 permitManager,

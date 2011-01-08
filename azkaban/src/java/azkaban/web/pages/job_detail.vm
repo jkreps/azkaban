@@ -132,19 +132,19 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 				          </tr>
 				          #foreach($exec in $executions)
 				            <tr>
-				              <td>$exec.jobName</td>
+				              <td>$exec.id</td>
 				              <td>
 				                #if($utils.isNull($exec.started))
 				                  &ndash;
 				                #else
-				                  $utils.formatDateTime($exec.started)
+				                  $utils.formatDateTimeAndZone($exec.started)
 				                #end
 				              </td>
 				              <td>
 				                #if($utils.isNull($exec.ended))
 				                  &ndash; 
 				                #else
-				                  $utils.formatDateTime($exec.ended)
+				                  $utils.formatDateTimeAndZone($exec.ended)
 				                #end
 				              </td>
 				              <td>
