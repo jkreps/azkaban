@@ -134,8 +134,13 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
       }
 
         // wrap up job in logging proxy
-        job = new LoggingJob(_logDir, job, job.getId());
-
+        if (jobDescriptor.getLoggerPattern() != null) {
+        	job = new LoggingJob(_logDir, job, job.getId(), jobDescriptor.getLoggerPattern());	
+        }
+        else {
+        	job = new LoggingJob(_logDir, job, job.getId());	
+        }
+        
         return job;
     }
 }
