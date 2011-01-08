@@ -220,6 +220,13 @@ function moveZoomPicker(newpos) {
 	}
 }
 
+function sliderClick(evt, item) {
+	var graphTab = document.getElementById("graphTab");
+	var newDelta = evt.clientY - graphTab.offsetTop - 25;
+	
+	moveZoomPicker(newDelta);
+}
+
 var zoomBar;
 var zoomPicker;
 var zoomLine;
@@ -227,11 +234,10 @@ var zoomPlus;
 var zoomMinus;
 var zoomSlider;
 var zoomHeight = 200;
+var radius = 12;
 function setupZoomBar(svgElement) {
 	zoomBar = document.createElementNS(svgns, 'g');
 	zoomBar.setAttribute('id', 'zoomBar');
-	
-	var radius = 12;
 	
 	// The upper plus button
 	zoomPlus = document.createElementNS(svgns, 'g');
@@ -278,6 +284,7 @@ function setupZoomBar(svgElement) {
 	var zoomSlider = document.createElementNS(svgns, 'g');
 	zoomSlider.setAttribute("transform", "translate(0, " + radius +")");
 	zoomSlider.setAttribute("class", "zoomSlider");
+	zoomSlider.setAttribute("onclick", "sliderClick(evt, this)");
 	
 	zoomLine = document.createElementNS(svgns, 'rect');
 	zoomLine.setAttribute("class", "zoomLine");
