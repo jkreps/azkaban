@@ -139,13 +139,13 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   	       <div class="box">
 	  	       <h3>All Jobs</h3>
 	    	   <div class="all-jobs">
-	    	        <form method="post" action="${context}/">
+	    	        <form id="runSubmit" method="post" action="${context}/">
 			        <div class="sched-form">
 			          <div>
 			            Run immediately
-			              (<input name="include_deps" type="checkbox" checked /> with dependencies)
+			              (<input name="include_deps" id="withdep" type="checkbox" checked /> with dependencies)
 			              <input type="submit" name="run_now" value="Run"/>
-			              <!-- input type="submit" name="flow_now" value="Flow (Beta)"/ -->
+			              <input id="submitType" type="hidden" />
 			          </div>
 			          <hr>
 			          <div>
@@ -173,7 +173,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 			            <input type="submit" name="schedule" value="Schedule"/>
 			          </div>
 			        </div>
-			        <div class="joblist">
+			        <div class="joblist translucent">
 			          #foreach($folderName in $folderNames)
 			          	<div class="jobfolder expand" onclick="expandFlow(this)" id="$folderName">
 			          		<span><div class="folderIcon"></div></span><p>$folderName</p>

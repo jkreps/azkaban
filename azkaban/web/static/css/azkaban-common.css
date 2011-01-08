@@ -338,7 +338,7 @@ a {
 
 /* Index page job list*/
 .joblist {
-	background-color: #CCC;
+
 	text-align: left;
 	margin-left: 20px;
 	margin-right: 20px;
@@ -349,7 +349,7 @@ a {
 }
 
 .joblist a {
-	color: darkred;
+	color: #A7CEFF;
 	font-size:110%;
 	padding-left:3px;
 	text-decoration:none;
@@ -357,7 +357,7 @@ a {
 }
 
 .joblist a:hover {
-	color: #F00000;
+	color: #FFFFFF;
 	font-size:110%;
 	padding-left:3px;
 	text-decoration:none;

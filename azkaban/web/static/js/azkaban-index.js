@@ -14,6 +14,10 @@ $(function () {
     }
 });
 
+function invokeRun() {
+	
+}
+
 function getList(data) {
 	var jobName = data.name;
 	
@@ -21,6 +25,7 @@ function getList(data) {
 	li['jobname'] = jobName;
 	// Setup checkbox
 	var input = document.createElement("input"); 
+	input.setAttribute("id", jobName + "-checkbox");
 	input.setAttribute("type", "checkbox");
 	input.setAttribute("name", "jobs");
 	input.setAttribute("value", jobName);
@@ -38,11 +43,44 @@ function getList(data) {
 	// Setup flow button
 	var flowButton = document.createElement("a");
 	$(flowButton).text("View Flow");
-	flowButton.setAttribute("id", jobName + "-button");
+	flowButton.setAttribute("id", jobName + "-flowbutton");
 	flowButton.setAttribute("class", "flowViewButton");
 	flowButton.setAttribute("href",contextURL + "/flow?job_id=" + jobName);
 	$(flowButton).addClass("hidden");
 	li.appendChild(flowButton);
+	
+	var runButton = document.createElement("a");
+	$(runButton).text("Run");
+	runButton.setAttribute("id", jobName + "-runbutton");
+	runButton.setAttribute("class", "flowViewButton");
+	runButton.setAttribute("href","#");
+	$(runButton).addClass("hidden");
+	$(runButton).click(function() {
+		$(".sched-tree-checkbox").attr('checked', false);
+		$("#withdep").attr('checked', false);
+		$("#" +jobName + "-checkbox").attr('checked', true);
+		$("#submitType").attr('name', 'run_now');
+		$("#submitType").attr('value', 'Run');
+		$("#runSubmit").submit();
+	});
+	li.appendChild(runButton);
+	
+	var runDepButton = document.createElement("a");
+	$(runDepButton).text("Run with Dependencies");
+	runDepButton.setAttribute("id", jobName + "-rundepbutton");
+	runDepButton.setAttribute("class", "flowViewButton");
+	runDepButton.setAttribute("href","#");
+	$(runDepButton).addClass("hidden");
+	$(runDepButton).click(function() {
+		$(".sched-tree-checkbox").attr('checked', false);
+		$("#withdep").attr('checked', true);
+		$("#" +jobName + "-checkbox").attr('checked', true);
+		$("#submitType").attr('name', 'run_now');
+		$("#submitType").attr('value', 'Run');
+		$("#runSubmit").submit();
+	});
+	li.appendChild(runDepButton);
+	
 	li.setAttribute("onMouseOver", "flowButtonShow(true, this.jobname)");
 	li.setAttribute("onMouseOut", "flowButtonShow(false, this.jobname)");
 	
@@ -61,14 +99,24 @@ function getList(data) {
 }
 
 function flowButtonShow(show, jobname) {
-	var flowButton = jobname + "-button";
+	var flowButton = jobname + "-flowbutton";
+	var runButton = jobname + "-runbutton"
+	var runDepButton = jobname + "-rundepbutton"
 	if (show) {
 		$("#" + flowButton).removeClass("hidden");
 		$("#" + flowButton).addClass("show");
+		$("#" + runButton).removeClass("hidden");
+		$("#" + runButton).addClass("show");
+		$("#" + runDepButton).removeClass("hidden");
+		$("#" + runDepButton).addClass("show");
 	}
 	else {
 		$("#" + flowButton).removeClass("show");
 		$("#" + flowButton).addClass("hidden");
+		$("#" + runButton).removeClass("show");
+		$("#" + runButton).addClass("hidden");
+		$("#" + runDepButton).removeClass("show");
+		$("#" + runDepButton).addClass("hidden");
 	}
 }
 
