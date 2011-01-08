@@ -12,11 +12,13 @@ $(function () {
       });    
       }
     }
+    
+    $(".jobfolder").each(function(index) {
+    	if ("open" == $.cookie(this.id)) {
+    		expandFlow(this);
+    	}
+    });
 });
-
-function invokeRun() {
-	
-}
 
 function getList(data) {
 	var jobName = data.name;
@@ -124,6 +126,7 @@ function expandFlow(folderDiv) {
 	var folderId = folderDiv.id;
 	
 	if (!folderDiv['fold']) {
+		$.cookie(folderId, "open");
 		$(folderDiv).removeClass('expand');
 		$(folderDiv).addClass('wait');
 		
@@ -164,12 +167,14 @@ function expandFlow(folderDiv) {
 	else {
 		var foldable = folderDiv['fold'];
 		if (foldable['hidden']) {
+			$.cookie(folderId, "open");
 			$(foldable).show('medium');
 			$(folderDiv).removeClass('expand');
 			$(folderDiv).addClass('collapse');
 			foldable['hidden'] = false;
 		}
 		else {
+			$.cookie(folderId, "closed");
 			$(foldable).hide('medium');
 			$(folderDiv).removeClass('collapse');
 			$(folderDiv).addClass('expand');
