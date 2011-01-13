@@ -8,7 +8,7 @@ $(function () {
         $("#"+treeElems[i].id).treeview({
         collapsed: true,
         animated: "medium",
-        persist: "cookie "
+        persist: "cookie"
       });    
       }
     }

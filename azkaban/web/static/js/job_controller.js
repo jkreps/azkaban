@@ -5,7 +5,7 @@ function JobControler() {
 	    url: "test.php",  
         collapsed: true,
         animated: "medium",
-      //  persist: "cookie",
+        persist: "cookie"
       });
     
     var treeElems = $(".execing-jobs");
@@ -17,7 +17,7 @@ function JobControler() {
         $("#"+treeElems[i].id).treeview({
         collapsed: true,
         animated: "medium",
-        persist: "cookie "
+        persist: "cookie"
       });    
       }
     }
