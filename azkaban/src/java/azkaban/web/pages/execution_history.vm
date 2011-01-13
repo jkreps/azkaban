@@ -93,24 +93,24 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		              <td>$flow.id</td>
 		              <td class="historytree"><ul class="sched-tree">#history_execing_job($flow)</ul></td>
 		              <td>
-		                #if($utils.isNull($flow.started))
+		                #if($utils.isNull($flow.startTime))
 		                  &ndash;
 		                #else
-		                  $utils.formatDateTime($flow.started)
+		                  $utils.formatDateTime($flow.startTime)
 		                #end
 		              </td>
 		              <td>
-		                #if($utils.isNull($flow.ended))
+		                #if($utils.isNull($flow.endTime))
 		                  &ndash; 
 		                #else
-		                  $utils.formatDateTime($flow.ended)
+		                  $utils.formatDateTime($flow.endTime)
 		                #end
 		              </td>
 		              <td>
-		                #if($utils.isNull($flow.ended))
+		                #if($utils.isNull($flow.endTime))
 		                  &ndash;
 		                #else
-		                  $utils.formatPeriod($utils.period($flow.started, $flow.ended))
+		                  $utils.formatPeriod($utils.period($flow.startTime, $flow.endTime))
 		                #end
 		              </td>
 		              <td>
