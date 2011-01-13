@@ -399,6 +399,7 @@ a {
 .jobtable a {
 	text-decoration: none;
 	font-size: 13pt;
+	color: #A7CEFF;
 }
 
 .jobtable .job-name-FAILED {
