@@ -14,8 +14,15 @@ $(function () {
     }
     
     $(".jobfolder").each(function(index) {
-    	if ("open" == $.cookie(this.id)) {
-    		expandFlow(this);
+    	var d = new Date();
+    	var numMinuteThreshold = 15;
+    	if ($.cookie(this.id)) {
+    		if ($.cookie(this.id) > d.getTime() - numMinuteThreshold*60000) {
+    			expandFlow(this);
+    		}
+    		else {
+    			$.cookie(this.id, null);
+    		}
     	}
     });
 });
@@ -124,9 +131,9 @@ function flowButtonShow(show, jobname) {
 
 function expandFlow(folderDiv) {
 	var folderId = folderDiv.id;
-	
+	var d = new Date();
 	if (!folderDiv['fold']) {
-		$.cookie(folderId, "open");
+		$.cookie(folderId, d.getTime());
 		$(folderDiv).removeClass('expand');
 		$(folderDiv).addClass('wait');
 		
@@ -167,14 +174,14 @@ function expandFlow(folderDiv) {
 	else {
 		var foldable = folderDiv['fold'];
 		if (foldable['hidden']) {
-			$.cookie(folderId, "open");
+			$.cookie(folderId, d.getTime());
 			$(foldable).show('medium');
 			$(folderDiv).removeClass('expand');
 			$(folderDiv).addClass('collapse');
 			foldable['hidden'] = false;
 		}
 		else {
-			$.cookie(folderId, "closed");
+			$.cookie(folderId, null);
 			$(foldable).hide('medium');
 			$(folderDiv).removeClass('collapse');
 			$(folderDiv).addClass('expand');
