@@ -17,7 +17,11 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		}
       
 		$(function () {
-			$( "#tabs" ).tabs();
+			#if($tab == "logs") 
+				$( "#tabs" ).tabs({ selected: 1 });
+			#else
+				$( "#tabs" ).tabs();
+			#end
 		});
     </script>
     <style type="text/css">
@@ -132,15 +136,16 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 				      </table>
 				    </div>
 				
-				  	#if($successful_executions > 1)
+				</div>
+			    
+			    <div id="tabs-2">
+					#if($successful_executions > 1)
 	  	            <div class="box">
 	  	            	<h3>Previous Runtimes</h3>
 				        <div class="jobdesc" id='runtime-chart' style='width: 700px; height: 300px; margin: auto'></div>
 	  	       		</div>       		
 				    #end
-				</div>
-			    
-			    <div id="tabs-2">
+				
 				    <div class="box">
 				          <h3>Job History</h3>
 				            #if($executions.size() > 0)

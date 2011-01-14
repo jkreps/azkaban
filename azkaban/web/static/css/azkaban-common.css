@@ -163,12 +163,12 @@ a {
 
 .box h3 {
 	color: #CCC;
-	font-size: 16pt;
+	font-size: 1.4em;
 }
 
 .box .h3like {
 	color: #CCC;
-	font-size: 14pt;
+	font-size: 12pt;
 }
 
 #variableWidth {
@@ -350,7 +350,6 @@ a {
 
 .joblist a {
 	color: #A7CEFF;
-	font-size:110%;
 	padding-left:3px;
 	text-decoration:none;
 	vertical-align:top;
@@ -358,7 +357,6 @@ a {
 
 .joblist a:hover {
 	color: #FFFFFF;
-	font-size:110%;
 	padding-left:3px;
 	text-decoration:none;
 	vertical-align:top;
@@ -398,7 +396,6 @@ a {
 
 .jobtable a {
 	text-decoration: none;
-	font-size: 13pt;
 	color: #A7CEFF;
 }
 
@@ -427,7 +424,6 @@ a {
 }
 
 .jobdesc {
-	font-size: 14pt;
 	margin: 10px;
 	color: #AAA;
 }

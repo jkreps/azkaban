@@ -1,6 +1,6 @@
 #macro(history_execing_job $flow)
   <li>
-    <a class="job job-name-${flow.status}" href="${context}/job?id=${flow.name}" title="${flow.name}<br>Status: ${flow.status}" name="sched-tree-link">
+    <a class="job job-name-${flow.status}" href="${context}/job?id=${flow.name}&logs" title="${flow.name}<br>Status: ${flow.status}" name="sched-tree-link">
       $flow.name
     </a>
     #if($flow.hasChildren())

@@ -74,6 +74,9 @@ public class JobDetailServlet extends AbstractAzkabanServlet {
             page.add("job", jdesc);
             page.add("descriptors", descriptors);
             page.add("jsonData", getJSONText(jdesc.getProps()));
+        	if (req.getParameter("logs") != null) {
+        		page.add("tab", "logs");
+        	}
             
             List<JobExecution> execs = jobManager.loadJobExecutions(jobId);
             int successes = 0;
