@@ -35,7 +35,12 @@ function runJob(id, withDep, contextURL, callback, modal) {
 						close: function(event, ui) {
 							callback();
 						},
-						title: title
+						title: title,
+						buttons : [
+				            {
+				                text: "Ok",
+				                click: function() { $(this).dialog("close"); }
+				            }]
 					}
 				);
 		}
