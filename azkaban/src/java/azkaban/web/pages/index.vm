@@ -39,6 +39,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     <script type="text/javascript" src="${context}/static/js/jqueryui/jquery.ui.datepicker.min.js"></script>
     <script type="text/javascript" src="${context}/static/js/jquery-treeview/jquery.treeview.js"></script>
     <script type="text/javascript" src="${context}/static/js/jqueryui/jquery-ui.custom.min.js"></script>
+    <script type="text/javascript" src="${context}/static/js/azkaban-api.js"></script>
     <script type="text/javascript" src="${context}/static/js/azkaban-index.js"></script>
     <script type="text/javascript">
 		var contextURL = "${context}";
@@ -202,6 +203,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	    	</div>
   	   </div>
   </div>
+  <div id="modelDialog" style="display: none;" title="Info" />
   <div><p class="currentTime">Current Time: $utils.formatDateTimeAndZone($utils.now)</p></div>
   </body>
 </html>

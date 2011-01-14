@@ -95,6 +95,7 @@ public class JobDetailServlet extends AbstractAzkabanServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         AzkabanApplication app = getApplication();
+        
         JobManager jobManager = app.getJobManager();
         String jobName = req.getParameter("job_name");
         String jobPath = req.getParameter("job_path");

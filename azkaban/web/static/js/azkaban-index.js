@@ -65,12 +65,7 @@ function getList(data) {
 	runButton.setAttribute("href","#");
 	$(runButton).addClass("hidden");
 	$(runButton).click(function() {
-		$(".sched-tree-checkbox").attr('checked', false);
-		$("#withdep").attr('checked', false);
-		$("#" +jobName + "-checkbox").attr('checked', true);
-		$("#submitType").attr('name', 'run_now');
-		$("#submitType").attr('value', 'Run');
-		$("#runSubmit").submit();
+		runJob(jobName, false, contextURL, function(){window.location.reload()}, true);
 	});
 	li.appendChild(runButton);
 	
@@ -81,12 +76,7 @@ function getList(data) {
 	runDepButton.setAttribute("href","#");
 	$(runDepButton).addClass("hidden");
 	$(runDepButton).click(function() {
-		$(".sched-tree-checkbox").attr('checked', false);
-		$("#withdep").attr('checked', true);
-		$("#" +jobName + "-checkbox").attr('checked', true);
-		$("#submitType").attr('name', 'run_now');
-		$("#submitType").attr('value', 'Run');
-		$("#runSubmit").submit();
+		runJob(jobName, true, contextURL, function(){window.location.reload()}, true);
 	});
 	li.appendChild(runDepButton);
 	

@@ -19,6 +19,7 @@ package azkaban.app;
 
 import azkaban.common.utils.Utils;
 import azkaban.jobs.AzkabanCommandLine;
+import azkaban.web.ApiServlet;
 import azkaban.web.AzkabanServletContextListener;
 import azkaban.web.JobManagerServlet;
 import azkaban.web.LogServlet;
@@ -116,6 +117,7 @@ public class AzkabanApp
       servlets.addServlet("Job Manager", "/api/jobs", JobManagerServlet.class.getName());
       servlets.addServlet("Job Upload", "/job-upload/*", JobUploadServlet.class.getName());
       servlets.addServlet("HDFS Browser", "/fs/*", HdfsBrowserServlet.class.getName());
+      servlets.addServlet("Api Servlet", "/call", ApiServlet.class.getName());
       servlets.addServlet("Flow Execution", "/flow", FlowExecutionServlet.class.getName());
       servlets.addServlet("favicon", "/favicon.ico", Default.class.getName());
       

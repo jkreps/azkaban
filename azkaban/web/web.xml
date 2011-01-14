@@ -18,6 +18,11 @@
 	</servlet>
 
 	<servlet>
+		<servlet-name>api</servlet-name>
+		<servlet-class>azkaban.web.ApiServlet</servlet-class>
+	</servlet>
+
+	<servlet>
 		<servlet-name>logs</servlet-name>
 		<servlet-class>azkaban.web.LogServlet</servlet-class>
 	</servlet>
@@ -60,6 +65,11 @@
 	<servlet-mapping>
 		<servlet-name>main</servlet-name>
 		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>api</servlet-name>
+		<url-pattern>/call</url-pattern>
 	</servlet-mapping>
 
 	<servlet-mapping>

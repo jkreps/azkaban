@@ -17,9 +17,11 @@
 package azkaban.web.pages;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +50,7 @@ import azkaban.flow.Flow;
 import azkaban.flow.FlowManager;
 import azkaban.jobs.JobExecutionException;
 import azkaban.jobs.JobExecutorManager.ExecutingJobAndInstance;
+import azkaban.util.json.JSONUtils;
 import azkaban.web.AbstractAzkabanServlet;
 
 /**
@@ -115,7 +118,7 @@ public class IndexServlet extends AbstractAzkabanServlet {
         }
         resp.sendRedirect(req.getContextPath());
     }
-
+    
     @SuppressWarnings("unchecked")
 	private String getJSONJobsForFolder(FlowManager manager, String folder) {
     	List<String> rootJobs = manager.getRootNamesByFolder(folder);
