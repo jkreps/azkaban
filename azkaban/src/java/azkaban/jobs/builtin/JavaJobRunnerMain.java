@@ -130,7 +130,7 @@ public class JavaJobRunnerMain {
             _logger.info("  no gend props");
             return;
         }
-        for (String key : outputProperties.getKeySet()) {
+        for (String key : outputProperties.keySet()) {
             _logger.info("  gend prop " + key + " value:" + outputProperties.get(key));
         }
         String outputFileStr = System.getenv(ProcessJob.JOB_OUTPUT_PROP_FILE);
@@ -139,7 +139,7 @@ public class JavaJobRunnerMain {
         }
 
         Map<String, String> properties = new LinkedHashMap<String, String>();
-        for (String key : outputProperties.getKeySet()) {
+        for (String key : outputProperties.keySet()) {
             properties.put(key, outputProperties.get(key));
         }
 
