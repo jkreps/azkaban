@@ -14,7 +14,7 @@
  * the License.
  */
 
-package azkaban.jobs;
+package azkaban.jobs.builtin;
 
 import java.io.File;
 import java.util.ArrayList;

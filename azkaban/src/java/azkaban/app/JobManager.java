@@ -21,6 +21,8 @@ import azkaban.common.utils.Props;
 import azkaban.common.utils.UndefinedPropertyException;
 import azkaban.common.utils.Utils;
 import azkaban.flow.FlowManager;
+import azkaban.jobs.JobExecution;
+
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -224,6 +226,7 @@ public class JobManager {
                                            start == null ? dirDate : start,
                                            end,
                                            succeeded,
+                                           false,
                                            logFile));
             }
         }
@@ -387,7 +390,7 @@ public class JobManager {
                 if(f.getName().endsWith(".jar")) {
                     try {
                         logger.debug("Adding jar " + f.getName() + " to the classpath");
-                        urls.add(f.toURL());
+                        urls.add(f.toURI().toURL());
                     } catch(MalformedURLException e) {
                         throw new JobLoadException(e);
                     }
@@ -468,7 +471,6 @@ public class JobManager {
         Map<File, File> m = new HashMap<File, File>();
         m.put(destPath, localPath);
         // verify job load
-        File basePath = this._jobDirs.get(0);
 
         loadJobDescriptors(null, m, false);
 

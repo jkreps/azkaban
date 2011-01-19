@@ -140,12 +140,17 @@ public class RefreshableFlowManager implements FlowManager
 
                 // For folder path additions
                 String jobPath = rootDescriptor.getPath();
-                String[] split = jobPath.split("/");
-                if (split[0].isEmpty()) {
-                	jobPath = split[1];
+                if (jobPath.contains("/")) {
+	                String[] split = jobPath.split("/");
+	                if (split[0].isEmpty()) {
+	                	jobPath = split[1];
+	                }
+	                else {
+	                	jobPath = split[0];
+	                }
                 }
                 else {
-                	jobPath = split[0];
+                	jobPath = "default";
                 }
 
                 List<String> root = folderToRoot.get(jobPath);

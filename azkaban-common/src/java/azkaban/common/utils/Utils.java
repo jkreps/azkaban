@@ -408,4 +408,148 @@ public class Utils {
         temp.deleteOnExit();
         return temp;
     }
+<<<<<<< HEAD
+=======
+
+    /**
+     * Read in content of a file and get the last *lineCount* lines. It is
+     * equivalent to *tail* command
+     * 
+     * @param filename           input file name
+     * @param lineCount          desired number of tailing lines
+     * @return vector of the last *lineCount* lines
+     */
+    public static Vector<String> tail(String filename, int lineCount) {
+        return tail(filename, lineCount, 2000);
+    }
+
+    /**
+     * Read in content of a file and get the last *lineCount* lines. It is
+     * equivalent to *tail* command
+     * 
+     * @param filename
+     * @param lineCount
+     * @param chunkSize
+     * @return
+     */
+    public static Vector<String> tail(String filename, int lineCount, int chunkSize) {
+        try {
+            // read in content of the file
+            RandomAccessFile file = new RandomAccessFile(filename, "r");
+            // destination vector
+            Vector<String> lastNLines = new Vector<String>();
+            // current position
+            long currPos = file.length() - 1;
+            long startPos;
+            byte[] byteArray = new byte[chunkSize];
+
+            // read in content of the file in reverse order
+            while(true) {
+                // read in from *fromPos*
+                startPos = currPos - chunkSize;
+
+                if(startPos <= 0) { // toward the beginning of the file
+                    file.seek(0);
+                    file.read(byteArray, 0, (int) currPos); // only read in
+                                                            // curPos bytes
+                    parseLinesFromLast(byteArray, 0, (int) currPos, lineCount, lastNLines);
+                    break;
+                } else {
+                    file.seek(startPos);
+                    if(byteArray == null)
+                        byteArray = new byte[chunkSize];
+                    file.readFully(byteArray);
+                    if(parseLinesFromLast(byteArray, lineCount, lastNLines)) {
+                        break; // we got the last *lineCount* lines
+                    }
+
+                    // move the current position
+                    currPos = startPos; // + lastLine.getBytes().length;
+                }
+            }
+
+            // there might be lineCount + 1 lines and the first line (now it is the last line)
+            // might not be complete
+            for (int index= lineCount; index < lastNLines.size(); index++)
+                lastNLines.removeElementAt(index);
+            
+            // reverse the order of elements in lastNLines
+            Collections.reverse(lastNLines);
+            return lastNLines;
+        } catch(Exception e) {
+            return null;
+        }
+
+    }
+
+    /**
+     * Parse lines in byteArray and store the last *lineCount* lines in
+     * *lastNLines*
+     * 
+     * @param byteArray                 source byte array
+     * @param lineCount                   desired number of lines
+     * @param lastNLines                vector of last N lines
+     * @return true     indicates we get *lineCount* lines 
+     *                false     otherwise
+     */
+
+    protected static boolean parseLinesFromLast(byte[] byteArray,
+                                                int lineCount,
+                                                Vector<String> lastNLines) {
+        return parseLinesFromLast(byteArray, 0, byteArray.length, lineCount, lastNLines);
+    }
+
+    /**
+     * Parse lines in byteArray and store the last *lineCount* lines in
+     * *lastNLines*
+     * 
+     * @param byteArray         source byte array
+     * @param offset                offset of the byte array
+     * @param length                length of the byte array
+     * @param lineCount             desired number of lines
+     * @param lastNLines        vector of last N lines
+     * @return true         indicates we get *lineCount* lines 
+     *                false         otherwise
+     */
+    protected static boolean parseLinesFromLast(byte[] byteArray,
+                                                int offset,
+                                                int length,
+                                                int lineCount,
+                                                Vector<String> lastNLines) {
+
+        if(lastNLines.size() > lineCount)
+            return true;
+
+        // convert byte array to string
+        String lastNChars = new String(byteArray, offset, length);
+
+        // reverse the string
+        StringBuffer sb = new StringBuffer(lastNChars);
+        lastNChars = sb.reverse().toString();
+
+        // tokenize the string using "\n"
+        String[] tokens = lastNChars.split("\n");
+
+        // append lines to lastNLines
+        for (int index=0; index < tokens.length; index++) {
+            StringBuffer sbLine = new StringBuffer(tokens[index]);
+            String newline = sbLine.reverse().toString();
+            
+            if (index == 0 && !lastNLines.isEmpty()) { // first line might not be a complete line
+                int lineNum = lastNLines.size();
+                String halfLine = lastNLines.get(lineNum - 1);
+                lastNLines.set(lineNum - 1, newline + halfLine);
+            }
+            else {
+                lastNLines.add(newline);
+            }
+            
+            if(lastNLines.size() > lineCount) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+>>>>>>> b9f26a24f8745a89e701d7a42f922a6a4bc15888
 }

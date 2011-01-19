@@ -25,6 +25,8 @@ import azkaban.jobcontrol.impl.jobs.locks.JobLock;
 import azkaban.jobcontrol.impl.jobs.locks.NamedPermitManager;
 import azkaban.jobcontrol.impl.jobs.locks.PermitLock;
 import azkaban.jobcontrol.impl.jobs.locks.ReadWriteLockManager;
+import azkaban.jobs.JobExecutionException;
+
 import com.google.common.base.Function;
 
 import java.util.ArrayList;
@@ -132,8 +134,13 @@ public class JobWrappingFactory implements Function<JobDescriptor, Job>
       }
 
         // wrap up job in logging proxy
-        job = new LoggingJob(_logDir, job, job.getId());
-
+        if (jobDescriptor.getLoggerPattern() != null) {
+        	job = new LoggingJob(_logDir, job, job.getId(), jobDescriptor.getLoggerPattern());	
+        }
+        else {
+        	job = new LoggingJob(_logDir, job, job.getId());	
+        }
+        
         return job;
     }
 }

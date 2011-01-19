@@ -13,31 +13,25 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package azkaban.jobs;
-
-import com.google.common.collect.ImmutableSet;
+package azkaban.jobs.builtin;
 
 import azkaban.app.JobDescriptor;
 
-/**
- * A script job issues a command of the form
- *    [EXECUTABLE] [SCRIPT] --key1 val1 ... --key2 val2
- *   executable -- the interpretor command to execute
- *   script -- the script to pass in (requried)
- * 
- * @author jkreps
- *
- */
-public class ScriptJob extends LongArgJob {
+import com.google.common.collect.ImmutableSet;
 
-    private static final String DEFAULT_EXECUTABLE_KEY = "executable";
+
+public class RubyJob extends LongArgJob {
+
+    private static final String RUBY_BINARY_KEY = "ruby";
     private static final String SCRIPT_KEY = "script";
-    
-    public ScriptJob(JobDescriptor desc) {
-        super(new String[] {desc.getProps().getString(DEFAULT_EXECUTABLE_KEY), desc.getProps().getString(SCRIPT_KEY)}, 
-              desc, 
-              ImmutableSet.of(DEFAULT_EXECUTABLE_KEY, SCRIPT_KEY, JobDescriptor.JOB_TYPE));
-    }
- 
 
+    public RubyJob(JobDescriptor desc) {
+        super(new String[]{desc.getProps().getString(RUBY_BINARY_KEY, "ruby"), 
+                           desc.getProps().getString(SCRIPT_KEY)}, 
+              desc, 
+              ImmutableSet.of(RUBY_BINARY_KEY, SCRIPT_KEY, JobDescriptor.JOB_TYPE));
+    }
+
+   
+    
 }

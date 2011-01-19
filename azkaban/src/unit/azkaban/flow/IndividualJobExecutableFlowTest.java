@@ -3,6 +3,7 @@ package azkaban.flow;
 import azkaban.app.JobManager;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
+import azkaban.jobs.Status;
 
 import org.easymock.IAnswer;
 import org.easymock.classextension.EasyMock;

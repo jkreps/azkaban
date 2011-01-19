@@ -163,12 +163,12 @@ a {
 
 .box h3 {
 	color: #CCC;
-	font-size: 16pt;
+	font-size: 1.4em;
 }
 
 .box .h3like {
 	color: #CCC;
-	font-size: 14pt;
+	font-size: 12pt;
 }
 
 #variableWidth {
@@ -218,7 +218,7 @@ a {
 
 .jobfolder.expand .folderIcon {
 	background-image: url("../js/jqueryui/themes/custom-theme/images/ui-icons_cccccc_256x240.png");
-	background-position: -64px -16px;
+	background-position: -32px -16px;
 }
 
 .jobfolder.collapse .folderIcon{
@@ -338,7 +338,7 @@ a {
 
 /* Index page job list*/
 .joblist {
-	background-color: #CCC;
+
 	text-align: left;
 	margin-left: 20px;
 	margin-right: 20px;
@@ -349,16 +349,14 @@ a {
 }
 
 .joblist a {
-	color: darkred;
-	font-size:110%;
+	color: #A7CEFF;
 	padding-left:3px;
 	text-decoration:none;
 	vertical-align:top;
 }
 
 .joblist a:hover {
-	color: #F00000;
-	font-size:110%;
+	color: #FFFFFF;
 	padding-left:3px;
 	text-decoration:none;
 	vertical-align:top;
@@ -398,7 +396,7 @@ a {
 
 .jobtable a {
 	text-decoration: none;
-	font-size: 13pt;
+	color: #A7CEFF;
 }
 
 .jobtable .job-name-FAILED {
@@ -426,7 +424,6 @@ a {
 }
 
 .jobdesc {
-	font-size: 14pt;
 	margin: 10px;
 	color: #AAA;
 }
@@ -578,4 +575,54 @@ rect.zoomLine {
 .message {
 	font-size: 14pt;
 	padding: 5px;
+}
+
+.pagination a {
+    font-size: 150%;
+	text-decoration: none;
+}
+
+.pagination {
+	padding: 10px;
+}
+
+.ui-datepicker-div {
+	float: bottom;
+}
+
+.ui-datepicker-calendar a:hover, .ui-datepicker-header a:hover {
+	color: #AAA;
+}
+
+.ui-datepicker-title span, .ui-datepicker-calendar thead {
+	color: #AAA;
+	font-weight: bold;
+}
+
+.ui-datepicker {
+	background: white;
+	border: 3px solid #AAA;
+	padding: 4px;
+}
+
+.ui-datepicker-prev, .ui-datepicker-next {
+	cursor: pointer;
+	display: block;
+}
+
+.ui-datepicker-prev {
+	float: left;
+}
+
+.ui-datepicker-next {
+	float: right;
+}
+
+.ui-datepicker-calendar a {
+	text-decoration: none;
+}
+
+.currentTime {
+	margin-right: 50px;
+	text-align: right;
 }

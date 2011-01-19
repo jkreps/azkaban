@@ -1,6 +1,6 @@
 #macro(history_execing_job $flow)
   <li>
-    <a class="job job-name-${flow.status}" href="${context}/job?id=${flow.name}" title="${flow.name}<br>Status: ${flow.status}" name="sched-tree-link">
+    <a class="job job-name-${flow.status}" href="${context}/job?id=${flow.name}&logs" title="${flow.name}<br>Status: ${flow.status}" name="sched-tree-link">
       $flow.name
     </a>
     #if($flow.hasChildren())
@@ -93,24 +93,24 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		              <td>$flow.id</td>
 		              <td class="historytree"><ul class="sched-tree">#history_execing_job($flow)</ul></td>
 		              <td>
-		                #if($utils.isNull($flow.started))
+		                #if($utils.isNull($flow.startTime))
 		                  &ndash;
 		                #else
-		                  $utils.formatDateTime($flow.started)
+		                  $utils.formatDateTime($flow.startTime)
 		                #end
 		              </td>
 		              <td>
-		                #if($utils.isNull($flow.ended))
+		                #if($utils.isNull($flow.endTime))
 		                  &ndash; 
 		                #else
-		                  $utils.formatDateTime($flow.ended)
+		                  $utils.formatDateTime($flow.endTime)
 		                #end
 		              </td>
 		              <td>
-		                #if($utils.isNull($flow.ended))
+		                #if($utils.isNull($flow.endTime))
 		                  &ndash;
 		                #else
-		                  $utils.formatPeriod($utils.period($flow.started, $flow.ended))
+		                  $utils.formatPeriod($utils.period($flow.startTime, $flow.endTime))
 		                #end
 		              </td>
 		              <td>
@@ -122,12 +122,22 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		            </tr>
 		          #end
 		        </table>
+		        <div class="pagination">
+		          #if($begin > 0)
+		            <a href="/history?begin=$utils.max(0, $utils.sub($begin, $size))&amp;size=${size}">
+		              Previous &middot;
+		            </a>
+		          #end
+		          <a href="/history?begin=${utils.add($begin, $size)}&size=${size}">
+		            Next
+		          </a> 
+		        </div>
 		      #else
 		        No recorded executions
 		      #end
   	       </div>
   	    </div>
   	</div>
-    
+    <div><p class="currentTime">Current Time: $utils.formatDateTimeAndZone($utils.now)</p></div>
   </body>
 </html>

@@ -10,24 +10,34 @@
 	<!-- Override/set  paths to module specific paths -->
 	<property name="module.dist.base" value="${batch.base.dir}/${dist.dir}/azkaban-common" />
 	<property name="module.dist.dir"
-		value="${batch.base.dir}/${dist.dir}/azkaban-common/jars" />
+		value="${batch.base.dir}/${dist.dir}/azkaban-common" />
 	<property name="module.classes.dir"
 		value="${batch.base.dir}/${dist.dir}/azkaban-common/classes" />
 	<property name="module.javadoc.dir"
 		value="${batch.base.dir}/${dist.dir}/azkaban-common/javadoc" />
+	<property name="module.dist.name" value="azkaban-common" />
 
 	<property name="module.java.dir" value="src/java" />
 	<property name="module.conf.dir" value="conf" />
 
 	<property name="module.distconf.dir" value="${module.dist.dir}" />
-	<property name="module.distjar.dir" value="${module.dist.dir}" />
+	<property name="module.distjar.dir" value="${module.dist.dir}/jars" />
 	<property name="module.jar.name" value="${module.distjar.dir}/${ant.project.name}.jar" />
+
+	<property name="unit.classes.dir" value="${module.dist.dir}/unit_classes" />
+        <property name="unit.java.dir" value="src/unit" />
+        <property name="unit.report.dir" value="${module.dist.dir}/unit_report" />
+        <property name="unit.html.dir" value="${module.dist.dir}/unit_html" />
+        <property name="unit.jar" value="${module.dist.dir}/${module.dist.name}-${curr.release}-unit.jar" />
+
+
 
 	<path id="main-classpath">
 		<fileset dir="${batch.base.dir}/${lib.dir}">
 			<include name="*.jar" />
 		</fileset>
 		<pathelement path="${module.classes.dir}" />
+		<!--pathelement path="src/unit/lib/azkaban-common-tests.jar" /-->
 	</path>
 
 	<!-- macro to delete and recreate a directory -->
@@ -79,7 +89,7 @@
 	-->
 	<target name="jars" depends="build" description="Build server jar file">
 		<mkdir dir="${module.distjar.dir}" />
-		<jar destfile="${module.distjar.dir}/${name}-common-${curr.release}.jar">
+		<jar destfile="${module.distjar.dir}/${module.dist.name}-${curr.release}.jar">
 			<fileset dir="${module.classes.dir}">
 				<include name="**/*.*" />
 			</fileset>
@@ -92,7 +102,7 @@
 
 	<target name="srcjar" description="Build source jar file">
 		<mkdir dir="${module.distjar.dir}" />
-		<jar destfile="${module.distjar.dir}/${name}-common-${curr.release}-src.jar">
+		<jar destfile="${module.distjar.dir}/${module.dist.name}-${curr.release}-src.jar">
 			<fileset dir="${java.dir}">
 				<include name="**/*.java" />
 			</fileset>
@@ -109,12 +119,52 @@
 		</javadoc>
 	</target>
 
-	<target name="unit" description="Build and run unit tests">
-		<echo message="TODO: add unit tests for this package!"/>
-	</target>
 
 	<target name="clean_unit" description="Clean unit tests jars">
-		<echo message="TODO: add unit tests for this package!"/>
+		<echo message="Delete unit tests for this package!"/>
+		<delete dir="${unit.classes.dir}" />
+                <delete dir="${unit.report.dir}" />
+                <delete dir="${unit.html.dir}" />
+                <delete file="${unit.jar}" />
+	</target>
+
+	<target name="build_unit" description="Compile unit test java files">
+                <mkdir dir="${unit.classes.dir}" />
+                <javac fork="true" destdir="${unit.classes.dir}"
+                       target="1.6" debug="true" deprecation="false" failonerror="true">
+                        <src path="${unit.java.dir}" />
+                        <classpath refid="main-classpath" />
+                </javac>
+                <jar destfile="${unit.jar}" basedir="${unit.classes.dir}"/>
+        </target>
+
+	<target name="unit" depends="jars, clean_unit, build_unit" description="Compile and run unit tests" >
+		<mkdir dir="${unit.report.dir}" />
+		<mkdir dir="${unit.html.dir}" />
+
+		<junit printsummary="yes" showoutput="yes" failureProperty="unit.failure" >
+			<sysproperty key="tests.to.run" value="${tests.to.run} "/>
+			<jvmarg value="-Xms256m" />
+			<jvmarg value="-Xmx1g" />
+
+			<classpath refid="main-classpath" />
+			<classpath path="${unit.jar}" />
+
+			<formatter type="xml"  />
+			<batchtest fork="yes" todir="${unit.report.dir}" >
+				<fileset dir="${unit.classes.dir}" >
+					<include name="**/*Test.class" />
+				</fileset>
+			</batchtest>
+		</junit>
+
+
+		<junitreport todir="${unit.html.dir}" >
+			<fileset dir="${unit.report.dir}" > <include name="TEST-*.xml"/> </fileset>
+			<report todir="${unit.html.dir}" format="frames"/>
+		</junitreport> 
+
+		<fail message="Unit test(s) failed!" if="unit.failure" />
 	</target>
 
 </project>

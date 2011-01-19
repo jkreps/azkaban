@@ -16,15 +16,10 @@
 
 package azkaban.web;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipFile;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +38,8 @@ public class MultipartParser {
         _uploadItemFactory.setSizeThreshold(spillToDiskSize);
     }
 
-    public Map<String, Object> parseMultipart(HttpServletRequest request) throws IOException,
+    @SuppressWarnings("unchecked")
+	public Map<String, Object> parseMultipart(HttpServletRequest request) throws IOException,
             ServletException {
         ServletFileUpload upload = new ServletFileUpload(_uploadItemFactory);
         List<FileItem> items = null;

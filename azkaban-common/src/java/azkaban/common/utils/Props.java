@@ -112,6 +112,7 @@ public class Props {
         return of((Props) null, args);
     }
 
+    @SuppressWarnings("unchecked")
     public static Props of(Props parent, String... args) {
         if(args.length % 2 != 0)
             throw new IllegalArgumentException("Must have an equal number of keys and values.");
@@ -483,6 +484,7 @@ public class Props {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public Props local() {
         return new Props(null, _current);
     }

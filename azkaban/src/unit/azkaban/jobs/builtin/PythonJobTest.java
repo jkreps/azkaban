@@ -1,4 +1,4 @@
-package azkaban.jobs;
+package azkaban.jobs.builtin;
 
 import java.io.IOException;
 import java.util.Date;
@@ -11,6 +11,8 @@ import org.junit.Test;
 
 import azkaban.app.JobDescriptor;
 import azkaban.common.utils.Props;
+import azkaban.jobs.AbstractProcessJob;
+import azkaban.jobs.builtin.PythonJob;
 
 public class PythonJobTest
 {

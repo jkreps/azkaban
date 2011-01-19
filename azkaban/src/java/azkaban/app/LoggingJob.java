@@ -41,17 +41,33 @@ import azkaban.common.utils.Utils;
  */
 public class LoggingJob extends DelegatingJob {
 
-    private static final Layout DEFAULT_LAYOUT = new PatternLayout("%d{dd-MM-yyyy HH:mm:ss} %c{1} %p - %m\n");
-
+    private static final Layout DEFAULT_LAYOUT = new PatternLayout("%d{dd-MM-yyyy HH:mm:ss z} %c{1} %p - %m\n");
+    
     private final Logger _logger;
     private final String _logDir;
-
+    private Layout loggerLayout = DEFAULT_LAYOUT;
+    
     public LoggingJob(String logDir, Job innerJob, String loggerName) {
         super(innerJob);
         this._logDir = Utils.nonNull(logDir);
         this._logger = Logger.getLogger(loggerName);
     }
 
+    public LoggingJob(String logDir, Job innerJob, String loggerName, String loggerPattern) {
+        super(innerJob);
+        this._logDir = Utils.nonNull(logDir);
+        this._logger = Logger.getLogger(loggerName);
+        setLoggingPattern(loggerPattern);
+    }
+    
+    /**
+     * Set up logging pattern to whatever you like it to be.
+     * @param layoutPattern
+     */
+    public void setLoggingPattern(String layoutPattern) {
+    	loggerLayout = new PatternLayout(layoutPattern);
+    }
+    
     @Override
     public void run() {
         String jobName = getInnerJob().getId();
@@ -64,7 +80,7 @@ public class LoggingJob extends DelegatingJob {
         String logName = new File(runLogDir, jobName + "." + date + ".log").getAbsolutePath();
         Appender jobAppender = null;
         try {
-            jobAppender = new FileAppender(DEFAULT_LAYOUT, logName, false);
+            jobAppender = new FileAppender(loggerLayout, logName, false);
             _logger.addAppender(jobAppender);
         } catch(IOException e) {
             _logger.error("Could not open log file in " + _logDir, e);

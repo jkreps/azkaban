@@ -14,7 +14,7 @@
  * the License.
  */
 
-package azkaban.jobs;
+package azkaban.jobs.builtin;
 
 import java.io.File;
 import java.util.List;
@@ -65,11 +65,12 @@ public class JavaJob extends JavaProcessJob {
         return classPath;
 	}
 
+	@SuppressWarnings("unchecked")
 	private static String getSourcePathFromClass(Class containedClass) {
 	    File file = new File(containedClass.getProtectionDomain().getCodeSource().getLocation().getPath());
 	    
         if (!file.isDirectory() && file.getName().endsWith(".class")) {
-            String name = JavaJobRunnerMain.class.getName();
+            String name = containedClass.getName();
             StringTokenizer tokenizer = new StringTokenizer(name, ".");
             while(tokenizer.hasMoreTokens()) {
                 tokenizer.nextElement();
@@ -80,7 +81,7 @@ public class JavaJob extends JavaProcessJob {
             return file.getPath();  
         }
         else {
-            return JavaJobRunnerMain.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            return containedClass.getProtectionDomain().getCodeSource().getLocation().getPath();
         }
 	}
 	

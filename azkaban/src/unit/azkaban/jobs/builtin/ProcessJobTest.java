@@ -1,4 +1,4 @@
-package azkaban.jobs;
+package azkaban.jobs.builtin;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -7,6 +7,8 @@ import org.easymock.classextension.EasyMock;
 
 import azkaban.app.JobDescriptor;
 import azkaban.common.utils.Props;
+import azkaban.jobs.AbstractProcessJob;
+import azkaban.jobs.builtin.ProcessJob;
 
 
 public class ProcessJobTest

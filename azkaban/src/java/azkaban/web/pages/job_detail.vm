@@ -6,19 +6,29 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     <title>#appname()</title>
     <link rel="stylesheet" type="text/css" href="${context}/static/js/jqueryui/themes/custom-theme/jquery-ui.custom.css"></link>
     <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"></link>
-    <script src="${context}/static/js/jquery/jquery.js" type="text/javascript"></script>
-    <script src="${context}/static/js/jqueryui/jquery-ui.custom.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jqueryui/jquery-ui.custom.min.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.cookie.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.cookie.js"></script>
+    <script type="text/javascript" src="${context}/static/js/azkaban-api.js"></script>
     <script type="text/javascript">
-      function showAllProps()
-      {
-        document.getElementById('all_props').style.display = 'block';
-        document.getElementById('all_props_link').style.display = 'none';
-      }
+		function showAllProps()
+		{
+		    document.getElementById('all_props').style.display = 'block';
+		    document.getElementById('all_props_link').style.display = 'none';
+		}
+      
+		$(function () {
+			#if($tab == "logs") 
+				$( "#tabs" ).tabs({ selected: 1 });
+			#else
+				$( "#tabs" ).tabs();
+			#end
+		});
     </script>
     <style type="text/css">
-		#editbutton span{
+		.mybutton span{
 			font-size: 10pt;
-			width: 30px;
 			padding-top: 2px;
 			padding-bottom: 2px;
 			padding-left: 10px;
@@ -59,6 +69,8 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	     var data = ${jsonData};
          $(function () {
          	$('#editbutton').button();
+         	$('#runbutton').button();
+         	$('#rundepbutton').button();
          
 			var params = data;
 			
@@ -84,108 +96,125 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     <div id="main">
         <h2 class="title" >Job Details</h2>
   	    <div id="variableWidth">
+  	    	<div id="tabs">
+  	    		<ul>
+					<li><a href="#tabs-1">Details</a></li>
+					<li><a href="#tabs-2">Logs</a></li>
+				</ul>
 	  	       #messages()
-	  	       <div class="box">
-	  	       		<h3>Details</h3>
-	  	       		<div class="jobdesc">
-					    <div>
-				          <span class="h3like">Job Name:</span> $job.id
-				        </div>
-				        <div>
-				          <span class="h3like">Type:</span> $job.jobType
-				        </div>
-				        <div>
-				          <span class="h3like">Path:</span> $job.path
-				        </div>
-				        <div>
-				          <span class="h3like">Dependencies:</span> 
-				          #if($job.hasDependencies())
-				            #foreach($dep in $job.dependencies)
-				              <a class="job-name-white" href="${context}/job?id=${dep.id}">$dep.id</a>, 
-				            #end
-				          #else
-				            None
-				          #end
-				        </div>
-				        <div id="editbutton" style="text-align: center"><a href="$context/job?id=${job.id}&amp;edit">Edit</a></div>
-	  	       		</div>
-	  	       </div>
-
-  	            #if($successful_executions > 1)
-  	            <div class="box">
-  	            	<h3>Previous Runtimes</h3>
-			        <div class="jobdesc" id='runtime-chart' style='width: 700px; height: 300px; margin: auto'></div>
-  	       		</div>       		
-			    #end
+	  	       <div id="tabs-1">
+		  	       <div class="box">
+		  	       		<h3>Details</h3>
+		  	       		<div class="jobdesc">
+						    <div>
+					          <span class="h3like">Job Name:</span> $job.id
+					        </div>
+					        <div>
+					          <span class="h3like">Type:</span> $job.jobType
+					        </div>
+					        <div>
+					          <span class="h3like">Path:</span> $job.path
+					        </div>
+					        <div>
+					          <span class="h3like">Dependencies:</span> 
+					          #if($job.hasDependencies())
+					            #foreach($dep in $job.dependencies)
+					              <a class="job-name-white" href="${context}/job?id=${dep.id}">$dep.id</a>, 
+					            #end
+					          #else
+					            None
+					          #end
+					        </div>
+		  	       		</div>
+		  	       </div>
+	
+				    <div class="box">
+				        <h3>Job Properties</h3>
+				    	<table id="params" class="jobtable translucent">
+				        <tr>
+				          <th>Key</th>
+				          <th>Value</th>
+				        </tr>
+				      </table>
+				    </div>
+				
+				</div>
 			    
-			    <div class="box">
-			          <h3>Job History</h3>
-			            #if($executions.size() > 0)
-				        <table class="jobtable translucent">
-				          <tr>
-				            <th>Name</th>
-				            <th>Started</th>
-				            <th>Ended</th>
-				            <th>Elapsed</th>
-				            <th>Completed Successfully?</th>
-				            <th>Log</th>
-				          </tr>
-				          #foreach($exec in $executions)
-				            <tr>
-				              <td>$exec.jobName</td>
-				              <td>
-				                #if($utils.isNull($exec.started))
-				                  &ndash;
-				                #else
-				                  $utils.formatDateTime($exec.started)
-				                #end
-				              </td>
-				              <td>
-				                #if($utils.isNull($exec.ended))
-				                  &ndash; 
-				                #else
-				                  $utils.formatDateTime($exec.ended)
-				                #end
-				              </td>
-				              <td>
-				                #if($utils.isNull($exec.ended))
-				                  &ndash;
-				                #else
-				                  $utils.formatPeriod($utils.period($exec.started, $exec.ended))
-				                #end
-				              </td>
-				              <td>
-				                #if($utils.isNull($exec.ended))
-				                  &ndash;
-				                #elseif($exec.succeeded)
-				                  yes
-				                #else
-				                  no
-				                #end
-				              </td>
-				              <td>
-				                <a href="${context}/logs?file=${exec.log}">
-				                 log
-				                </a>
-				              </td>
-				            </tr>
-				          #end
-				        </table>
-				      #else
-				        No recorded executions
-				      #end
+			    <div id="tabs-2">
+					#if($successful_executions > 1)
+	  	            <div class="box">
+	  	            	<h3>Previous Runtimes</h3>
+				        <div class="jobdesc" id='runtime-chart' style='width: 700px; height: 300px; margin: auto'></div>
+	  	       		</div>       		
+				    #end
+				
+				    <div class="box">
+				          <h3>Job History</h3>
+				            #if($executions.size() > 0)
+					        <table class="jobtable translucent">
+					          <tr>
+					            <th>Name</th>
+					            <th>Started</th>
+					            <th>Ended</th>
+					            <th>Elapsed</th>
+					            <th>Completed Successfully?</th>
+					            <th>Log</th>
+					          </tr>
+					          #foreach($exec in $executions)
+					            <tr>
+					              <td>$exec.id</td>
+					              <td>
+					                #if($utils.isNull($exec.started))
+					                  &ndash;
+					                #else
+					                  $utils.formatDateTimeAndZone($exec.started)
+					                #end
+					              </td>
+					              <td>
+					                #if($utils.isNull($exec.ended))
+					                  &ndash; 
+					                #else
+					                  $utils.formatDateTimeAndZone($exec.ended)
+					                #end
+					              </td>
+					              <td>
+					                #if($utils.isNull($exec.ended))
+					                  &ndash;
+					                #else
+					                  $utils.formatPeriod($utils.period($exec.started, $exec.ended))
+					                #end
+					              </td>
+					              <td>
+					                #if($utils.isNull($exec.ended))
+					                  &ndash;
+					                #elseif($exec.succeeded)
+					                  yes
+					                #else
+					                  no
+					                #end
+					              </td>
+					              <td>
+					                <a href="${context}/logs?file=${exec.log}">
+					                 log
+					                </a>
+					              </td>
+					            </tr>
+					          #end
+					        </table>
+					      #else
+					        No recorded executions
+					      #end
+				    </div>
 			    </div>
-			    
-			    <div class="box">
-			        <h3>Job Properties</h3>
-			    	<table id="params" class="jobtable translucent">
-			        <tr>
-			          <th>Key</th>
-			          <th>Value</th>
-			        </tr>
-			      </table>
-			    </div>
+			    <div id="buttonbar">
+				    <div id="editbutton" class="mybutton" style="text-align: center"><a href="$context/job?id=${job.id}&amp;edit">Edit</a></div>
+				    <div id="runbutton" class="mybutton" onclick="runJob('${job.id}', false, '$context')" style="text-align: center"><a href="#">Run</a></div>
+				    <div id="rundepbutton" class="mybutton" onclick="runJob('${job.id}', true, '$context')" style="text-align: center"><a href="#">Run with Dependencies</a></div>
+  	       		</div>
   	       </div>
+  	    </div>
   	</div>
+  	 <div id="modelDialog" style="display: none;" title="Info" />
+  	 <div><p class="currentTime">Current Time: $utils.formatDateTimeAndZone($utils.now)</p></div>
   </body>
 </html>
