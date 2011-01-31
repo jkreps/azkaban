@@ -1,0 +1,32 @@
+Release Notes - Azkaban - Version 0.10
+
+
+
+** Bug
+    * [AZK-3] - Compiler warnings when building azkaban
+    * [AZK-4] - Remove JobExecution
+    * [AZK-17] - When viewing the history page, the log link seems to fail.
+    * [AZK-23] - Setting classpath param in job file throws UnsupportedOperationException
+    * [AZK-34] - Manually running schedule jobs fails
+    * [AZK-35] - Run unit tests in hudson
+    * [AZK-58] - Azkaban's logs need to report timezone
+    * [AZK-78] - Cancel Button only works if Email Notifications are set up
+    * [AZK-81] - Next link in execution history does not work on different web context
+
+
+** Improvement
+    * [AZK-31] - Null Pointer Exception when Creating Store from New Shiny One Liner Way
+
+** New Feature
+    * [AZK-39] - Azkaban should be timezone aware
+    * [AZK-47] - Add an option to tell Azkaban to reschedule a recurring job immediately after kicking off an execution
+    * [AZK-63] - Save state when expanding menus on homepage
+    * [AZK-64] - Run button on job details page (run with deps, and run without deps)
+    * [AZK-65] - Tabify job details page
+    * [AZK-66] - Tabify the homepage
+    * [AZK-67] - Don't collapse job trees in history page (or maintain expanded state)
+    * [AZK-68] - Start/end time for entire flow on history page
+    * [AZK-70] - Make zoom bar clickable on flow instance page (not just the + and -)
+    * [AZK-75] - Add [run] and [run with deps] next to [view flow] link on hover over jobs list on home page
+    * [AZK-79] - Support timezone offset when starting azkaban
+

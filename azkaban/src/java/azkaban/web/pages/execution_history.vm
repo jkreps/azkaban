@@ -124,11 +124,11 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		        </table>
 		        <div class="pagination">
 		          #if($begin > 0)
-		            <a href="/history?begin=$utils.max(0, $utils.sub($begin, $size))&amp;size=${size}">
+		            <a href="${context}/history?begin=$utils.max(0, $utils.sub($begin, $size))&amp;size=${size}">
 		              Previous &middot;
 		            </a>
 		          #end
-		          <a href="/history?begin=${utils.add($begin, $size)}&size=${size}">
+		          <a href="${context}/history?begin=${utils.add($begin, $size)}&size=${size}">
 		            Next
 		          </a> 
 		        </div>
