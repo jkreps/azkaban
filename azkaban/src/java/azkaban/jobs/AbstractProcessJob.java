@@ -65,7 +65,7 @@ public abstract class AbstractProcessJob extends AbstractJob {
     protected AbstractProcessJob(JobDescriptor descriptor) {
         super(descriptor.getId());
         
-        _props = descriptor.getResolvedProps();  //starting properties
+        _props = descriptor.getProps();
         _jobPath = descriptor.getFullPath();
          
         _descriptor = descriptor;
@@ -85,10 +85,6 @@ public abstract class AbstractProcessJob extends AbstractJob {
         return _jobPath;
     }
     
-    /**
-     * 
-     * @author eric
-     */
     protected void resolveProps () {
         _props = PropsUtils.resolveProps(_props);
     }
@@ -126,11 +122,11 @@ public abstract class AbstractProcessJob extends AbstractJob {
 
     
     public Map<String, String> getEnvironmentVariables( ) {
-        return _props.getMapByPrefix(ENV_PREFIX);
+        return getProps().getMapByPrefix(ENV_PREFIX);
     }
     
     public String getWorkingDirectory() {
-        return  _props.getString(WORKING_DIR,  new File(_jobPath).getParent());
+        return  getProps().getString(WORKING_DIR,  new File(_jobPath).getParent());
     }
     
     public Props loadOutputFileProps( File outputPropertiesFile)

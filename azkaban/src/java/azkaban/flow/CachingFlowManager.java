@@ -106,6 +106,10 @@ public class CachingFlowManager implements FlowManager
     {
         final ExecutableFlow retVal = baseManager.createNewExecutableFlow(name);
 
+        if (retVal == null) {
+            return null;
+        }
+
         return new WrappingExecutableFlow(retVal){
             @Override
             public void execute(Props parentProperties, FlowCallback callback) {

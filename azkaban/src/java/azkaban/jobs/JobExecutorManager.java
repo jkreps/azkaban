@@ -18,6 +18,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import azkaban.app.JobDescriptor;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
@@ -381,10 +382,12 @@ public class JobExecutorManager {
             List<String> emailList = null;
             String senderAddress = null;
             try {
-                emailList = jobManager.getJobDescriptor(flow.getName()).getEmailNotificationList();
+                final JobDescriptor jobDescriptor = jobManager.getJobDescriptor(flow.getName());
+
+                emailList = jobDescriptor.getEmailNotificationList();
                 final List<String> finalEmailList = emailList;
 
-                senderAddress = jobManager.getJobDescriptor(flow.getName()).getSenderEmail();
+                senderAddress = jobDescriptor.getSenderEmail();
                 final String senderEmail = senderAddress;
 
                 // mark the job as executing
@@ -406,10 +409,14 @@ public class JobExecutorManager {
                             allKnownFlows.saveExecutableFlow(holder);
                             switch(status) {
                                 case SUCCEEDED:
-                                    sendSuccessEmail(runningJob,
-                                    				 runningJob.getExecutionDuration(),
-                                                     senderEmail,
-                                                     finalEmailList);
+                                    if (jobDescriptor.getSendSuccessEmail()) {
+                                        sendSuccessEmail(
+                                                runningJob,
+                                                runningJob.getExecutionDuration(),
+                                                senderEmail,
+                                                finalEmailList
+                                        );
+                                    }
                                     break;
                                 case FAILED:
                                     sendErrorEmail(runningJob,

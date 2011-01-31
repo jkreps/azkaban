@@ -110,32 +110,43 @@
       (fn [#^BytesWritable key values context]
         [(.toObject key-serializer (.getBytes key)) (map (fn [#^BytesWritable val] (.toObject value-serializer (.getBytes val))) values)]))))
 
-(defn group-by [fields projections]
+(defn group-by
   "Performs a group-by using voldemort serialization for the intermediate serialization format.
 
   fields is a [[field-name data-type] ...] sequence
-  projections is a [[name default-fn accumulator-fn data-type] ...] sequence"
-  (let [field-names (map (fn [[field-name serialization-type]] field-name) fields)
-        key-schema (format "{%s}" (str-utils/join ", " (map (fn [[field-name serialization-type]] (format "'%s':%s" field-name serialization-type)) fields)))
-        value-schema (format "{%s}" (str-utils/join ", " (map (fn [[name default-fn acc-fn data-type]] (format "'%s':%s" name data-type)) projections)))
-        aggregation-fn
-        (fn [key values context]
-          [[key
-            (clojure.core/reduce
-              (fn [old-val new-val]
-                (clojure.core/reduce conj {}
-                  (map (fn [[name default-fn acc-fn]] {name (acc-fn (get old-val name) (get new-val name))}) projections)))
-              values)]])]
-    (job/compose-wrappers
-      (job/map-reduce-output (fn [key value context] [[false (conj {} key value)]]))
-      (voldemort-intermediate-data key-schema value-schema)
-      (job/create-reducer aggregation-fn)
-      (job/create-combiner aggregation-fn)
-      (job/use-combiner)
-      (job/map-mapper
-        (fn [key value context]
-          [[(select-keys value field-names)
-            (clojure.core/reduce conj {} (map (fn [[name default-fn acc-fn]] {name (default-fn value)}) projections))]])))))
+  projections is a [[name default-fn accumulator-fn data-type] ...] sequence
+
+  key-expansion-fn is optional and gives you a chance to emit multiple keys for a given key grouping.
+    it is a function (fn [key-map] ...) that returns a sequence of maps of the keys"
+  ([fields projections]
+     (group-by fields projections vector))
+  ([fields projections key-expansion-fn]
+     (let [field-names (map (fn [[field-name serialization-type]] field-name) fields)
+	   key-schema (format "{%s}" (str-utils/join ", " (map (fn [[field-name serialization-type]] (format "'%s':%s" field-name serialization-type)) fields)))
+	   value-schema (format "{%s}" (str-utils/join ", " (map (fn [[name default-fn acc-fn data-type]] (format "'%s':%s" name data-type)) projections)))
+	   aggregation-fn
+	   (fn [key values context]
+	     [[key
+	       (clojure.core/reduce
+		(fn [old-val new-val]
+		  (clojure.core/reduce conj {}
+				       (map (fn [[name default-fn acc-fn]]
+					      {name (acc-fn (get old-val name) (get new-val name))})
+					    projections)))
+		values)]])]
+       (job/compose-wrappers
+	(job/map-reduce-output (fn [key value context] [[false (conj {} key value)]]))
+	(voldemort-intermediate-data key-schema value-schema)
+	(job/create-reducer aggregation-fn)
+	(job/create-combiner aggregation-fn)
+	(job/use-combiner)
+	(job/map-mapper
+	 (fn [key value context]
+	   (let [ret-value (clojure.core/reduce conj {}
+						(map (fn [[name default-fn acc-fn]]
+						       {name (default-fn value)})
+						     projections))]
+	     (map #(vector % ret-value) (key-expansion-fn (select-keys value field-names))))))))))
 
 (defn group-by-no-combine [fields projections]
   "Performs a group-by using voldemort serialization for the intermediate serialization format.
@@ -163,7 +174,10 @@
             (clojure.core/reduce conj {} (map (fn [[name default-fn acc-fn]] {name (default-fn value)}) projections))]])))))
 
 (defn- join-sorted
-  ([key-fn value-fn merge-fn previously-joined coll] (join-sorted key-fn value-fn merge-fn previously-joined coll 0 []))
+  ([key-fn value-fn merge-fn previously-joined coll]
+     (if (empty? coll)
+       previously-joined
+       (join-sorted key-fn value-fn merge-fn previously-joined coll (key-fn (first coll)) [])))
   ([key-fn value-fn merge-fn previously-joined coll index curr-joined]
     (if (empty? coll)
       curr-joined
@@ -177,7 +191,7 @@
   "Performs a join among the inputs using the fields specified in the fields grouping
 
   fields is a [[field-name data-type] ...] sequence
-  inputs is a [[input-path input-serializer-fn projections out-value-schema & wrappers] ...] sequence
+  inputs is a [[input-path input-serializer-fn projections & wrappers] ...] sequence
     input-serializer-fn is a function that takes a single argument (the path) and returns a wrapper that will
       add whatever is required to the job configuration.  Note that this configuration should be orthogonal
       to any configuration that other input formats might do, as a join implies that multiple inputs will be touching
@@ -198,7 +212,7 @@
         (fn [key values context]
           [key (sort-by :index values)]))
       (job/wrap-reducer-input
-        (fn [key values context]
+       (fn [key values context]
           [false (join-sorted :index :value conj [(into {} key)] values)]))
       (job/wrap-reducer-input
         (let [output-keys (concat (mapcat (fn [[path serializer projections]] (map first projections)) inputs) (map first fields))
@@ -219,12 +233,12 @@
                 (JsonTypeSerializer. out-value-schema)
                 actual-wrappers
                 (job/compose-wrappers
-                  (job/map-mapper (fn [key value context] [[key {"index" (byte index) "value" (.toBytes output-serializer value)}]]))
-                  (job/map-mapper
-                    (let [select-projections-fn (utils/make-select-all-fn projection-field-names)]
-                      (fn [key value context]
-                        [[(select-keys value field-names) (select-projections-fn value)]])))
-                  (apply job/compose-wrappers wrappers))]
+		 (job/map-mapper (fn [key value context] [[key {"index" (byte index) "value" (.toBytes output-serializer value)}]]))
+		 (job/map-mapper
+		  (let [select-projections-fn (utils/make-select-all-fn projection-field-names)]
+		    (fn [key value context]
+		      [[(select-keys value field-names) (select-projections-fn value)]])))
+		 (apply job/compose-wrappers wrappers))]
             (println (format "Voldemort Join: working on file[%s] which is join index[%s]" current-path index))
             (job/wrap-mapper actual-wrappers mapper-fn))))
       (reduce job/compose-wrappers (map (fn [[path serializer-fn]] (serializer-fn path)) inputs)))))

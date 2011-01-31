@@ -21,13 +21,19 @@ import clojure.lang.IFn;
 import clojure.lang.RT;
 import clojure.lang.Symbol;
 import clojure.lang.Var;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
 
@@ -65,7 +71,27 @@ public class GenericClojureJob extends AbstractJob
                 throw new RuntimeException("Must define either li.clj.source or li.clj.source.file on the Props object.");
             }
 
-            final URL resource = getClass().getClassLoader().getResource(resourceName);
+            URL resource = getClass().getClassLoader().getResource(resourceName);
+
+            if (resource == null) { // Perhaps it's a URL for a Hadoop-understood file-system
+                try {
+                    resource = getScriptFromPath(new Configuration(), resourceName).toURI().toURL();
+                } catch (Exception e) {
+                    // perhaps it wasn't...
+                }
+            }
+
+            if (resource == null) { // Maybe it's a file
+                File theFile = new File(resourceName);
+                if (theFile.exists()) {
+                    try {
+                        resource = theFile.toURI().toURL();
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException("WTF?", e);
+                    }
+                }
+
+            }
 
             if (resource == null) {
                 throw new RuntimeException(String.format("Resource[%s] does not exist on the classpath.", resourceName));
@@ -87,7 +113,7 @@ public class GenericClojureJob extends AbstractJob
         final String theActualFunction = String.format(
                 "(require '[com.linkedin.mr-kluj.job :as job])\n\n" +
                 "%s\n" +
-                "(map (comp #(%%) job/starter) the-jobs)\n",
+                "(map job/starter the-jobs)\n",
                 cljSource
         );
 
@@ -107,10 +133,11 @@ public class GenericClojureJob extends AbstractJob
                     )
             );
 
-            Iterable<Job> jobs = (Iterable<Job>) clojure.lang.Compiler.load(new StringReader(theActualFunction), "start-job-input", "clj-job");
+            Iterable<IFn> jobs = (Iterable<IFn>) clojure.lang.Compiler.load(new StringReader(theActualFunction), "start-job-input", "clj-job");
 
             int count = 0;
-            for (Job job : jobs) {
+            for (IFn ifn : jobs) {
+                Job job = (Job) ifn.invoke();
                 job.getConfiguration().set(LI_CLJ_SOURCE, cljSource);
                 job.getConfiguration().set(LI_CLJ_JOB_INDEX, String.valueOf(count));
 
@@ -144,7 +171,7 @@ public class GenericClojureJob extends AbstractJob
             return;
         }
 
-        props.put(LI_CLJ_SOURCE, new String(getBytes(new FileInputStream(args[0]))));
+        props.put("li.clj.source.file", args[0]);
         for (int i = 1; i < args.length; i += 2) {
             props.put(args[i], args[i+1]);
         }
@@ -164,5 +191,12 @@ public class GenericClojureJob extends AbstractJob
         }
 
         return cljBytes.toByteArray();
+    }
+
+    static File getScriptFromPath(Configuration conf, String path) throws Exception {
+        FileSystem fs = FileSystem.get(new URI(path), conf);
+        File localCopyOfPath = File.createTempFile("resources", "tmp");
+        fs.copyToLocalFile(new Path(path), new Path(localCopyOfPath.getAbsolutePath()));
+        return localCopyOfPath;
     }
 }

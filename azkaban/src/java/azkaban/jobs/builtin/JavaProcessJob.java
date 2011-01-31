@@ -53,7 +53,7 @@ public class JavaProcessJob extends ProcessJob {
 		command += "-Xmx" + getMaxMemorySize() + " ";
 		command += "-cp " + createArguments(getClassPaths(), ":") + " ";
 		command += getJavaClass() + " ";
-		command += createArguments(getMainArguments(), " ");
+		command += getMainArguments();
 
 		return command;
 	}
@@ -100,8 +100,8 @@ public class JavaProcessJob extends ProcessJob {
 		return getProps().getString(MAX_MEMORY_SIZE, DEFAULT_MAX_MEMORY_SIZE);
 	}
 
-	protected List<String> getMainArguments() {
-		return getProps().getStringList(MAIN_ARGS, null, ",");
+	protected String getMainArguments() {
+		return getProps().getString(MAIN_ARGS, "");
 	}
 
 	protected String getJVMArguments() {
@@ -120,5 +120,4 @@ public class JavaProcessJob extends ProcessJob {
 
 		return "";
 	}
-
 }

@@ -17,6 +17,7 @@
 package com.linkedin.mr_kluj;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -25,6 +26,7 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URLClassLoader;
+import java.util.Map;
 
 /**
  *
@@ -90,11 +92,24 @@ public class StagedOutputJob extends Job
 
             fs.mkdirs(actualOutputPath);
 
-            log.info(String.format("Deleting data at old path[%s]", actualOutputPath));
-            fs.delete(actualOutputPath, true);
+            if (getConfiguration().getBoolean("com.linkedin.mr_kluj.delete.output.path", true)) {
+                log.info(String.format("Deleting data at old path[%s]", actualOutputPath));
+                fs.delete(actualOutputPath, true);
+            }
 
-            log.info(String.format("Moving from staged path[%s] to final resting place[%s]", stagedPath, actualOutputPath));
-            return fs.rename(stagedPath, actualOutputPath);
+            for (FileStatus fileStatus : FSUtils.spiderPath(fs, stagedPath)) {
+                Path thisStagedPath = fileStatus.getPath();
+                Path thisActualOutputPath = new Path(fileStatus.getPath().toString().replace(stagedPath.toString(), actualOutputPath.toString()));
+
+                log.info(String.format("Moving from staged path[%s] to final resting place[%s]", thisStagedPath, thisActualOutputPath));
+                fs.mkdirs(thisActualOutputPath.getParent());
+                if (! fs.rename(thisStagedPath, thisActualOutputPath)) {
+                    log.info("Rename failed!");
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         log.warn("retVal was false for some reason...");
