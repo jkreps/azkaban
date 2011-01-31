@@ -16,7 +16,6 @@
 
 package azkaban.web.pages;
 
-import azkaban.app.PropsUtils;
 import azkaban.common.utils.Props;
 import azkaban.common.web.Page;
 import azkaban.flow.ComposedExecutableFlow;
@@ -39,7 +38,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.json.simple.JSONArray;
@@ -55,7 +53,7 @@ import java.util.List;
 public class FlowExecutionServlet extends AbstractAzkabanServlet {
 	private static final long serialVersionUID = 7234050895543142356L;
 
-	@Override
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
         resp.setContentType("application/xhtml+xml");
@@ -218,7 +216,7 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         	long id = Long.parseLong(getParam(req, "id"));
            	FlowExecutionHolder holder = allFlows.loadExecutableFlow(id);
         	//Flows.resetFailedFlows(holder.getFlow());
-        	
+
         	// Disable all proper values
         	ExecutableFlow executableFlow = holder.getFlow();
         	traverseFlow(disabledJobs, executableFlow);

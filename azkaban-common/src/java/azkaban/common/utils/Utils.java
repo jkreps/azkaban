@@ -408,6 +408,8 @@ public class Utils {
         temp.deleteOnExit();
         return temp;
     }
+<<<<<<< HEAD
+=======
 
     /**
      * Read in content of a file and get the last *lineCount* lines. It is
@@ -549,4 +551,5 @@ public class Utils {
 
         return false;
     }
+>>>>>>> b9f26a24f8745a89e701d7a42f922a6a4bc15888
 }
