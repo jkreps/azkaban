@@ -85,8 +85,7 @@ public class PythonJobTest
     props.put("t",  "90");
 
     EasyMock.expect(descriptor.getId()).andReturn("script").times(1);
-    EasyMock.expect(descriptor.getProps()).andReturn(props).times(2);
-    EasyMock.expect(descriptor.getResolvedProps()).andReturn(props).times(1);
+    EasyMock.expect(descriptor.getProps()).andReturn(props).times(3);
     EasyMock.expect(descriptor.getFullPath()).andReturn(".").times(1);
     EasyMock.replay(descriptor);
     job = new PythonJob(descriptor);

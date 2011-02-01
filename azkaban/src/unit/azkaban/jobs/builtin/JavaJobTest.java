@@ -50,7 +50,7 @@ public class JavaJobTest
   public static void init() {
     // get the classpath
     Properties prop = System.getProperties();
-    classPaths = prop.getProperty("java.class.path", null);
+    classPaths = String.format("'%s'", prop.getProperty("java.class.path", null));
  
     long time = (new Date()).getTime();
    inputFile = "/tmp/azkaban_input_" + time;
@@ -86,7 +86,7 @@ public class JavaJobTest
     props.put(AbstractProcessJob.WORKING_DIR, ".");
     
     EasyMock.expect(descriptor.getId()).andReturn("java").times(1);
-    EasyMock.expect(descriptor.getResolvedProps()).andReturn(props).times(1);
+    EasyMock.expect(descriptor.getProps()).andReturn(props).times(1);
     EasyMock.expect(descriptor.getFullPath()).andReturn(".").times(1);
     
     EasyMock.replay(descriptor);
