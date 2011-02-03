@@ -219,10 +219,10 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
 
         	// Disable all proper values
         	ExecutableFlow executableFlow = holder.getFlow();
-        	traverseFlow(disabledJobs, executableFlow);
+           	HashSet<String> visited = new HashSet<String>();
+           	traverseFlow(visited, disabledJobs, executableFlow);
         	
     		PrintWriter writer = resp.getWriter();
-    		JSONUtils jsonUtils = new JSONUtils();
     		HashMap<String,Object> results = new HashMap<String,Object>();
     		
         	try {
@@ -236,7 +236,7 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         		results.put("message", String.format("Error running Flow[%s]. " + e.getMessage(), id));
         	}
         	
-        	writer.print(jsonUtils.toJSONString(results));
+        	writer.print(JSONUtils.toJSONString(results));
         	writer.flush();
         }
         else if (action.equals("run")) {
@@ -254,9 +254,9 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
            	if (flow == null) {
         		addError(req, "Job " + name + " not found.");
            	}
-           	traverseFlow(disabledJobs, flow);
+           	HashSet<String> visited = new HashSet<String>();
+           	traverseFlow(visited, disabledJobs, flow);
     		PrintWriter writer = resp.getWriter();
-    		JSONUtils jsonUtils = new JSONUtils();
     		HashMap<String,Object> results = new HashMap<String,Object>();
     		
         	try {
@@ -270,36 +270,41 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         		results.put("message", String.format("Error running Flow[%s]. " + e.getMessage(), name));
         	}
         	
-        	writer.print(jsonUtils.toJSONString(results));
+        	writer.print(JSONUtils.toJSONString(results));
         	writer.flush();
         }
         
        
     }
     
-    private void traverseFlow(HashSet<String> disabledJobs, ExecutableFlow flow) {
+    private void traverseFlow(HashSet<String> visitedJobs, HashSet<String> disabledJobs, ExecutableFlow flow) {
     	String name = flow.getName();
-		System.out.println("at " + name);
+    	// Pretty much mark visited nodes and prevent unnecessary traversals.
+    	if (visitedJobs.contains(name)) {
+    		return;
+    	}
+    	
     	flow.reset();
     	if (flow instanceof IndividualJobExecutableFlow && disabledJobs.contains(name)) {
     		IndividualJobExecutableFlow individualJob = (IndividualJobExecutableFlow)flow;
     		individualJob.setStatus(Status.IGNORED);
     		System.out.println("ignore " + name);
+    		visitedJobs.add(name);
     	}
     	else {
     		if (flow instanceof ComposedExecutableFlow) {
         		ExecutableFlow innerFlow = ((ComposedExecutableFlow) flow).getDepender();
-        		traverseFlow(disabledJobs, innerFlow);
+        		traverseFlow(visitedJobs, disabledJobs, innerFlow);
     		}
     		else if (flow instanceof MultipleDependencyExecutableFlow) {
-        		traverseFlow(disabledJobs, ((MultipleDependencyExecutableFlow) flow).getActualFlow());
+        		traverseFlow(visitedJobs, disabledJobs, ((MultipleDependencyExecutableFlow) flow).getActualFlow());
     		}
     		else if (flow instanceof WrappingExecutableFlow) {
-        		traverseFlow(disabledJobs, ((WrappingExecutableFlow) flow).getDelegateFlow());
+        		traverseFlow(visitedJobs, disabledJobs, ((WrappingExecutableFlow) flow).getDelegateFlow());
     		}
 
     		for(ExecutableFlow childFlow : flow.getChildren()) {
-    			traverseFlow(disabledJobs, childFlow);
+    			traverseFlow(visitedJobs, disabledJobs, childFlow);
     		}
     	}
 

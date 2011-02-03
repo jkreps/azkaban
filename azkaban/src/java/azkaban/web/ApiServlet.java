@@ -21,8 +21,6 @@ public class ApiServlet extends AbstractAzkabanServlet {
 	 */
 	private static final long serialVersionUID = 246975794895355127L;
 	private static final Logger logger = Logger.getLogger(ApiServlet.class.getName());
-    
-	private static JSONUtils jsonUtils = new JSONUtils();
 	
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
@@ -65,7 +63,7 @@ public class ApiServlet extends AbstractAzkabanServlet {
         	results.put("error", e.getMessage());
         }
         
-    	writer.print(jsonUtils.toJSONString(results));
+    	writer.print(JSONUtils.toJSONString(results));
     	writer.flush();
     	
     	writer.close();

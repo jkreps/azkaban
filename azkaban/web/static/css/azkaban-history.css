@@ -1,0 +1,84 @@
+      
+.tableHistory {
+  padding: 10px;
+  width: 95%;
+}
+
+col.execid {
+  width: 50px;
+}
+
+col.datetime {
+  width: 150px;
+}
+
+col.duration {
+  width: 100px;
+}
+
+col.status {
+  width: 90px;
+}
+
+col.action {
+  width: 90px;
+}
+
+col.timeline {
+  width: 200px;
+}
+
+table {
+  white-space: nowrap;
+}
+
+#execTable td.titlecol {
+  text-align: left;
+  min-width: 100px;
+  overflow: hidden;
+}
+
+#execTable .titlecol .arrow {
+	float: left;
+	width: 16px;
+	height: 16px;
+	padding-right: 5px;
+	cursor: pointer;
+	background-image: url("../js/jqueryui/themes/custom-theme/images/ui-icons_cccccc_256x240.png");
+	background-position: -32px -16px;
+}
+
+#execTable td.titlecol .arrow.collapse{
+	background-position: 0 -16px;
+}
+
+.innerTable {
+	text-align: center;
+	margin-left : auto;
+	margin-right : auto;
+}
+
+.gantts {
+	text-align: center;
+	background-color: #444;
+}
+
+.gantts div.failed {
+	background-color: darkred;
+}
+
+.gantts div.succeeded {
+	background-color: #00CC55;
+}
+
+.gantts div {
+	height: 18px;
+	color: white;
+	background-color: #3399FF;
+	border: 2px solid #333;
+}
+
+.gantts div:hover {
+	border: 2px solid #FFF;
+}
+

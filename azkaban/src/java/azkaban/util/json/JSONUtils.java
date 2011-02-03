@@ -39,9 +39,9 @@ import org.json.JSONTokener;
 public class JSONUtils {
 	
 	/**
-	 * The constructor.
+	 * The constructor. Cannot construct this class.
 	 */
-	public JSONUtils() {
+	private JSONUtils() {
 	}
 	
 	/**
@@ -54,7 +54,7 @@ public class JSONUtils {
 	 * @return
 	 * @throws Exception
 	 */
-	public Map<String, Object> fromJSONStream(Reader reader) throws Exception {
+	public static Map<String, Object> fromJSONStream(Reader reader) throws Exception {
 		JSONObject jsonObj = new JSONObject(new JSONTokener(reader));
 		Map<String, Object> results = createObject(jsonObj);
 		
@@ -70,7 +70,7 @@ public class JSONUtils {
 	 * @return
 	 * @throws Exception
 	 */
-	public Map<String, Object> fromJSONString(String str) throws Exception {
+	public static Map<String, Object> fromJSONString(String str) throws Exception {
 		JSONObject jsonObj = new JSONObject(str);
 		Map<String, Object> results = createObject(jsonObj);
 		return results;
@@ -83,7 +83,7 @@ public class JSONUtils {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private Map<String, Object> createObject(JSONObject obj) {
+	private static Map<String, Object> createObject(JSONObject obj) {
 		LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
 		
 		Iterator<String> iterator = obj.keys();
@@ -116,7 +116,7 @@ public class JSONUtils {
 	 * @param obj
 	 * @return
 	 */
-	private List<Object> createArray(JSONArray array) {
+	private static List<Object> createArray(JSONArray array) {
 		ArrayList<Object> list = new ArrayList<Object>();
 		for (int i = 0; i < array.length(); ++i) {
 			Object value = null;
@@ -145,7 +145,38 @@ public class JSONUtils {
 	 * @param obj
 	 * @return
 	 */
-	public String toJSONString(Map<String, Object> obj) {
+	public static String toJSONString(List<?> list) {
+		JSONArray jsonList = new JSONArray(list);
+		try {
+			return jsonList.toString();
+		} catch (Exception e) {
+			return "";
+		}
+	}
+	
+	/**
+	 * Creates a json string from Map/List/Primitive object.
+	 * 
+	 * @param obj
+	 * @parm indent
+	 * @return
+	 */
+	public static String toJSONString(List<?> list, int indent) {
+		JSONArray jsonList = new JSONArray(list);
+		try {
+			return jsonList.toString(indent);
+		} catch (Exception e) {
+			return "";
+		}
+	}
+	
+	/**
+	 * Creates a json string from Map/List/Primitive object.
+	 * 
+	 * @param obj
+	 * @return
+	 */
+	public static String toJSONString(Map<String, Object> obj) {
 		JSONObject jsonObj = new JSONObject(obj);
 		try {
 			return jsonObj.toString();
@@ -161,7 +192,7 @@ public class JSONUtils {
 	 * @param indent
 	 * @return
 	 */
-	public String toJSONString(Map<String, Object> obj, int indent) {
+	public static String toJSONString(Map<String, Object> obj, int indent) {
 		JSONObject jsonObj = new JSONObject(obj);
 		try {
 			return jsonObj.toString(4);

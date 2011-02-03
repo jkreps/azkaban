@@ -17,11 +17,12 @@
 package azkaban.web.pages;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,17 +39,21 @@ import org.joda.time.Minutes;
 import org.joda.time.ReadablePeriod;
 import org.joda.time.Seconds;
 import org.joda.time.format.DateTimeFormat;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import org.joda.time.format.DateTimeFormatter;
 
 import azkaban.app.AzkabanApplication;
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobManager;
 import azkaban.common.web.Page;
+import azkaban.flow.ComposedExecutableFlow;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flow;
 import azkaban.flow.FlowManager;
+import azkaban.flow.IndividualJobExecutableFlow;
+import azkaban.flow.MultipleDependencyExecutableFlow;
+import azkaban.flow.WrappingExecutableFlow;
 import azkaban.jobs.JobExecutionException;
+import azkaban.jobs.Status;
 import azkaban.jobs.JobExecutorManager.ExecutingJobAndInstance;
 import azkaban.util.json.JSONUtils;
 import azkaban.web.AbstractAzkabanServlet;
@@ -60,7 +65,8 @@ import azkaban.web.AbstractAzkabanServlet;
  * 
  */
 public class IndexServlet extends AbstractAzkabanServlet {
-
+    private DateTimeFormatter DATE_FORMATTER = DateTimeFormat.forPattern("MM-dd-yyyy HH:mm:ss");
+    private DateTimeFormatter ZONE_FORMATTER = DateTimeFormat.forPattern("z");
     private static final Logger logger = Logger.getLogger(IndexServlet.class.getName());
 
     private static final long serialVersionUID = 1;
@@ -83,6 +89,10 @@ public class IndexServlet extends AbstractAzkabanServlet {
         page.add("rootJobNames", app.getAllFlows().getRootFlowNames());
         page.add("folderNames", app.getAllFlows().getFolders());
         page.add("jobDescComparator", JobDescriptor.NAME_COMPARATOR);
+        
+        page.add("jsonExecution", getExecutableJSON(app.getJobExecutorManager().getExecutingJobs()));
+        page.add("timezone", ZONE_FORMATTER.print(System.currentTimeMillis()));
+        page.add("currentTime",(new DateTime()).getMillis());
         page.render();
     }
 
@@ -119,44 +129,187 @@ public class IndexServlet extends AbstractAzkabanServlet {
         resp.sendRedirect(req.getContextPath());
     }
     
-    @SuppressWarnings("unchecked")
+    private HashMap<String, Object> serializeExecutableFlow(ExecutableFlow flow) {
+    	HashMap<String,Object> map = new HashMap<String,Object>();
+    	map.put("name", flow.getName());
+    	if (flow.getStartTime() != null) {
+	    	map.put("starttime", flow.getStartTime().getMillis());
+    		map.put("starttimestr", DATE_FORMATTER.print(flow.getStartTime().getMillis()));
+    	}
+    	if (flow.getEndTime() != null) {
+    		map.put("endtime", flow.getEndTime().getMillis());
+    		map.put("endtimestr", DATE_FORMATTER.print(flow.getEndTime().getMillis()));
+    	}
+    	map.put("status", getStringStatus(flow.getStatus()));
+    	
+    	return map;
+    }
+    
+    private String getStringStatus(Status status) {
+    	switch(status) {
+    	case COMPLETED:
+    		return "completed";
+    	case FAILED:
+    		return "failed";
+    	case SUCCEEDED:
+    		return "succeeded";
+    	case RUNNING:
+    		return "running";
+    	case READY:
+    		return "ready";
+    	case IGNORED:
+    	    return "disabled";
+    	}
+    
+    	
+    	return "normal";
+    }
+    
+    private String getExecutableJSON(Collection<ExecutingJobAndInstance> elements) {
+    	if(elements.isEmpty()) {
+    		return "[]";
+    	}
+    	
+    	StringBuffer buffer = new StringBuffer();
+    	buffer.append("[");
+    	for (ExecutingJobAndInstance flow : elements ) {
+    		buffer.append((JSONUtils.toJSONString(getExecutableElement(flow.getExecutableFlow()))));
+    		buffer.append(",");
+    	}
+
+		buffer.setCharAt(buffer.length() - 1, ']');
+		return buffer.toString();
+    }
+    
+    private HashMap<String, Object> getExecutableElement(ExecutableFlow flow) {
+    	HashMap<String, HashMap<String, Object>> elementMap = new LinkedHashMap<String, HashMap<String, Object>>();
+    	traverseFlow(elementMap, flow);
+    	
+    	ArrayList<HashMap<String, Object>> list = new ArrayList<HashMap<String, Object>>(elementMap.values());
+    	Collections.sort(list, new TimeLineComparator());
+    	
+    	HashMap<String,Object> map = new HashMap<String,Object>();
+    	map.put("id", flow.getId());
+    	map.put("name", flow.getName());
+    	map.put("status", getStringStatus(flow.getStatus()));
+    	if (flow.getStartTime() != null) {
+    		map.put("starttime", flow.getStartTime().getMillis());
+    		map.put("starttimestr", DATE_FORMATTER.print(flow.getStartTime().getMillis()));
+    	}
+    	if (flow.getEndTime() != null) {
+    		map.put("endtime", flow.getEndTime().getMillis());
+    		map.put("endtimestr", DATE_FORMATTER.print(flow.getEndTime().getMillis()));
+    	}
+    	map.put("children", list);
+    	
+    	return map;
+    }
+    
+    private void traverseFlow(HashMap<String, HashMap<String, Object>> jobList, ExecutableFlow flow) {
+    	if (jobList.containsKey(flow.getName())) {
+    		return;
+    	}
+    	if (flow instanceof IndividualJobExecutableFlow) {
+    		jobList.put(flow.getName(), serializeExecutableFlow(flow));
+    	}
+    	else {
+    		if (flow instanceof ComposedExecutableFlow) {
+        		ExecutableFlow innerFlow = ((ComposedExecutableFlow) flow).getDepender();
+        		traverseFlow(jobList, innerFlow);
+    		}
+    		else if (flow instanceof MultipleDependencyExecutableFlow) {
+        		traverseFlow(jobList, ((MultipleDependencyExecutableFlow) flow).getActualFlow());
+    		}
+    		else if (flow instanceof WrappingExecutableFlow) {
+        		traverseFlow(jobList, ((WrappingExecutableFlow) flow).getDelegateFlow());
+    		}
+
+    		for(ExecutableFlow childFlow : flow.getChildren()) {
+    			traverseFlow(jobList, childFlow);
+    		}
+    	}
+
+    }
+    
 	private String getJSONJobsForFolder(FlowManager manager, String folder) {
     	List<String> rootJobs = manager.getRootNamesByFolder(folder);
     	Collections.sort(rootJobs);
 
-    	JSONArray rootJobObj = new JSONArray();
+    	ArrayList<Object> rootJobObj = new ArrayList<Object>();
     	for (String root: rootJobs) {
     		Flow flow = manager.getFlow(root);
-    		JSONObject flowObj = getJSONDependencyTree(flow);
+    		HashMap<String,Object> flowObj = getJSONDependencyTree(flow);
     		rootJobObj.add(flowObj);
     	}
     	
-    	return rootJobObj.toJSONString();
+    	return JSONUtils.toJSONString(rootJobObj);
     }
     
-    @SuppressWarnings("unchecked")
-	private JSONObject getJSONDependencyTree(Flow flow) {
-    	JSONObject jobObject = new JSONObject();
+	private HashMap<String,Object> getJSONDependencyTree(Flow flow) {
+    	HashMap<String,Object> jobObject = new HashMap<String,Object>();
     	jobObject.put("name", flow.getName());
     	
     	if (flow.hasChildren()) {
-    		JSONArray dependencies = new JSONArray();
+    		ArrayList<HashMap<String,Object>> dependencies = new ArrayList<HashMap<String,Object>>();
     		for(Flow child : flow.getChildren()) {
-    			JSONObject childObj = getJSONDependencyTree(child);
+    			HashMap<String, Object> childObj = getJSONDependencyTree(child);
     			dependencies.add(childObj);
     		}
     		
     		Collections.sort(dependencies, new FlowComparator());
-    		jobObject.put("dep", dependencies);
+    		jobObject.put("children", dependencies);
     	}
     	
     	return jobObject;
     }
     
-    private class FlowComparator implements Comparator<JSONObject> {
+    private class TimeLineComparator implements Comparator< HashMap<String,Object> > {
+		@Override
+		public int compare(HashMap<String,Object> arg0, HashMap<String,Object> arg1) {
+			
+			Long first = (Long)arg0.get("starttime");
+			Long second = (Long)arg1.get("starttime");
+			
+			if (first == null) {
+				if (second == null) {
+					return 0;
+				}
+				
+				return 1;
+			}
+			else if (second == null) {
+				return -1;
+			}
+			
+			
+			int val = first.compareTo(second);
+			
+			if (val != 0) {
+				return val;
+			}
+
+			first = (Long)arg0.get("endtime");
+			second = (Long)arg1.get("endtime");
+			
+			if (first == null) {
+				if (second == null) {
+					return 0;
+				}
+				
+				return 1;
+			}
+			else if (second == null) {
+				return -1;
+			}
+			
+			return first.compareTo(second);
+		}
+    }
+	
+    private class FlowComparator implements Comparator<Map<String,Object>> {
 
 		@Override
-		public int compare(JSONObject arg0, JSONObject arg1) {
+		public int compare(Map<String,Object> arg0, Map<String,Object> arg1) {
 			String first = (String)arg0.get("name");
 			String second = (String)arg1.get("name");
 			return first.compareTo(second);

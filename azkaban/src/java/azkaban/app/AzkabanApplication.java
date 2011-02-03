@@ -149,7 +149,7 @@ public class AzkabanApplication
 
         String failureEmail = defaultProps.getString("job.failure.email", null);
         String successEmail = defaultProps.getString("job.success.email", null);
-        int schedulerThreads = defaultProps.getInt("scheduler.threads", 50);
+        int schedulerThreads = defaultProps.getInt("scheduler.threads", 20);
         _instanceName = defaultProps.getString(INSTANCE_NAME, "");
         
         final File initialJobDir = _jobDirs.get(0);

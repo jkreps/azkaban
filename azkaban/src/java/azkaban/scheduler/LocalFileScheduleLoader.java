@@ -57,8 +57,6 @@ public class LocalFileScheduleLoader implements ScheduleLoader {
 	private File scheduleFile;
 	private File backupScheduleFile;
 	
-	private JSONUtils jsonUtils = new JSONUtils();
-	
 	public LocalFileScheduleLoader(File schedule, File backupSchedule) {
 		this.scheduleFile = schedule;
 		this.backupScheduleFile = backupSchedule;
@@ -107,7 +105,7 @@ public class LocalFileScheduleLoader implements ScheduleLoader {
  
     		try {
     			FileWriter writer = new FileWriter(scheduleFile);
-    			writer.write(jsonUtils.toJSONString(obj, 4));
+    			writer.write(JSONUtils.toJSONString(obj, 4));
     			writer.flush();
     		} catch (Exception e) {
     			throw new RuntimeException("Error saving flow file", e);
@@ -129,7 +127,7 @@ public class LocalFileScheduleLoader implements ScheduleLoader {
     	
 		HashMap<String, Object> schedule;
 		try {
-			schedule = (HashMap<String,Object>)jsonUtils.fromJSONStream(reader);
+			schedule = (HashMap<String,Object>)JSONUtils.fromJSONStream(reader);
 		} catch (Exception e) {
 			schedule = loadLegacyFile(schedulefile);
 		}

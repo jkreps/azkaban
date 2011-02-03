@@ -1,35 +1,24 @@
-#macro(history_execing_job $flow)
-  <li>
-    <a class="job job-name-${flow.status}" href="${context}/job?id=${flow.name}&logs" title="${flow.name}<br>Status: ${flow.status}" name="sched-tree-link">
-      $flow.name
-    </a>
-    #if($flow.hasChildren())
-      <ul>
-        #foreach($subjob in $flow.children)
-          #history_execing_job($subjob)
-        #end
-      </ul>
-    #end
-  </li>
-#end
-
-
 <!DOCTYPE html
 PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>#appname()</title>
-      <link rel="stylesheet" href="${context}/static/js/jquery-treeview/jquery.treeview.css" />
       <script type="text/javascript" src="${context}/static/js/jquery.js"></script>
       <script type="text/javascript" src="${context}/static/js/jquery.cookie.js"></script>
-      <script type="text/javascript" src="${context}/static/js/jquery-treeview/jquery.treeview.pack.js"></script>
    	  <script type="text/javascript" src="${context}/static/js/jquery/jquery.tools.min.js"></script>
-   	  <script type="text/javascript" src="${context}/static/js/job_controller.js"></script>
+   	  <script type="text/javascript" src="${context}/static/js/azkaban-exectable.js"></script>
+   	  <script type="text/javascript" src="${context}/static/js/azkaban-history.js"></script>
+      <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-history.css"/>
       <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"/>
       
       <style>
 	      #executionHistory {
+	        padding: 10px;
+	        width: 90%;
+	      }
+	      
+	      .tableHistory {
 	        padding: 10px;
 	        width: 90%;
 	      }
@@ -56,16 +45,26 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
       </style>
       <script type="text/javascript">
       	var contextURL = "${context}";
-      	
-      	$(function () {
-			$(".job").tooltip({
-				position: "center right",
-				offset: [0, 10],
-				effect: "fade",
-				opacity: 0.9,
-				predelay: 500
+      	var execution = ${jsonExecution};
+      	var currentTime = ${currentTime};
+      	var timezone = "${timezone}";
+		var persistVar = "azExHistory";
+
+		$(function () {
+			
+			var persisted = getLastPersisted();
+			$("#execTable").azExecTable({
+				'data': execution,
+				'style': 'tableHistory jobtable translucent',
+				'headerRowfunc': headerRowfunc,
+				'dataTablefunc': dataTablefunc,
+				'dataRowfunc': dataRowfunc,
+				'lastExpanded': persisted
 			});
+			
+			presetToggle(persisted);
 		});
+
       </script>
   </head>
   <body>
@@ -77,52 +76,30 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   	        #messages()
   	       <div class="box">
   	       <h3>Execution History</h3>
-		      #if($executions.size() > 0)
-		        <table id="executionHistory" class="jobtable translucent">
+  		        <table id="execTable" class="tableHistory jobtable translucent">
+  		          <colgroup>
+  		          	<col class="execid"/>
+  		          	<col class="titlecol"/>
+  		          	<col class="datetime"/>
+  		          	<col class="datetime"/>
+  		          	<col class="duration"/>
+  		          	<col class="status"/>
+   		          	<col class="action"/>
+  		          </colgroup>
 		          <tr>
 		            <th>Id</th>
 		            <th>Name</th>
-		            <th>Started</th>
-		            <th>Ended</th>
+		            <th>Started (${timezone})</th>
+		            <th>Ended (${timezone})</th>
 		            <th>Elapsed</th>
 		            <th>Status</th>
 		            <th>Action</th>
 		          </tr>
-		          #foreach($flow in $executions)
-		            <tr>
-		              <td>$flow.id</td>
-		              <td class="historytree"><ul class="sched-tree">#history_execing_job($flow)</ul></td>
-		              <td>
-		                #if($utils.isNull($flow.startTime))
-		                  &ndash;
-		                #else
-		                  $utils.formatDateTime($flow.startTime)
-		                #end
-		              </td>
-		              <td>
-		                #if($utils.isNull($flow.endTime))
-		                  &ndash; 
-		                #else
-		                  $utils.formatDateTime($flow.endTime)
-		                #end
-		              </td>
-		              <td>
-		                #if($utils.isNull($flow.endTime))
-		                  &ndash;
-		                #else
-		                  $utils.formatPeriod($utils.period($flow.startTime, $flow.endTime))
-		                #end
-		              </td>
-		              <td>
-		                $flow.status
-		              </td>
-		              <td class="blue">
-		                <a href="${context}/flow?action=restart&id=${flow.id}">view&#47;restart</a>
-		              </td>
-		            </tr>
-		          #end
-		        </table>
-		        <div class="pagination">
+		         </table>
+         		 #if($executions.size() == 0)
+			       No Job history.
+			     #end
+		      	 <div class="pagination">
 		          #if($begin > 0)
 		            <a href="${context}/history?begin=$utils.max(0, $utils.sub($begin, $size))&amp;size=${size}">
 		              Previous &middot;
@@ -132,9 +109,6 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		            Next
 		          </a> 
 		        </div>
-		      #else
-		        No recorded executions
-		      #end
   	       </div>
   	    </div>
   	</div>

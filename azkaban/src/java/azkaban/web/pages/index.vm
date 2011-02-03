@@ -30,19 +30,27 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     <title>#appname()</title>
     
     <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"/>
-    <link rel="stylesheet" href="${context}/static/js/jquery-treeview/jquery.treeview.css" />
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-charts.css"/>
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-history.css"/>
     <link rel="stylesheet" type="text/css" href="${context}/static/js/jqueryui/themes/custom-theme/jquery-ui.custom.css"></link>
     
     <script type="text/javascript" src="${context}/static/js/jquery/jquery.js"></script>
+    <script type="text/javascript" src="${context}/static/js/jquery/jquery.jstree.js"></script>
     <script type="text/javascript" src="${context}/static/js/jquery/jquery.cookie.js"></script>
     <script type="text/javascript" src="${context}/static/js/jquery/jquery.tools.min.js"></script>
     <script type="text/javascript" src="${context}/static/js/jqueryui/jquery.ui.datepicker.min.js"></script>
     <script type="text/javascript" src="${context}/static/js/jquery-treeview/jquery.treeview.js"></script>
     <script type="text/javascript" src="${context}/static/js/jqueryui/jquery-ui.custom.min.js"></script>
     <script type="text/javascript" src="${context}/static/js/azkaban-api.js"></script>
+    <script type="text/javascript" src="${context}/static/js/azkaban-charts.js"></script>
+    <script type="text/javascript" src="${context}/static/js/azkaban-history.js"></script>
+    <script type="text/javascript" src="${context}/static/js/azkaban-exectable.js"></script>
     <script type="text/javascript" src="${context}/static/js/azkaban-index.js"></script>
     <script type="text/javascript">
 		var contextURL = "${context}";
+		var execution = ${jsonExecution};
+      	var currentTime = ${currentTime};
+      	var timezone = "${timezone}";
     </script>
     <script>
 	  $(function() {
@@ -70,46 +78,24 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 		  	   <div id="executing-tab">
 		  	       <div class="box">
 		       		<h3>Executing Jobs</h3>
-		       		    #if($executing.size() > 0)
-					      <table class="jobtable execing-jobs-table translucent">
+
+					      <table id="execTable" class="jobtable execing-jobs-table translucent">
+					        <colgroup>
+			  		          	<col class="execid"/>
+			  		          	<col class="titlecol"/>
+			  		          	<col class="datetime"/>
+			  		          	<col class="duration"/>
+			   		          	<col class="action"/>
+			  		        </colgroup>
 					        <tr>
+					          <th>Id</th>
 					          <th>Name</th>
 					          <th>Start Time</th>
 					          <th>Period</th>
-					          <th></th>
+					          <th>Action</th>
 					        </tr>
-					        #set ($rowCount = 1)
-					        #foreach($exec in $executing)
-					          <tr>
-					            <td>
-					                <ul id="execing-jobs-tree-${rowCount}" class="execing-jobs">
-					                  #execing_job($exec.executableFlow)
-					                </ul>
-					            </td>
-					            <td>
-					              $utils.formatDateTimeAndZone($exec.executableFlow.startTime)
-					              <br/>
-					              ($utils.formatPeriod($utils.period($exec.executableFlow.startTime, $util.now)) ago)
-					            </td>
-					            <td>
-					              #if($exec.scheduledJob.period)
-					                $utils.formatPeriod($exec.scheduledJob.period) 
-					              #else
-					                - 
-					              #end
-					            </td>
-					            <td>
-					              <form action="${context}/" method="post" style="display:inline">
-					                <input type="hidden" name="action" value="cancel"/>
-					                <input type="hidden" name="job" value="${exec.executableFlow.id}"/>
-					                <input type="submit" value="Cancel"/>
-					              </form>
-					            </td>
-					          </tr>
-					          #set ($rowCount = $rowCount + 1)
-					        #end
 					      </table>
-					    #else
+					    #if($executing.size() == 0)
 					      No jobs currently executing.
 					    #end
 		  	       </div>
@@ -193,7 +179,10 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 					          	<div class="jobfolder expand" onclick="expandFlow(this)" id="$folderName">
 					          		<span><div class="folderIcon"></div></span><p>$folderName</p>
 					          	</div>
-					          	<div id="${folderName}-panel"></div>
+					          	<div id="${folderName}-panel" style="display: none">
+					          		<table id="${folderName}-table" class="jobtreetable">
+					          		</table>
+					          	</div>
 					          #end
 					        </div>
 					      </form>

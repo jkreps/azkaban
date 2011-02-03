@@ -18,12 +18,11 @@ public class JSONUtilTest {
     @SuppressWarnings("unchecked")
 	@Test
     public void objectFromString() throws Exception {
-    	JSONUtils utils = new JSONUtils();
     	
     	String jsonTest = "{\"test\":[1,2,\"tree\"], \"test2\":{\"a\":\"b\"}, \"test4\":\"bye\"}";
     	Object obj = null;
     	try {
-    		obj = utils.fromJSONString(jsonTest);
+    		obj = JSONUtils.fromJSONString(jsonTest);
     	}
     	catch (Exception e) {
     		e.printStackTrace();
@@ -61,13 +60,12 @@ public class JSONUtilTest {
     @SuppressWarnings("unchecked")
 	@Test
     public void objectFromStream() throws Exception {
-    	JSONUtils utils = new JSONUtils();
     	
     	String jsonTest = "{\"test\":[1,2,\"tree\"], \"test2\":{\"a\":\"b\"}, \"test4\":\"bye\"}";
     	StringReader reader = new StringReader(jsonTest);
     	Object obj = null;
     	try {
-    		obj = utils.fromJSONStream(reader);
+    		obj = JSONUtils.fromJSONStream(reader);
     	}
     	catch (Exception e) {
     		e.printStackTrace();
@@ -105,23 +103,22 @@ public class JSONUtilTest {
     @SuppressWarnings("unchecked")
 	@Test
     public void backAndForth() throws Exception {
-    	JSONUtils utils = new JSONUtils();
     	
     	String jsonTest = "{\"test\":[1,2,\"tree\"], \"test2\":{\"a\":\"b\"}, \"test4\":\"bye\"}";
     	Map oldObj = null;
     	try {
-    		oldObj = utils.fromJSONString(jsonTest);
+    		oldObj = JSONUtils.fromJSONString(jsonTest);
     	}
     	catch (Exception e) {
     		e.printStackTrace();
     		throw e;
     	}
     	System.out.println(oldObj);
-    	String returnString = utils.toJSONString(oldObj);
+    	String returnString = JSONUtils.toJSONString(oldObj);
     	System.out.println(returnString);
     	Map obj = null;
     	try {
-    		obj = utils.fromJSONString(returnString);
+    		obj = JSONUtils.fromJSONString(returnString);
     	}
     	catch (Exception e) {
     		e.printStackTrace();

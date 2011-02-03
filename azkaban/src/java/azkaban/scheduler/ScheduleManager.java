@@ -229,16 +229,14 @@ public class ScheduleManager {
 	    	    				} catch (JobExecutionException e) {
 	    	    					logger.info("Could not run job. " + e.getMessage());
 	    	    				}
+	    	    	        	schedule.remove(job);
+	    	    				
 	    	    				// Immediately reschedule if it's possible. Let the execution manager
 	    	    				// handle any duplicate runs.
 	    	    				if (runningJob.updateTime()) {
 	    	    					schedule.add(runningJob);
-	    	    					saveSchedule();
 	    	    				}
-	    	    				else {
-	    	    					// No need to keep it in the schedule.
-	    	    					removeScheduledJob(runningJob);
-	    	    				}
+    	    					saveSchedule();
 	    	    			}
 	    	    			else {
 	    	    				// wait until job run

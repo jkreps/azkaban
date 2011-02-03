@@ -137,6 +137,7 @@ a {
 
 .box {
 	min-height: 125px;
+	min-width: 800px;
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 
@@ -172,6 +173,7 @@ a {
 }
 
 #variableWidth {
+	min-width: 820px;
 	-moz-border-radius: 15px;
 	-webkit-border-radius: 15px;
 	border-radius: 15px;
@@ -342,7 +344,7 @@ a {
 	text-align: left;
 	margin-left: 20px;
 	margin-right: 20px;
-	margin-top: 15px;
+	margin-top: 0px;
 	padding: 2px 3px;
 	-moz-border-radius: 10px;
 	-webkit-border-radius: 10px;
