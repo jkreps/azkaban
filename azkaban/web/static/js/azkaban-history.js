@@ -72,6 +72,15 @@ function createGantzChart(status, absStart, absEnd, start, end) {
 		else if(percentWidth < 1) {
 			percentWidth = 1;
 		}
+		
+		if (startPercent + percentWidth > 98) {
+			if (percentWidth == 1) {
+				startPercent = 97;
+			}
+			else {
+				percentWidth = 98 - startPercent;
+			}
+		}
 	}
 	
 	var generalBar = document.createElement("div");

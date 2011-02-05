@@ -63,6 +63,7 @@ table {
 	text-align: center;
 	background-color: #444;
 	border: 2px solid #444;
+	overflow: hidden;
 }
 
 .gantts div.failed {
