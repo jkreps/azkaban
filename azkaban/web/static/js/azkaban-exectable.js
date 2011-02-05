@@ -12,6 +12,8 @@
 	
 	var createPanel = function(id) {
 		var childRow = document.getElementById(id + "-child");
+		settings.prepareRowResults(childRow);
+		
 		if (childRow.innerChildren) {
 			var td = document.createElement("td");
 			
@@ -20,8 +22,6 @@
 			var table = settings.dataTablefunc.apply(this);
 
 			for (var i = 0; i < childRow.innerChildren.length; ++i) {
-				childRow.innerChildren[i].absstart = childRow.starttime;
-				childRow.innerChildren[i].absend = childRow.endtime;
 				var tr = settings.dataRowfunc.apply(this, [childRow.innerChildren[i]]);
 				table.appendChild(tr);
 			}
@@ -46,6 +46,10 @@
     		dataRowfunc : function(rowData) {
     			return createRow.apply(this, [rowData]);
     		},
+    		prepareChildData : function(childTr, data) {
+    		},
+    		prepareRowResults : function(childTr) {
+    		},
     		style : "azkaban-exec",
     		lastExpanded : "-1"
     	};
@@ -60,15 +64,15 @@
 					$this.settings = settings;
 
 					for (var i = 0; i < settings.data.length; ++i) {
+						var data = settings.data[i];
 						$(this).addClass(settings.style);
 						var headerTr = settings.headerRowfunc.apply(this, [settings.data[i]]);
 						
 						var childTr = document.createElement("tr");
-						childTr.innerChildren = settings.data[i].children;
-						childTr.starttime = settings.data[i].starttime;
-						childTr.endtime = settings.data[i].endtime;
-						$(childTr).attr("id", settings.data[i].id + "-child");
+						childTr.innerChildren = data.children;
+						$(childTr).attr("id", data.id + "-child");
 						$(childTr).addClass("childRow");
+						settings.prepareChildData.apply(this, [childTr, data]);
 						headerRows = $(headerTr).children().length;
 						
 						this.appendChild(headerTr);

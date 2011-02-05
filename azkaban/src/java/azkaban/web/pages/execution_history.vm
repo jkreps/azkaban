@@ -13,11 +13,6 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
       <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"/>
       
       <style>
-	      #executionHistory {
-	        padding: 10px;
-	        width: 90%;
-	      }
-	      
 	      .tableHistory {
 	        padding: 10px;
 	        width: 90%;
@@ -59,7 +54,9 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 				'headerRowfunc': headerRowfunc,
 				'dataTablefunc': dataTablefunc,
 				'dataRowfunc': dataRowfunc,
-				'lastExpanded': persisted
+				'lastExpanded': persisted,
+				'prepareChildData': prepareChildData,
+				'prepareRowResults': prepareRowResults
 			});
 			
 			presetToggle(persisted);

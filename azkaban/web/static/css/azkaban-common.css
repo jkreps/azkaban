@@ -628,3 +628,8 @@ rect.zoomLine {
 	margin-right: 50px;
 	text-align: right;
 }
+
+#executionHistory {
+  padding: 10px;
+  width: 90%;
+}

@@ -1,3 +1,41 @@
+function prepareChildData(childTr, data) {
+	childTr.starttime = data.starttime;
+	childTr.endtime = data.endtime;
+}
+
+function prepareRowResults(childRow) {
+	if (childRow.innerChildren) {
+		var td = document.createElement("td");
+
+		var starttime = currentTime;
+		var endtime = 1;
+		var isRunning = false;
+		
+		for (var i = 0; i < childRow.innerChildren.length; ++i) {
+			var innerChildRow = childRow.innerChildren[i];
+			if (innerChildRow.starttime) {
+				starttime = Math.min(starttime, innerChildRow.starttime);
+			}
+			if (innerChildRow.endtime) {
+				endtime = Math.max(endtime, innerChildRow.endtime);
+			}
+			
+			if (innerChildRow.status == "running" ) {
+				isRunning = true;
+			}
+		}
+		
+		if (isRunning) {
+			endtime = currentTime;
+		}
+		
+		for (var i = 0; i < childRow.innerChildren.length; ++i) {
+			childRow.innerChildren[i].absstart = starttime;
+			childRow.innerChildren[i].absend = endtime;
+		}
+	}
+}
+
 function createGantzChart(status, absStart, absEnd, start, end) {
 	var groupDiv = document.createElement("div");
 	$(groupDiv).addClass("gantts");
@@ -30,6 +68,9 @@ function createGantzChart(status, absStart, absEnd, start, end) {
 		percentWidth = 100*(end - start)/total;
 		if (percentWidth > 100) {
 			percentWidth = 100;
+		}
+		else if(percentWidth < 1) {
+			percentWidth = 1;
 		}
 	}
 	

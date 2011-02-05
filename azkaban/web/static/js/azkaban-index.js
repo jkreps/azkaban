@@ -9,9 +9,11 @@ $(function () {
 		'headerRowfunc': indexheaderRowfunc,
 		'dataTablefunc': dataTablefunc,
 		'dataRowfunc': dataRowfunc,
+		'prepareChildData': prepareChildData,
+		'prepareRowResults': prepareRowResults,
 		'lastExpanded': persisted
 	});
-    
+
 	presetToggle(persisted);
 	
     $(".jobfolder").each(function(index) {

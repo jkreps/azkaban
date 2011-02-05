@@ -56,11 +56,13 @@ table {
 	text-align: center;
 	margin-left : auto;
 	margin-right : auto;
+	border-collapse: collapse;
 }
 
 .gantts {
 	text-align: center;
 	background-color: #444;
+	border: 2px solid #444;
 }
 
 .gantts div.failed {
