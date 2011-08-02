@@ -288,13 +288,19 @@ public class AzkabanApplication
         final ClassLoader retVal;
 
         String hadoopHome = System.getenv("HADOOP_HOME");
-        if(hadoopHome == null) {
-            logger.info("HADOOP_HOME not set, using default hadoop config.");
-            retVal = getClass().getClassLoader();
-        } else {
+	String hadoopConfDir = System.getenv("HADOOP_CONF_DIR");
+
+        if(hadoopConfDir != null) {
+	  logger.info("Using hadoop config found in " + hadoopConfDir);
+	  retVal = new URLClassLoader(new URL[] { new File(hadoopConfDir).toURI().toURL() },
+				      getClass().getClassLoader());
+	} else if(hadoopHome != null) {
             logger.info("Using hadoop config found in " + hadoopHome);
             retVal = new URLClassLoader(new URL[] { new File(hadoopHome, "conf").toURI().toURL() },
                                         getClass().getClassLoader());
+        } else {
+            logger.info("HADOOP_HOME not set, using default hadoop config.");
+            retVal = getClass().getClassLoader();
         }
 
         return retVal;
