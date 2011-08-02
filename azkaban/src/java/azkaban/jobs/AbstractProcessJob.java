@@ -45,6 +45,7 @@ public abstract class AbstractProcessJob extends AbstractJob {
     private static final Logger log = Logger.getLogger(AbstractProcessJob.class);
 
     public static final String ENV_PREFIX = "env.";
+    public static final String ENV_PREFIX_UCASE = "ENV.";
     public static final String WORKING_DIR = "working.dir";
     public static final String JOB_PROP_ENV = "JOB_PROP_FILE";
     public static final String JOB_NAME_ENV = "JOB_NAME";
@@ -122,7 +123,10 @@ public abstract class AbstractProcessJob extends AbstractJob {
 
     
     public Map<String, String> getEnvironmentVariables( ) {
-        return getProps().getMapByPrefix(ENV_PREFIX);
+        Props props = getProps();
+        Map<String, String> envMap = props.getMapByPrefix(ENV_PREFIX);
+        envMap.putAll(props.getMapByPrefix(ENV_PREFIX_UCASE));
+        return envMap;
     }
     
     public String getWorkingDirectory() {
