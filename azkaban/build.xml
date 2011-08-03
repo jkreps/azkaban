@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="azkaban" basedir="." default="all">
+<project name="azkaban" basedir="." default="all"  xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 	<property name="batch.base.dir" value="${basedir}/.." />
 	<property file="${batch.base.dir}/build.properties" />
 
@@ -8,35 +8,6 @@
 	<property name="author" value="Richard Park" />
 	<property environment="env" />
 
-	<property name="module.dist.name" value="azkaban" />
-	<property name="module.dist.base" value="${batch.base.dir}/${dist.dir}/azkaban" />
-	<property name="module.dist.dir.war" value="${batch.base.dir}/${dist.dir}/war" />
-	<property name="module.dist.dir" value="${batch.base.dir}/${dist.dir}/azkaban/jars" />
-	<property name="module.dist.static" value="${batch.base.dir}/${dist.dir}/azkaban/web/static" />
-	<property name="module.lib.dir" value="${batch.base.dir}/${lib.dir}" />
-	<property name="module.classes.dir" value="${batch.base.dir}/${dist.dir}/azkaban/classes" />
-	<property name="module.javadoc.dir" value="${batch.base.dir}/${dist.dir}/azkaban/javadoc" />
-	<property name="module.java.dir" value="src/java" />
-
-	<property name="unit.classes.dir" value="${batch.base.dir}/${dist.dir}/azkaban/unit_classes" />
-	<property name="unit.java.dir" value="src/unit" />
-	<property name="unit.report.dir" value="${batch.base.dir}/${dist.dir}/azkaban/unit_report" />
-	<property name="unit.html.dir" value="${batch.base.dir}/${dist.dir}/azkaban/unit_html" />
-	<property name="unit.jar" value="${module.dist.dir}/${module.dist.name}-${curr.release}-unit.jar" />
-	        
-
-	<path id="main.classpath">
-		<fileset dir="${batch.base.dir}/${lib.dir}">
-			<include name="*.jar" />
-		</fileset>
-		<fileset dir="${batch.base.dir}/${dist.dir}/azkaban-common/jars">
-			<include name="*.jar" />
-		</fileset>
-		<pathelement path="${module.classes.dir}" />
-		<pathelement path="src/unit/lib/azkaban-tests.jar" />
-	</path>
-
-		
 	<!--
 		set the build number based on environment variable, otherwise blank
 	-->
@@ -52,6 +23,44 @@
 		</and>
 	</condition>
 
+	<!-- these will get set by the master build for mvn targets. -->
+	<property name="release.version" value="${curr.release.snapshot}"/>
+	<property name="mvn.repository.id" value="${mvn.repository.id.snapshot}"/>
+	<property name="mvn.repository.location" value="${mvn.repository.location.snapshot}"/>
+
+	<property name="module.dist.name" value="azkaban" />
+	<property name="module.dist.base" value="${batch.base.dir}/${dist.dir}/azkaban" />
+	<property name="module.dist.dir.war" value="${batch.base.dir}/${dist.dir}/war" />
+	<property name="module.dist.dir" value="${batch.base.dir}/${dist.dir}/azkaban/jars" />
+	<property name="module.dist.static" value="${batch.base.dir}/${dist.dir}/azkaban/web/static" />
+	<property name="module.lib.dir" value="${batch.base.dir}/${lib.dir}" />
+	<property name="module.classes.dir" value="${batch.base.dir}/${dist.dir}/azkaban/classes" />
+	<property name="module.javadoc.dir" value="${batch.base.dir}/${dist.dir}/azkaban/javadoc" />
+	<property name="module.java.dir" value="src/java" />
+	<property name="module.jar.name" value="${module.dist.dir}/${module.dist.name}-${release.version}.jar" />
+	<property name="module.war.name" value="${module.dist.dir.war}/${module.dist.name}-${release.version}.war" />
+	<property name="module.srcjar.name" value="${module.dist.dir}/${module.dist.name}-${release.version}-src.jar" />
+
+	<property name="unit.classes.dir" value="${batch.base.dir}/${dist.dir}/azkaban/unit_classes" />
+	<property name="unit.java.dir" value="src/unit" />
+	<property name="unit.report.dir" value="${batch.base.dir}/${dist.dir}/azkaban/unit_report" />
+	<property name="unit.html.dir" value="${batch.base.dir}/${dist.dir}/azkaban/unit_html" />
+	<property name="unit.jar" value="${module.dist.dir}/${module.dist.name}-${release.version}-unit.jar" />
+
+	<property name="mvn.pom" value="${module.dist.dir}/${module.dist.name}-${release.version}.pom" />
+	
+	<path id="main.classpath">
+		<fileset dir="${batch.base.dir}/${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${batch.base.dir}/${dist.dir}/azkaban-common/jars">
+			<include name="*.jar" />
+		</fileset>
+		<pathelement path="${module.classes.dir}" />
+		<pathelement path="src/unit/lib/azkaban-tests.jar" />
+	</path>
+
+
 	<macrodef name="replace-dir">
 		<attribute name="dir" />
 		<sequential>
@@ -64,6 +73,7 @@
 
 	<target name="clean" description="Delete generated files." depends="clean_unit" >
 		<delete dir="${module.dist.base}" />
+		<delete dir="${module.dist.dir.war}" />
 	</target>
 
 	<target name="build" description="Compile main source tree java files">
@@ -91,7 +101,7 @@
 
 	<target name="jars" depends="build" description="Build server jar file">
 		<mkdir dir="${module.dist.dir}" />
-		<jar destfile="${module.dist.dir}/${module.dist.name}-${curr.release}.jar">
+		<jar destfile="${module.jar.name}">
 			<fileset dir="${module.classes.dir}">
 				<include name="**/*.*" />
 			</fileset>
@@ -104,7 +114,7 @@
 
 	<target name="srcjar" description="Build source jar file">
 		<mkdir dir="${module.dist.dir}" />
-		<jar destfile="${module.dist.dir}/${module.dist.name}-${curr.release}-src.jar">
+		<jar destfile="${module.srcjar.name}">
 			<fileset dir="${java.dir}">
 				<include name="**/*.java" />
 			</fileset>
@@ -114,7 +124,8 @@
 
 	<target name="war" depends="build" description="Build server war file">
 		<replace-dir dir="${module.dist.dir.war}" />
-		<war destfile="${module.dist.dir.war}/${name}.war" webxml="${basedir}/web/web.xml">
+       <echo message="azkaban building war ${name}-${release.version}" />
+		<war destfile="${module.war.name}" webxml="${basedir}/web/web.xml">
 			<classes dir="${module.classes.dir}" />
 			<lib dir="${module.lib.dir}">
 				<exclude name="servlet-api-2.5.jar" />
@@ -217,5 +228,82 @@
 		<undeploy url="${tomcat.manager.url}" username="${tomcat.manager.username}"
 			password="${tomcat.manager.password}" path="${tomcat.context}" />
 	</target>
+
+    <target name="pomgen" description="Build a pom file." depends="jars, srcjar, unit">
+        <artifact:pom id="azkaban" groupId="azkaban" artifactId="azkaban" version="${release.version}" name="Azkaban">
+            <dependency groupId="net.sf.jopt-simple" artifactId="jopt-simple" version="3.2"/>
+            <dependency groupId="javax.mail" artifactId="mail" version="1.4"/>
+            <dependency groupId="org.apache.tomcat" artifactId="servlet-api" version="6.0.26"/>
+            <dependency groupId="org.json" artifactId="json" version="20090211"/>
+            <dependency groupId="commons-fileupload" artifactId="commons-fileupload" version="1.2"/>
+            <dependency groupId="jetty" artifactId="org.mortbay.jetty" version="5.1.4"/>
+            <dependency groupId="azkaban" artifactId="azkaban-common" version="${release.version}"/>
+            <dependency groupId="org.apache.commons" artifactId="commons-math" version="2.1"/>
+            <dependency groupId="com.googlecode.json-simple" artifactId="json-simple" version="1.1"/>
+        </artifact:pom>
+        <echo message="creating pom: ${mvn.pom}"/>
+        <artifact:writepom pomRefId="azkaban" file="${mvn.pom}"/>
+    </target>
+
+    <target name="mvn-install" description="Install azkaban" depends="pomgen">
+        <exec executable="mvn">
+            <arg value="install:install-file"/>
+            <arg value="-Dfile=${module.jar.name}"/>
+            <arg value="-DpomFile=${mvn.pom}"/>
+            <arg value="-Dversion=${release.version}"/>
+            <arg value="-Dpackaging=jar"/>
+        </exec>
+        <exec executable="mvn">
+            <arg value="install:install-file"/>
+            <arg value="-Dfile=${module.srcjar.name}"/>
+            <arg value="-DgroupId=azkaban"/>
+            <arg value="-DartifactId=azkaban"/>
+            <arg value="-Dversion=${release.version}"/>
+            <arg value="-Dpackaging=jar"/>
+            <arg value="-Dclassifier=sources"/>
+        </exec>
+        <exec executable="mvn">
+            <arg value="install:install-file"/>
+            <arg value="-Dfile=${module.war.name}"/>
+            <arg value="-DgroupId=azkaban"/>
+            <arg value="-DartifactId=azkaban-war"/>
+            <arg value="-Dversion=${release.version}"/>
+            <arg value="-Dpackaging=war"/>
+        </exec>
+    </target>
+
+    <target name="mvn-deploy" description="Deploy azkaban" depends="pomgen">
+        <exec executable="mvn">
+            <arg value="deploy:deploy-file"/>
+            <arg value="-Durl=${mvn.repository.location}"/>
+            <arg value="-DrepositoryId=${mvn.repository.id}"/>
+            <arg value="-Dfile=${module.jar.name}"/>
+            <arg value="-DpomFile=${mvn.pom}"/>
+            <arg value="-Dversion=${release.version}"/>
+            <arg value="-Dpackaging=jar"/>
+        </exec>
+        <exec executable="mvn">
+            <arg value="deploy:deploy-file"/>
+            <arg value="-Durl=${mvn.repository.location}"/>
+            <arg value="-DrepositoryId=${mvn.repository.id}"/>
+            <arg value="-Dfile=${module.srcjar.name}"/>
+            <arg value="-DgroupId=azkaban"/>
+            <arg value="-DartifactId=azkaban"/>
+            <arg value="-Dversion=${release.version}"/>
+            <arg value="-Dpackaging=jar"/>
+            <arg value="-Dclassifier=sources"/>
+            <arg value="-DgeneratePom=false"/>
+        </exec>
+        <exec executable="mvn">
+            <arg value="deploy:deploy-file"/>
+            <arg value="-Durl=${mvn.repository.location}"/>
+            <arg value="-DrepositoryId=${mvn.repository.id}"/>
+            <arg value="-Dfile=${module.war.name}"/>
+            <arg value="-DgroupId=azkaban"/>
+            <arg value="-DartifactId=azkaban-war"/>
+            <arg value="-Dversion=${release.version}"/>
+            <arg value="-Dpackaging=war"/>
+        </exec>
+    </target>
 
 </project>
