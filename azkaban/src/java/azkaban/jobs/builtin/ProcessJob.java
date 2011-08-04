@@ -77,9 +77,9 @@ public class ProcessJob extends AbstractProcessJob implements Job {
                 for (File file: propFiles)   if (file != null && file.exists()) file.delete();
                 throw new RuntimeException(e);
             }
-            Thread outputGobbler = new LoggingGobbler(new InputStreamReader(_process.getInputStream()),
+            LoggingGobbler outputGobbler = new LoggingGobbler(new InputStreamReader(_process.getInputStream()),
                                                       Level.INFO);
-            Thread errorGobbler = new LoggingGobbler(new InputStreamReader(_process.getErrorStream()),
+            LoggingGobbler errorGobbler = new LoggingGobbler(new InputStreamReader(_process.getErrorStream()),
                                                      Level.ERROR);
 
             int processId = getProcessId();
@@ -93,20 +93,20 @@ public class ProcessJob extends AbstractProcessJob implements Job {
             int exitCode = -999;
             try {
                 exitCode = _process.waitFor();
-            } catch(InterruptedException e) {
-            }
 
-            _isComplete = true;
-            if(exitCode != 0) {
-                for (File file: propFiles)   if (file != null && file.exists()) file.delete();
-                throw new RuntimeException("Processes ended with exit code " + exitCode + ".");
-            }
+                _isComplete = true;
+                if(exitCode != 0) {
+                    for (File file: propFiles)   if (file != null && file.exists()) file.delete();
+                    throw new RuntimeException("Processes ended with exit code " + exitCode + ".");
+                }
 
-            // try to wait for everything to get logged out before exiting
-            try {
+                // try to wait for everything to get logged out before exiting
                 outputGobbler.join(1000);
                 errorGobbler.join(1000);
             } catch(InterruptedException e) {
+            } finally {
+                outputGobbler.close();
+                errorGobbler.close();
             }
         }
         
@@ -186,6 +186,16 @@ public class ProcessJob extends AbstractProcessJob implements Job {
         public LoggingGobbler(InputStreamReader inputReader, Level level) {
             _inputReader = new BufferedReader(inputReader);
             _loggingLevel = level;
+        }
+
+        public void close() {
+            if (_inputReader != null) {
+                try {
+                    _inputReader.close();
+                } catch(IOException e) {
+                    error("Error cleaning up logging stream reader:", e);
+                }
+            }
         }
 
         @Override
