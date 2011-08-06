@@ -56,4 +56,9 @@ public class NoopJob implements Job
     {
         return new Props();
     }
+
+    @Override
+    public boolean isCanceled() {
+        return false;
+    }
 }

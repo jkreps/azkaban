@@ -49,6 +49,9 @@ import azkaban.jobs.builtin.ProcessJob;
 import azkaban.jobs.builtin.PythonJob;
 import azkaban.jobs.builtin.RubyJob;
 import azkaban.jobs.builtin.ScriptJob;
+import azkaban.monitor.MonitorImpl;
+import azkaban.monitor.MonitorInterface;
+import azkaban.monitor.MonitorInternalInterface;
 import azkaban.scheduler.LocalFileScheduleLoader;
 import azkaban.scheduler.ScheduleManager;
 import azkaban.serialization.DefaultExecutableFlowSerializer;
@@ -85,6 +88,7 @@ public class AzkabanApplication
     private final ClassLoader _baseClassLoader;
     private final String _hdfsUrl;
     private final FlowManager _allFlows;
+    private final MonitorImpl _monitor;
     
     private final JobExecutorManager _jobExecutorManager;
     private final ScheduleManager _schedulerManager;
@@ -168,6 +172,8 @@ public class AzkabanApplication
 
         FlowExecutionSerializer flowExecutionSerializer = new FlowExecutionSerializer(flowSerializer);
         FlowExecutionDeserializer flowExecutionDeserializer = new FlowExecutionDeserializer(flowDeserializer);
+
+        _monitor = (MonitorImpl)MonitorImpl.getMonitor();
 
         _allFlows = new CachingFlowManager(
                 new RefreshableFlowManager(
@@ -369,5 +375,13 @@ public class AzkabanApplication
 
     public void setRuntimeProperty(String key, String value) {
     	_jobExecutorManager.setRuntimeProperty(key, value);
+    }
+    
+    public MonitorInterface getMonitor() {
+        return _monitor;
+    }
+    
+    public MonitorInternalInterface getInternalMonitor() {
+        return _monitor;
     }
 }

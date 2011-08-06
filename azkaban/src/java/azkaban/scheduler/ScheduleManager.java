@@ -17,6 +17,9 @@ import org.joda.time.format.PeriodFormat;
 
 import azkaban.jobs.JobExecutionException;
 import azkaban.jobs.JobExecutorManager;
+import azkaban.monitor.MonitorImpl;
+import azkaban.monitor.MonitorInterface.WorkflowState;
+import azkaban.monitor.MonitorInternalInterface.WorkflowAction;
 
 
 /**
@@ -186,6 +189,12 @@ public class ScheduleManager {
         public synchronized void addScheduledJob(ScheduledJob job) {
         	logger.info("Adding " + job + " to schedule.");
         	schedule.add(job);
+            MonitorImpl.getInternalMonitorInterface().workflowEvent(null, 
+                    System.currentTimeMillis(),
+                    WorkflowAction.SCHEDULE_WORKFLOW, 
+                    WorkflowState.NOP,
+                    job.getId());
+
         	this.interrupt();
         }
 
@@ -197,6 +206,11 @@ public class ScheduleManager {
         public synchronized void removeScheduledJob(ScheduledJob job) {
         	logger.info("Removing " + job + " from the schedule.");
         	schedule.remove(job);
+            MonitorImpl.getInternalMonitorInterface().workflowEvent(null, 
+                    System.currentTimeMillis(),
+                    WorkflowAction.UNSCHEDULE_WORKFLOW,
+                    WorkflowState.NOP,
+                    job.getId());
         	// Don't need to interrupt, because if this is originally on the top of the queue,
         	// it'll just skip it.
         }

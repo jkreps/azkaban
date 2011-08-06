@@ -19,6 +19,9 @@ package azkaban.jobcontrol.impl.jobs;
 import org.apache.log4j.Logger;
 
 import azkaban.jobcontrol.impl.jobs.locks.JobLock;
+import azkaban.monitor.MonitorImpl;
+import azkaban.monitor.MonitorInterface.JobState;
+import azkaban.monitor.MonitorInternalInterface.JobAction;
 
 import azkaban.common.jobs.DelegatingJob;
 import azkaban.common.jobs.Job;
@@ -60,17 +63,45 @@ public class ResourceThrottledJob extends DelegatingJob {
         }
         long totalWait = System.currentTimeMillis() - start;
         _logger.info(_jobLock + " Time: " + totalWait + " ms.");
+        
+        MonitorImpl.getInternalMonitorInterface().workflowResourceThrottledJobEvent(this, totalWait);
+        
         try {
             boolean shouldRunJob;
             synchronized(lock) {
                 shouldRunJob = ! canceled;
             }
+
+            MonitorImpl.getInternalMonitorInterface().jobEvent( 
+                    getInnerJob(),
+                    System.currentTimeMillis(),
+                    JobAction.START_WORKFLOW_JOB,
+                    JobState.NOP);
+            
             if(shouldRunJob) {
                 getInnerJob().run();
+                
+                MonitorImpl.getInternalMonitorInterface().jobEvent( 
+                        getInnerJob(),
+                        System.currentTimeMillis(),
+                        JobAction.END_WORKFLOW_JOB,
+                        JobState.SUCCESSFUL);
             }
             else {
                 _logger.info("Job was canceled while waiting for lock.  Not running.");
+                MonitorImpl.getInternalMonitorInterface().jobEvent( 
+                        getInnerJob(),
+                        System.currentTimeMillis(),
+                        JobAction.END_WORKFLOW_JOB,
+                        JobState.CANCELED);
             }
+        } catch (Exception e) {
+            MonitorImpl.getInternalMonitorInterface().jobEvent( 
+                    getInnerJob(),
+                    System.currentTimeMillis(),
+                    JobAction.END_WORKFLOW_JOB,
+                    JobState.FAILED);
+            throw e;
         } finally {
             _jobLock.releaseLock();
         }
@@ -84,5 +115,9 @@ public class ResourceThrottledJob extends DelegatingJob {
 
             super.cancel();
         }
+    }
+    
+    public synchronized boolean isCanceled() {
+        return canceled;
     }
 }
