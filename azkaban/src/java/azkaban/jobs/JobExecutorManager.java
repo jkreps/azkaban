@@ -31,6 +31,7 @@ import com.google.common.collect.Multimaps;
 import azkaban.app.AppCommon;
 import azkaban.app.JobManager;
 import azkaban.app.Mailman;
+import azkaban.app.PropsUtils;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
 import azkaban.flow.ExecutableFlow;
@@ -119,7 +120,7 @@ public class JobExecutorManager {
     		throw new JobExecutionException("Job " + flow.getName() + " is already running.");
     	}
     	
-        final Props parentProps = produceParentProperties(flow);
+        final Props parentProps = PropsUtils.produceParentProperties(flow);
         FlowExecutionHolder holder = new FlowExecutionHolder(flow, parentProps);
         logger.info("Executing job '" + flow.getName() + "' now");
 
@@ -306,26 +307,6 @@ public class JobExecutorManager {
                 logger.error(uhe);
             }
         }
-    }
-    
-    private Props produceParentProperties(final ExecutableFlow flow) {
-        Props parentProps = new Props();
-
-        parentProps.put("azkaban.flow.id", flow.getId());
-        parentProps.put("azkaban.flow.uuid", UUID.randomUUID().toString());
-
-        DateTime loadTime = new DateTime();
-
-        parentProps.put("azkaban.flow.start.timestamp", loadTime.toString());
-        parentProps.put("azkaban.flow.start.year", loadTime.toString("yyyy"));
-        parentProps.put("azkaban.flow.start.month", loadTime.toString("MM"));
-        parentProps.put("azkaban.flow.start.day", loadTime.toString("dd"));
-        parentProps.put("azkaban.flow.start.hour", loadTime.toString("HH"));
-        parentProps.put("azkaban.flow.start.minute", loadTime.toString("mm"));
-        parentProps.put("azkaban.flow.start.seconds", loadTime.toString("ss"));
-        parentProps.put("azkaban.flow.start.milliseconds", loadTime.toString("SSS"));
-        parentProps.put("azkaban.flow.start.timezone", loadTime.toString("ZZZZ"));
-        return parentProps;
     }
     
     /**

@@ -168,6 +168,7 @@ public class PropsUtils {
         parentProps.put("azkaban.flow.start.seconds", loadTime.toString("ss"));
         parentProps.put("azkaban.flow.start.milliseconds", loadTime.toString("SSS"));
         parentProps.put("azkaban.flow.start.timezone", loadTime.toString("ZZZZ"));
+        parentProps.put("azkaban.flow.start.epoch.milliseconds", Long.toString(loadTime.getMillis()));
         return parentProps;
     }
 }
