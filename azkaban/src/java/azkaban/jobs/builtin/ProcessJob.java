@@ -43,14 +43,17 @@ public class ProcessJob extends AbstractProcessJob implements Job {
     
     private volatile Process _process;
     private volatile boolean _isComplete;
-    
+    private volatile boolean _isCancelled;
+
     public ProcessJob(JobDescriptor descriptor) {
         super(descriptor);
     }
         
 
     public void run() {
-        
+        synchronized(this) {
+            _isCancelled = false;
+        }
         resolveProps();
         
         // Sets a list of all the commands that need to be run.
@@ -156,6 +159,9 @@ public class ProcessJob extends AbstractProcessJob implements Job {
             if(!_isComplete) {
                 warn("Force kill the process");
                 _process.destroy();
+            }
+            synchronized (this) {
+              _isCancelled = true;
             }
         }
     }
@@ -313,6 +319,10 @@ public class ProcessJob extends AbstractProcessJob implements Job {
         }
 
         return commands.toArray(new String[commands.size()]);
+    }
+    
+    public synchronized boolean isCanceled() {
+        return _isCancelled;
     }
 
 }

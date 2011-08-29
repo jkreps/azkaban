@@ -66,6 +66,12 @@ public class WordCountLocal extends AbstractJob {
     {
       return new Props();
     }
+
+    @Override
+    public boolean isCanceled()
+    {
+      return false;
+    }
     
     
     }

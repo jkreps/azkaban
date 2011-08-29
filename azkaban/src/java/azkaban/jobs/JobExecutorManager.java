@@ -37,6 +37,9 @@ import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowCallback;
 import azkaban.flow.FlowExecutionHolder;
 import azkaban.flow.FlowManager;
+import azkaban.monitor.MonitorImpl;
+import azkaban.monitor.MonitorInterface.WorkflowState;
+import azkaban.monitor.MonitorInternalInterface.WorkflowAction;
 import azkaban.util.process.ProcessFailureException;
 
 public class JobExecutorManager {
@@ -126,6 +129,11 @@ public class JobExecutorManager {
         final JobExecution executingJob = new JobExecution(flow.getName(),
                                                        new DateTime(),
                                                        true);
+        MonitorImpl.getInternalMonitorInterface().workflowEvent(flow.getId(),
+                System.currentTimeMillis(),
+                WorkflowAction.START_WORKFLOW,
+                WorkflowState.NOP,
+                flow.getName());
 
         executor.execute(new ExecutingFlowRunnable(holder, executingJob));
     }
@@ -404,6 +412,13 @@ public class JobExecutorManager {
                     @Override
                     public void completed(Status status) {
                     	runningJob.setEndTime(new DateTime());
+
+                    	MonitorImpl.getInternalMonitorInterface().workflowEvent(flow.getId(), 
+                    	        System.currentTimeMillis(),
+                    	        WorkflowAction.END_WORKFLOW, 
+                    	        (status == Status.SUCCEEDED ?  WorkflowState.SUCCESSFUL : 
+                    	        (status == Status.FAILED ? WorkflowState.FAILED : WorkflowState.UNKNOWN)),
+                    	        flow.getName());
 
                         try {
                             allKnownFlows.saveExecutableFlow(holder);

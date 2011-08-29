@@ -66,4 +66,10 @@ public interface Job {
      * @return
      */
     public Props getJobGeneratedProperties();
+    
+    /**
+     * Determine if the job was cancelled.
+     * @return
+     */
+    public boolean isCanceled();
 }

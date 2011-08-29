@@ -31,6 +31,9 @@ import azkaban.common.jobs.DelegatingJob;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
+import azkaban.monitor.MonitorImpl;
+import azkaban.monitor.MonitorInterface.JobState;
+import azkaban.monitor.MonitorInternalInterface.JobAction;
 
 /**
  * A wrapper for a job that attaches a Log4J appender to write to the logs
@@ -51,6 +54,10 @@ public class LoggingJob extends DelegatingJob {
         super(innerJob);
         this._logDir = Utils.nonNull(logDir);
         this._logger = Logger.getLogger(loggerName);
+    }
+    
+    public synchronized boolean isCanceled() {
+        return getInnerJob().isCanceled();
     }
 
     public LoggingJob(String logDir, Job innerJob, String loggerName, String loggerPattern) {
@@ -90,10 +97,27 @@ public class LoggingJob extends DelegatingJob {
         boolean jobNotStaleException = false;
         long start = System.currentTimeMillis();
         try {
+            MonitorImpl.getInternalMonitorInterface().jobEvent( 
+                    getInnerJob(),
+                    System.currentTimeMillis(),
+                    JobAction.START_WORKFLOW_JOB,
+                    JobState.NOP);
+
             getInnerJob().run();
             succeeded = true;
+            
+            MonitorImpl.getInternalMonitorInterface().jobEvent( 
+                    getInnerJob(),
+                    System.currentTimeMillis(),
+                    JobAction.END_WORKFLOW_JOB,
+                    JobState.SUCCESSFUL);
         } catch(Exception e) {
             _logger.error("Fatal error occurred while running job '" + jobName + "':", e);
+            MonitorImpl.getInternalMonitorInterface().jobEvent(
+                    getInnerJob(),
+                    System.currentTimeMillis(),
+                    JobAction.END_WORKFLOW_JOB,
+                    getInnerJob().isCanceled() ? JobState.CANCELED : JobState.FAILED);
             if(e instanceof RuntimeException)
                 throw (RuntimeException) e;
             else
