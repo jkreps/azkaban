@@ -113,8 +113,11 @@ public class LoggingJob extends DelegatingJob {
                 throw new RuntimeException(e);
             }
 
-            if(jobAppender != null)
+            if(jobAppender != null) {
                 _logger.removeAppender(jobAppender);
+                jobAppender.close();
+            }
+            
         }
     }
 }
