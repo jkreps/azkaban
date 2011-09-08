@@ -30,6 +30,7 @@ public class RetryingJob extends DelegatingJob {
     private final Logger _logger;
     private final int _retries;
     private final long _retryBackoff;
+    private volatile boolean _isCancelled;
 
     public RetryingJob(Job innerJob, int retries, long retryBackoff) {
         super(innerJob);
@@ -40,7 +41,10 @@ public class RetryingJob extends DelegatingJob {
 
     @Override
     public void run() {
-        for(int tries = 0; tries <= _retries; tries++) {
+        synchronized (this) {
+            _isCancelled = false;
+        }
+        for(int tries = 0; tries <= _retries & !_isCancelled; tries++) {
             // helpful logging info
             if(tries > 0) {
                 if(_retryBackoff > 0) {
@@ -93,6 +97,14 @@ public class RetryingJob extends DelegatingJob {
     
     public synchronized boolean isCanceled() {
         return getInnerJob().isCanceled();
+    }
+    
+    @Override
+    public void cancel() throws Exception {
+        synchronized (this) {
+            _isCancelled = true;
+          }
+        getInnerJob().cancel();
     }
 
 }
