@@ -19,11 +19,15 @@ package azkaban.app;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
 import java.util.TimeZone;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import org.apache.log4j.Logger;
 import org.apache.velocity.app.VelocityEngine;
@@ -31,6 +35,7 @@ import org.apache.velocity.runtime.log.Log4JLogChute;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.joda.time.DateTimeZone;
 
+import azkaban.app.jmx.RefreshJobs;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
 import azkaban.common.utils.Utils;
@@ -92,6 +97,7 @@ public class AzkabanApplication
     
     private final JobExecutorManager _jobExecutorManager;
     private final ScheduleManager _schedulerManager;
+    private MBeanServer mbeanServer;
     
     public AzkabanApplication(List<File> jobDirs, File logDir, File tempDir, boolean enableDevMode) throws IOException {
         this._jobDirs = Utils.nonNull(jobDirs);
@@ -209,6 +215,8 @@ public class AzkabanApplication
         }
 
         this._velocityEngine = configureVelocityEngine(enableDevMode);
+        
+        configureMBeanServer();
     }
 
     private VelocityEngine configureVelocityEngine(boolean devMode) {
@@ -238,6 +246,19 @@ public class AzkabanApplication
                            Logger.getLogger("org.apache.velocity.Logger"));
         engine.setProperty("parser.pool.size", 3);
         return engine;
+    }
+    
+    private void configureMBeanServer() {
+        logger.info("Registering MBeans...");
+        mbeanServer = ManagementFactory.getPlatformMBeanServer();
+        try {
+            ObjectName azkabanAppName = new ObjectName("azkaban.app.jmx.RefreshJobs:name=jobRefresher");
+            mbeanServer.registerMBean(new RefreshJobs(this), azkabanAppName);
+            logger.info("Bean " + azkabanAppName.getCanonicalName() + " registered.");
+        }
+        catch(Exception e) {
+            logger.error("Failed to configure MBeanServer", e);
+        }
     }
 
     public String getLogDirectory() {
@@ -383,5 +404,9 @@ public class AzkabanApplication
     
     public MonitorInternalInterface getInternalMonitor() {
         return _monitor;
+    }
+    
+    public void reloadJobsFromDisk() {
+        getJobManager().updateFlowManager();
     }
 }

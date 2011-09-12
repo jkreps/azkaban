@@ -490,7 +490,7 @@ public class JobManager {
         updateFlowManager();
     }
 
-    private void updateFlowManager()
+    public void updateFlowManager()
     {
         jobDescriptorCache.set(loadJobDescriptors());
         manager.reload();
