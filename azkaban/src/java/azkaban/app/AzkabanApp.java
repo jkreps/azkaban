@@ -30,6 +30,8 @@ import azkaban.web.pages.HdfsBrowserServlet;
 import azkaban.web.pages.IndexServlet;
 import azkaban.web.pages.JobDetailServlet;
 import azkaban.web.pages.JobUploadServlet;
+import azkaban.web.pages.RefreshJobsServlet;
+
 import java.io.File;
 import java.util.Arrays;
 import joptsimple.OptionParser;
@@ -122,6 +124,7 @@ public class AzkabanApp
       servlets.addServlet("Api Servlet", "/call", ApiServlet.class.getName());
       servlets.addServlet("Flow Execution", "/flow", FlowExecutionServlet.class.getName());
       servlets.addServlet("favicon", "/favicon.ico", Default.class.getName());
+      servlets.addServlet("Refresh Jobs", "/refresh-jobs", RefreshJobsServlet.class.getName());
       
       try {
           server.start();
