@@ -16,12 +16,6 @@
 
 package azkaban.jobs.builtin;
 
-import azkaban.app.JobDescriptor;
-import azkaban.common.jobs.Job;
-import azkaban.common.utils.Props;
-import azkaban.jobs.AbstractProcessJob;
-
-import org.apache.log4j.Level;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +24,13 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Level;
+
+import azkaban.app.JobDescriptor;
+import azkaban.common.jobs.Job;
+import azkaban.common.utils.Props;
+import azkaban.jobs.AbstractProcessJob;
+
 /**
  * A job that runs a simple unix command
  * 
@@ -37,56 +38,62 @@ import java.util.List;
  * 
  */
 public class ProcessJob extends AbstractProcessJob implements Job {
- 
+
     public static final String COMMAND = "command";
     public static final int CLEAN_UP_TIME_MS = 1000;
-    
+
     private volatile Process _process;
     private volatile boolean _isComplete;
     private volatile boolean _isCancelled;
 
-    public ProcessJob(JobDescriptor descriptor) {
+    public ProcessJob(final JobDescriptor descriptor) {
         super(descriptor);
     }
-        
 
+    @Override
     public void run() {
-        synchronized(this) {
+        synchronized (this) {
             _isCancelled = false;
         }
         resolveProps();
-        
+
         // Sets a list of all the commands that need to be run.
         List<String> commands = getCommandList();
         info(commands.size() + " commands to execute.");
 
-        File[] propFiles =initPropsFiles();
-        
-        //System.err.println("in process job outputFile=" +propFiles[1]);
- 
+        File[] propFiles = initPropsFiles();
+
+        // System.err.println("in process job outputFile=" +propFiles[1]);
+
         // For each of the jobs, set up a process and run them.
-        for(String command: commands) {
+        for (String command : commands) {
             info("Executing command: " + command);
             String[] cmdPieces = partitionCommandLine(command);
 
             ProcessBuilder builder = new ProcessBuilder(cmdPieces);
 
             builder.directory(new File(getCwd()));
-            builder.environment().putAll(getEnv());
+            builder.environment().putAll(getEnvironmentVariables());
 
             try {
                 _process = builder.start();
-            } catch(IOException e) {
-                for (File file: propFiles)   if (file != null && file.exists()) file.delete();
+            } catch (IOException e) {
+                for (File file : propFiles) {
+                    if (file != null && file.exists()) {
+                        file.delete();
+                    }
+                }
                 throw new RuntimeException(e);
             }
-            LoggingGobbler outputGobbler = new LoggingGobbler(new InputStreamReader(_process.getInputStream()),
-                                                      Level.INFO);
-            LoggingGobbler errorGobbler = new LoggingGobbler(new InputStreamReader(_process.getErrorStream()),
-                                                     Level.ERROR);
+            LoggingGobbler outputGobbler = new LoggingGobbler(
+                    new InputStreamReader(_process.getInputStream()),
+                    Level.INFO);
+            LoggingGobbler errorGobbler = new LoggingGobbler(
+                    new InputStreamReader(_process.getErrorStream()),
+                    Level.ERROR);
 
             int processId = getProcessId();
-            if(processId == 0) {
+            if (processId == 0) {
                 info("Spawned thread. Unknowned processId");
             } else {
                 info("Spawned thread with processId " + processId);
@@ -98,70 +105,76 @@ public class ProcessJob extends AbstractProcessJob implements Job {
                 exitCode = _process.waitFor();
 
                 _isComplete = true;
-                if(exitCode != 0) {
-                    for (File file: propFiles)   if (file != null && file.exists()) file.delete();
-                    throw new RuntimeException("Processes ended with exit code " + exitCode + ".");
+                if (exitCode != 0) {
+                    for (File file : propFiles) {
+                        if (file != null && file.exists()) {
+                            file.delete();
+                        }
+                    }
+                    throw new RuntimeException(
+                            "Processes ended with exit code " + exitCode + ".");
                 }
 
                 // try to wait for everything to get logged out before exiting
                 outputGobbler.join(1000);
                 errorGobbler.join(1000);
-            } catch(InterruptedException e) {
+            } catch (InterruptedException e) {
             } finally {
                 outputGobbler.close();
                 errorGobbler.close();
             }
         }
-        
+
         // Get the output properties from this job.
-       generateProperties(propFiles[1]);
-               
-       for (File file: propFiles)
-           if (file != null && file.exists()) file.delete();
-    
+        generateProperties(propFiles[1]);
+
+        for (File file : propFiles) {
+            if (file != null && file.exists()) {
+                file.delete();
+            }
+        }
+
     }
-       
 
     protected List<String> getCommandList() {
         List<String> commands = new ArrayList<String>();
         commands.add(_props.getString(COMMAND));
-        for(int i = 1; _props.containsKey(COMMAND + "." + i); i++)
+        for (int i = 1; _props.containsKey(COMMAND + "." + i); i++) {
             commands.add(_props.getString(COMMAND + "." + i));
+        }
 
         return commands;
     }
 
-
-   
-
     @Override
     public void cancel() throws Exception {
-        if(_process != null) {
+        if (_process != null) {
             int processId = getProcessId();
-            if(processId != 0) {
+            if (processId != 0) {
                 warn("Attempting to kill the process " + processId);
                 try {
                     Runtime.getRuntime().exec("kill " + processId);
-                    synchronized(this) {
+                    synchronized (this) {
                         wait(CLEAN_UP_TIME_MS);
                     }
-                } catch(InterruptedException e) {
+                } catch (InterruptedException e) {
                     // Do nothing. We don't really care.
                 }
-                if(!_isComplete) {
-                    error("After " + CLEAN_UP_TIME_MS
-                          + " ms, the job hasn't terminated. Will force terminate the job.");
+                if (!_isComplete) {
+                    error("After "
+                            + CLEAN_UP_TIME_MS
+                            + " ms, the job hasn't terminated. Will force terminate the job.");
                 }
             } else {
                 info("Cound not get process id");
             }
 
-            if(!_isComplete) {
+            if (!_isComplete) {
                 warn("Force kill the process");
                 _process.destroy();
             }
             synchronized (this) {
-              _isCancelled = true;
+                _isCancelled = true;
             }
         }
     }
@@ -174,7 +187,8 @@ public class ProcessJob extends AbstractProcessJob implements Job {
             f.setAccessible(true);
 
             processId = f.getInt(_process);
-        } catch(Throwable e) {}
+        } catch (Throwable e) {
+        }
 
         return processId;
     }
@@ -189,7 +203,8 @@ public class ProcessJob extends AbstractProcessJob implements Job {
         private final BufferedReader _inputReader;
         private final Level _loggingLevel;
 
-        public LoggingGobbler(InputStreamReader inputReader, Level level) {
+        public LoggingGobbler(final InputStreamReader inputReader,
+                final Level level) {
             _inputReader = new BufferedReader(inputReader);
             _loggingLevel = level;
         }
@@ -198,7 +213,7 @@ public class ProcessJob extends AbstractProcessJob implements Job {
             if (_inputReader != null) {
                 try {
                     _inputReader.close();
-                } catch(IOException e) {
+                } catch (IOException e) {
                     error("Error cleaning up logging stream reader:", e);
                 }
             }
@@ -207,36 +222,43 @@ public class ProcessJob extends AbstractProcessJob implements Job {
         @Override
         public void run() {
             try {
-                while(!Thread.currentThread().isInterrupted()) {
+                while (!Thread.currentThread().isInterrupted()) {
                     String line = _inputReader.readLine();
-                    if(line == null)
+                    if (line == null) {
                         return;
+                    }
 
                     logMessage(line);
                 }
-            } catch(IOException e) {
+            } catch (IOException e) {
                 error("Error reading from logging stream:", e);
             }
         }
 
-        private void logMessage(String message) {
-            if(message.startsWith(Level.DEBUG.toString())) {
-                String newMsg = message.substring(Level.DEBUG.toString().length());
+        private void logMessage(final String message) {
+            if (message.startsWith(Level.DEBUG.toString())) {
+                String newMsg = message.substring(Level.DEBUG.toString()
+                        .length());
                 getLog().debug(newMsg);
-            } else if(message.startsWith(Level.ERROR.toString())) {
-                String newMsg = message.substring(Level.ERROR.toString().length());
+            } else if (message.startsWith(Level.ERROR.toString())) {
+                String newMsg = message.substring(Level.ERROR.toString()
+                        .length());
                 getLog().error(newMsg);
-            } else if(message.startsWith(Level.INFO.toString())) {
-                String newMsg = message.substring(Level.INFO.toString().length());
+            } else if (message.startsWith(Level.INFO.toString())) {
+                String newMsg = message.substring(Level.INFO.toString()
+                        .length());
                 getLog().info(newMsg);
-            } else if(message.startsWith(Level.WARN.toString())) {
-                String newMsg = message.substring(Level.WARN.toString().length());
+            } else if (message.startsWith(Level.WARN.toString())) {
+                String newMsg = message.substring(Level.WARN.toString()
+                        .length());
                 getLog().warn(newMsg);
-            } else if(message.startsWith(Level.FATAL.toString())) {
-                String newMsg = message.substring(Level.FATAL.toString().length());
+            } else if (message.startsWith(Level.FATAL.toString())) {
+                String newMsg = message.substring(Level.FATAL.toString()
+                        .length());
                 getLog().fatal(newMsg);
-            } else if(message.startsWith(Level.TRACE.toString())) {
-                String newMsg = message.substring(Level.TRACE.toString().length());
+            } else if (message.startsWith(Level.TRACE.toString())) {
+                String newMsg = message.substring(Level.TRACE.toString()
+                        .length());
                 getLog().trace(newMsg);
             } else {
                 getLog().log(_loggingLevel, message);
@@ -245,6 +267,7 @@ public class ProcessJob extends AbstractProcessJob implements Job {
         }
     }
 
+    @Override
     public Props getProps() {
         return _props;
     }
@@ -257,6 +280,7 @@ public class ProcessJob extends AbstractProcessJob implements Job {
         return getId();
     }
 
+    @Override
     public JobDescriptor getJobDescriptor() {
         return _descriptor;
     }
@@ -268,7 +292,7 @@ public class ProcessJob extends AbstractProcessJob implements Job {
      * @param command
      * @return
      */
-    public static String[] partitionCommandLine(String command) {
+    public static String[] partitionCommandLine(final String command) {
         ArrayList<String> commands = new ArrayList<String>();
 
         int index = 0;
@@ -277,50 +301,51 @@ public class ProcessJob extends AbstractProcessJob implements Job {
 
         boolean isApos = false;
         boolean isQuote = false;
-        while(index < command.length()) {
+        while (index < command.length()) {
             char c = command.charAt(index);
 
-            switch(c) {
-                case ' ':
-                    if(!isQuote && !isApos) {
-                        String arg = buffer.toString();
-                        buffer = new StringBuffer(command.length() - index);
-                        if(arg.length() > 0) {
-                            commands.add(arg);
-                        }
-                    } else {
-                        buffer.append(c);
+            switch (c) {
+            case ' ':
+                if (!isQuote && !isApos) {
+                    String arg = buffer.toString();
+                    buffer = new StringBuffer(command.length() - index);
+                    if (arg.length() > 0) {
+                        commands.add(arg);
                     }
-                    break;
-                case '\'':
-                    if(!isQuote) {
-                        isApos = !isApos;
-                    } else {
-                        buffer.append(c);
-                    }
-                    break;
-                case '"':
-                    if(!isApos) {
-                        isQuote = !isQuote;
-                    } else {
-                        buffer.append(c);
-                    }
-                    break;
-                default:
+                } else {
                     buffer.append(c);
+                }
+                break;
+            case '\'':
+                if (!isQuote) {
+                    isApos = !isApos;
+                } else {
+                    buffer.append(c);
+                }
+                break;
+            case '"':
+                if (!isApos) {
+                    isQuote = !isQuote;
+                } else {
+                    buffer.append(c);
+                }
+                break;
+            default:
+                buffer.append(c);
             }
 
             index++;
         }
 
-        if(buffer.length() > 0) {
+        if (buffer.length() > 0) {
             String arg = buffer.toString();
             commands.add(arg);
         }
 
         return commands.toArray(new String[commands.size()]);
     }
-    
+
+    @Override
     public synchronized boolean isCanceled() {
         return _isCancelled;
     }
