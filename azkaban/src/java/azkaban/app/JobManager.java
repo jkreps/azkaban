@@ -410,6 +410,32 @@ public class JobManager {
      * @param jobs
      */
     private void addDependencies(Map<String, JobDescriptor> jobs) {
+    	//convert forward dependencies to normal dependencies
+        for (JobDescriptor job: jobs.values()) {
+        	List<String> forwardDependencies = job.getProps().getStringList("followedby", new ArrayList<String>());
+        	
+        	for (String forwdep: forwardDependencies){
+        		String name = forwdep.trim();
+                if(Utils.isNullOrEmpty(name))
+                    continue;
+                if(jobs.containsKey(name))
+                {
+                	String job_deps = jobs.get(name).getProps().getString("dependencies", "");
+                	if (job_deps.equalsIgnoreCase(""))
+                		job_deps = job.getId();
+                	else
+                		job_deps = job_deps + "," + job.getId();
+                	jobs.get(name).getProps().put("dependencies", job_deps);
+                }
+                else
+                    throw new AppConfigurationException("Job '"
+                            + job.getId()
+                            + "' is a pre-requisite for '"
+                            + name
+                            + "' which does not exist (check the spelling of the job name!).");                	
+        		
+        	}     	
+        }
         // add all dependencies
         for(JobDescriptor job: jobs.values()) {
             List<String> dependencies = job.getProps().getStringList("dependencies",
