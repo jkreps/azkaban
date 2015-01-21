@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import azkaban.app.JobManager;
 import azkaban.app.JobWrappingFactory;
 import azkaban.common.utils.Props;
+import azkaban.jobs.Status;
 import azkaban.serialization.Verifier;
 
 import com.google.common.base.Function;

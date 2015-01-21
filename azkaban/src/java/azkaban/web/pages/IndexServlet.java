@@ -17,14 +17,14 @@
 package azkaban.web.pages;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,21 +35,21 @@ import org.joda.time.Days;
 import org.joda.time.Hours;
 import org.joda.time.LocalDateTime;
 import org.joda.time.Minutes;
-import org.joda.time.ReadablePartial;
 import org.joda.time.ReadablePeriod;
 import org.joda.time.Seconds;
 import org.joda.time.format.DateTimeFormat;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import org.joda.time.format.DateTimeFormatter;
 
 import azkaban.app.AzkabanApplication;
 import azkaban.app.JobDescriptor;
 import azkaban.app.JobManager;
-import azkaban.app.Scheduler.ScheduledJobAndInstance;
 import azkaban.common.web.Page;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flow;
 import azkaban.flow.FlowManager;
+import azkaban.jobs.JobExecutionException;
+import azkaban.jobs.JobExecutorManager.ExecutingJobAndInstance;
+import azkaban.util.json.JSONUtils;
 import azkaban.web.AbstractAzkabanServlet;
 
 /**
@@ -59,7 +59,7 @@ import azkaban.web.AbstractAzkabanServlet;
  * 
  */
 public class IndexServlet extends AbstractAzkabanServlet {
-
+    private static final DateTimeFormatter ZONE_FORMATTER = DateTimeFormat.forPattern("z");
     private static final Logger logger = Logger.getLogger(IndexServlet.class.getName());
 
     private static final long serialVersionUID = 1;
@@ -76,12 +76,17 @@ public class IndexServlet extends AbstractAzkabanServlet {
         Page page = newPage(req, resp, "azkaban/web/pages/index.vm");
         page.add("logDir", app.getLogDirectory());
         page.add("flows", app.getAllFlows());
-        page.add("scheduled", app.getScheduler().getScheduledJobs());
-        page.add("executing", app.getScheduler().getExecutingJobs());
-        page.add("completed", app.getScheduler().getCompleted());
+        page.add("scheduled", app.getScheduleManager().getSchedule());
+        page.add("executing", app.getJobExecutorManager().getExecutingJobs());
+        page.add("completed", app.getJobExecutorManager().getCompleted());
         page.add("rootJobNames", app.getAllFlows().getRootFlowNames());
         page.add("folderNames", app.getAllFlows().getFolders());
         page.add("jobDescComparator", JobDescriptor.NAME_COMPARATOR);
+        
+        ExecutingJobUtils utils = new ExecutingJobUtils();
+        page.add("jsonExecution", utils.getExecutableJobAndInstanceJSON(app.getJobExecutorManager().getExecutingJobs()));
+        page.add("timezone", ZONE_FORMATTER.print(System.currentTimeMillis()));
+        page.add("currentTime",(new DateTime()).getMillis());
         page.render();
     }
 
@@ -95,15 +100,15 @@ public class IndexServlet extends AbstractAzkabanServlet {
         AzkabanApplication app = getApplication();
         String action = getParam(req, "action");
         if ("loadjobs".equals(action)) {
-            resp.setContentType("application/json");
+        	resp.setContentType("application/json");
         	String folder = getParam(req, "folder");
         	resp.getWriter().print(getJSONJobsForFolder(app.getAllFlows(), folder));
         	resp.getWriter().flush();
         	return;
         }
         else if("unschedule".equals(action)) {
-            String job = getParam(req, "job");
-            app.getScheduler().unschedule(job);
+            String jobid = getParam(req, "job");
+            app.getScheduleManager().removeScheduledJob(jobid);
         } else if("cancel".equals(action)) {
             cancelJob(app, req);
         } else if("schedule".equals(action)) {
@@ -117,45 +122,43 @@ public class IndexServlet extends AbstractAzkabanServlet {
         }
         resp.sendRedirect(req.getContextPath());
     }
-
-    @SuppressWarnings("unchecked")
+    
 	private String getJSONJobsForFolder(FlowManager manager, String folder) {
     	List<String> rootJobs = manager.getRootNamesByFolder(folder);
     	Collections.sort(rootJobs);
 
-    	JSONArray rootJobObj = new JSONArray();
+    	ArrayList<Object> rootJobObj = new ArrayList<Object>();
     	for (String root: rootJobs) {
     		Flow flow = manager.getFlow(root);
-    		JSONObject flowObj = getJSONDependencyTree(flow);
+    		HashMap<String,Object> flowObj = getJSONDependencyTree(flow);
     		rootJobObj.add(flowObj);
     	}
     	
-    	return rootJobObj.toJSONString();
+    	return JSONUtils.toJSONString(rootJobObj);
     }
     
-    @SuppressWarnings("unchecked")
-	private JSONObject getJSONDependencyTree(Flow flow) {
-    	JSONObject jobObject = new JSONObject();
+	private HashMap<String,Object> getJSONDependencyTree(Flow flow) {
+    	HashMap<String,Object> jobObject = new HashMap<String,Object>();
     	jobObject.put("name", flow.getName());
     	
     	if (flow.hasChildren()) {
-    		JSONArray dependencies = new JSONArray();
+    		ArrayList<HashMap<String,Object>> dependencies = new ArrayList<HashMap<String,Object>>();
     		for(Flow child : flow.getChildren()) {
-    			JSONObject childObj = getJSONDependencyTree(child);
+    			HashMap<String, Object> childObj = getJSONDependencyTree(child);
     			dependencies.add(childObj);
     		}
     		
     		Collections.sort(dependencies, new FlowComparator());
-    		jobObject.put("dep", dependencies);
+    		jobObject.put("children", dependencies);
     	}
     	
     	return jobObject;
     }
-    
-    private class FlowComparator implements Comparator<JSONObject> {
+
+    private class FlowComparator implements Comparator<Map<String,Object>> {
 
 		@Override
-		public int compare(JSONObject arg0, JSONObject arg1) {
+		public int compare(Map<String,Object> arg0, Map<String,Object> arg1) {
 			String first = (String)arg0.get("name");
 			String second = (String)arg1.get("name");
 			return first.compareTo(second);
@@ -166,8 +169,14 @@ public class IndexServlet extends AbstractAzkabanServlet {
     private void cancelJob(AzkabanApplication app, HttpServletRequest req) throws ServletException {
 
         String jobId = getParam(req, "job");
-        Collection<ScheduledJobAndInstance> executing = app.getScheduler().getExecutingJobs();
-        for(ScheduledJobAndInstance curr: executing) {
+        try {
+			app.getJobExecutorManager().cancel(jobId);
+		} catch (Exception e1) {
+			logger.error("Error cancelling job " + e1);
+		}
+        
+        Collection<ExecutingJobAndInstance> executing = app.getJobExecutorManager().getExecutingJobs();
+        for(ExecutingJobAndInstance curr: executing) {
             ExecutableFlow flow = curr.getExecutableFlow();
             final String flowId = flow.getId();
             if(flowId.equals(jobId)) {
@@ -241,17 +250,23 @@ public class IndexServlet extends AbstractAzkabanServlet {
 	                    hour += 12;
 	                hour %= 24;
 	
-	                app.getScheduler().schedule(job,
-	                                            day.withHourOfDay(hour)
-	                                               .withMinuteOfHour(minutes)
-	                                               .withSecondOfMinute(0),
-	                                            thePeriod,
-	                                            false);
+	                app.getScheduleManager().schedule(job,
+                            day.withHourOfDay(hour)
+                            .withMinuteOfHour(minutes)
+                            .withSecondOfMinute(0),
+                         thePeriod,
+                         false);
+
 	                addMessage(req, job + " scheduled.");
 	            } else if(hasParam(req, "run_now")) {
 	                boolean ignoreDeps = !hasParam(req, "include_deps");
-	                @SuppressWarnings("unused")
-	                ScheduledFuture<?> f = app.getScheduler().schedule(job, new DateTime(), ignoreDeps);
+	                try {
+	                	app.getJobExecutorManager().execute(job, ignoreDeps);
+	                }
+	                catch (JobExecutionException e) {
+	                	addError(req, e.getMessage());	
+	                	return "";
+	                }
 	                addMessage(req, "Running " + job);
 	            }
 	            else {

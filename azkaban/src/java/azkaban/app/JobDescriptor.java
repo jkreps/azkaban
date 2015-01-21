@@ -24,7 +24,6 @@ import java.util.Set;
 
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
-import azkaban.common.utils.Utils;
 
 /**
  * A job descriptor represents the configuration information for a job This
@@ -47,6 +46,9 @@ public class JobDescriptor {
     public static final String RETRY_BACKOFF = "retry.backoff";
     public static final String JOB_PERMITS = "job.permits";
     public static final String NOTIFY_EMAIL = "notify.emails";
+    public static final String LOGGER_PATTERN = "logger.pattern";
+    public static final String MAIL_SENDER = "mail.sender";
+    public static final String SEND_SUCCESS_EMAIL = "azkaban.send.success.email";
 
     public static final Comparator<JobDescriptor> NAME_COMPARATOR = new Comparator<JobDescriptor>() {
 
@@ -63,7 +65,6 @@ public class JobDescriptor {
     private final long _retryBackoffMs;
     private final Integer _requiredPermits;
     private final Props _props;
-    private final Props _resolvedProps;
     private final Set<JobDescriptor> _dependencies;
     private final ClassLoader _classLoader;
     private final List<String> _readResourceLocks;
@@ -71,14 +72,14 @@ public class JobDescriptor {
     private final String _sourceEmailList;
     private final List<String> _emailList;
     private final String _jobType;
+    private final String _loggerPattern;
 
     public JobDescriptor(String id, String conicalPath, String fullpath, Props props, ClassLoader classLoader) {
         this._id = id;
         this._path = conicalPath;
         this._fullpath = fullpath;
         this._props = props;
-        this._resolvedProps = PropsUtils.resolveProps(props);
-        
+
         this._jobType = props.getString(JOB_TYPE, "");
 
         // @TODO Move this validation check in Java Job
@@ -97,8 +98,9 @@ public class JobDescriptor {
 
         this._writeResourceLocks = props.getStringList(WRITE_LOCKS, ",");
 
-        this._sourceEmailList = props.getString("mail.sender", null);
-        
+        this._sourceEmailList = props.getString(MAIL_SENDER, null);
+        this._loggerPattern = props.getString(LOGGER_PATTERN, null);
+
         // Ordered resource locking should help prevent simple deadlocking
         // situations.
         Collections.sort(this._readResourceLocks);
@@ -133,10 +135,6 @@ public class JobDescriptor {
         return this._props;
     }
     
-    public Props getResolvedProps() {
-        return this._resolvedProps;
-    }
-
     public boolean hasDependencies() {
         return this._dependencies.size() > 0;
     }
@@ -194,5 +192,13 @@ public class JobDescriptor {
     
     public String getSenderEmail() {
         return _sourceEmailList;
+    }
+
+	public String getLoggerPattern() {
+		return _loggerPattern;
+	}
+
+    public boolean getSendSuccessEmail() {
+        return _props.getBoolean(SEND_SUCCESS_EMAIL, true);
     }
 }

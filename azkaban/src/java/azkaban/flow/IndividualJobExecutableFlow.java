@@ -29,6 +29,10 @@ import azkaban.app.JobManager;
 import azkaban.common.jobs.DelegatingJob;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
+import azkaban.jobs.Status;
+import azkaban.monitor.MonitorImpl;
+import azkaban.monitor.MonitorInterface.JobState;
+import azkaban.monitor.MonitorInternalInterface.JobAction;
 
 /**
  * An implemention of the ExecutableFlow interface that just
@@ -165,6 +169,12 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                     public void run()
                     {
                         final List<FlowCallback> callbackList;
+                        
+                        MonitorImpl.getInternalMonitorInterface().jobEvent( 
+                                job,
+                                System.currentTimeMillis(),
+                                JobAction.START_WORKFLOW_JOB,
+                                JobState.NOP);
 
                         try {
                             job.run();
@@ -176,6 +186,13 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                                 exceptions.put(getName(), e);
                                 callbackList = callbacksToCall; // Get the reference before leaving the synchronized
                             }
+                            
+                            MonitorImpl.getInternalMonitorInterface().jobEvent( 
+                                    job,
+                                    System.currentTimeMillis(),
+                                    JobAction.END_WORKFLOW_JOB,
+                                    JobState.FAILED);
+                            
                             callCallbacks(callbackList, jobState);
 
                             throw new RuntimeException(e);
@@ -187,6 +204,11 @@ public class IndividualJobExecutableFlow implements ExecutableFlow
                             callbackList = callbacksToCall; // Get the reference before leaving the synchronized
                         }
 
+                        MonitorImpl.getInternalMonitorInterface().jobEvent( 
+                                job,
+                                System.currentTimeMillis(),
+                                JobAction.END_WORKFLOW_JOB,
+                                JobState.SUCCESSFUL);
                         returnProps.logProperties(String.format("Return props for job[%s]", getName()));
 
                         callCallbacks(callbackList, jobState);

@@ -18,6 +18,11 @@
 	</servlet>
 
 	<servlet>
+		<servlet-name>api</servlet-name>
+		<servlet-class>azkaban.web.ApiServlet</servlet-class>
+	</servlet>
+
+	<servlet>
 		<servlet-name>logs</servlet-name>
 		<servlet-class>azkaban.web.LogServlet</servlet-class>
 	</servlet>
@@ -43,6 +48,11 @@
 	</servlet>
 
 	<servlet>
+		<servlet-name>job-runner</servlet-name>
+		<servlet-class>azkaban.web.JobRunnerServlet</servlet-class>
+	</servlet>
+
+	<servlet>
 		<servlet-name>job-upload</servlet-name>
 		<servlet-class>azkaban.web.pages.JobUploadServlet</servlet-class>
 	</servlet>
@@ -63,14 +73,24 @@
 	</servlet-mapping>
 
 	<servlet-mapping>
+		<servlet-name>api</servlet-name>
+		<url-pattern>/call</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
 		<servlet-name>job-detail</servlet-name>
 		<url-pattern>/job</url-pattern>
 	</servlet-mapping>
 
-	<servlet-mapping>
-		<servlet-name>job-upload</servlet-name>
-		<url-pattern>/job-upload/*</url-pattern>
-	</servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>job-upload</servlet-name>
+        <url-pattern>/job-upload/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>job-runner</servlet-name>
+        <url-pattern>/job-runner/*</url-pattern>
+    </servlet-mapping>
 
 	<servlet-mapping>
 		<servlet-name>logs</servlet-name>

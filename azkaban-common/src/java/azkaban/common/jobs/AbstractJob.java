@@ -93,5 +93,9 @@ public abstract class AbstractJob implements Job {
     }
     
     public abstract void run() throws Exception;
+    
+    public boolean isCanceled() {
+        return false;
+    }
 
 }

@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+
 <project name="azkaban" basedir="." default="all">
 	<property name="azkaban.base.dir" value="${basedir}" />
 	<property file="build.properties" />
@@ -19,7 +20,7 @@
 		</and>
 	</condition>
 
-	<target name="all" depends="clean, jars, war" description="Builds all jars" />
+	<target name="all" depends="clean, jars, war, unit" description="Builds all jars" />
 
 	<target name="clean" description="Delete generated files.">
 		<!--echo message="Deleting dist directory: ${azkaban.base.dir}/${dist.dir}, ${azkaban.base.dir}/${build.dir}" />
@@ -132,5 +133,46 @@
 			</tar>
 		</sequential>
 	</macrodef>
+	
+	<target name="mvn-deploy" description="Maven deploy all">
+		<echo message="Running mvn deploy on azkaban-common" />
+		<subant target="mvn-deploy" inheritall="true">
+			<fileset dir="azkaban-common" includes="build.xml" />
+		</subant>
+		<echo message="Running mvn deploy on azkaban" />
+		<subant target="mvn-deploy" inheritall="true">
+			<fileset dir="azkaban" includes="build.xml" />
+		</subant>
+	</target>
+
+	<target name="mvn-install" description="Maven install all">
+		<echo message="Running mvn install on azkaban-common" />
+		<subant target="mvn-install">
+			<fileset dir="azkaban-common" includes="build.xml" />
+		</subant>
+		<echo message="Running mvn install on azkaban" />
+		<subant target="mvn-install">
+			<fileset dir="azkaban" includes="build.xml" />
+		</subant>
+	</target>
+	 
+	<target name="setsnapshotversion" description="Set the version to be snapshot">
+		<echo message="Setting Snapshot Version" />
+		<property name="release.version" value="${curr.release.snapshot}"/>
+		<property name="mvn.repository.location" value="${mvn.repository.location.snapshot}"/>
+		<property name="mvn.repository.id" value="${mvn.repository.id.snapshot}"/>
+	</target>
+ 
+	<target name="setreleaseversion" description="Set the version to be release">
+		<echo message="Setting Release Version" />
+		<property name="release.version" value="${curr.release}"/>
+		<property name="mvn.repository.location" value="${mvn.repository.location.release}"/>
+		<property name="mvn.repository.id" value="${mvn.repository.id.release}"/>
+	</target>
+	
+	<target name="mvn-deploysnapshot" description="Deploy the snapshot version" depends="setsnapshotversion, mvn-deploy" />
+	<target name="mvn-deployrelease" description="Deploy the release version" depends="setreleaseversion, mvn-deploy" />
+	<target name="mvn-installsnapshot" description="Install the snapshot version" depends="setsnapshotversion, mvn-install" />
+	<target name="mvn-installrelease" description="Install the release version" depends="setreleaseversion, mvn-install" />
 
 </project>

@@ -107,5 +107,6 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   	       </form>
   	    </div>
   	</div>
+  	<div><p class="currentTime">Current Time: $utils.formatDateTimeAndZone($utils.now)</p></div>
   </body>
 </html>

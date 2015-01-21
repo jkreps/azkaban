@@ -114,7 +114,7 @@ public class AzkabanCommandLine {
 				logger.debug("Adding config to classloader from HADOOP_HOME ("
 						+ hadoopHome + ").");
 				return new URLClassLoader(new URL[] { new File(hadoopHome,
-						"conf").toURL() }, CommandLineJobRunner.class
+						"conf").toURI().toURL() }, CommandLineJobRunner.class
 						.getClassLoader());
 			} catch (MalformedURLException e) {
 				throw new IllegalStateException("Invalid HADOOP_HOME: "

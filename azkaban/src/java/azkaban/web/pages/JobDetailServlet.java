@@ -30,12 +30,12 @@ import org.json.simple.JSONObject;
 
 import azkaban.app.AzkabanApplication;
 import azkaban.app.JobDescriptor;
-import azkaban.app.JobExecution;
 import azkaban.app.JobManager;
 import azkaban.web.AbstractAzkabanServlet;
 
 import azkaban.common.utils.Props;
 import azkaban.common.web.Page;
+import azkaban.jobs.JobExecution;
 
 /**
  * Show the details of a job
@@ -74,6 +74,9 @@ public class JobDetailServlet extends AbstractAzkabanServlet {
             page.add("job", jdesc);
             page.add("descriptors", descriptors);
             page.add("jsonData", getJSONText(jdesc.getProps()));
+        	if (req.getParameter("logs") != null) {
+        		page.add("tab", "logs");
+        	}
             
             List<JobExecution> execs = jobManager.loadJobExecutions(jobId);
             int successes = 0;
@@ -87,10 +90,12 @@ public class JobDetailServlet extends AbstractAzkabanServlet {
         }
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         AzkabanApplication app = getApplication();
+        
         JobManager jobManager = app.getJobManager();
         String jobName = req.getParameter("job_name");
         String jobPath = req.getParameter("job_path");

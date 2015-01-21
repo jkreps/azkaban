@@ -18,9 +18,11 @@ package azkaban.common.utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.StringTokenizer;
@@ -458,16 +461,16 @@ public class Utils {
                         break; // we got the last *lineCount* lines
                     }
 
-                    // remove the last element in lastNLines for it might be an
-                    // incomplete line
-                    String lastLine = lastNLines.get(lastNLines.size() - 1);
-                    lastNLines.remove(lastNLines.size() - 1);
-
                     // move the current position
-                    currPos = startPos + lastLine.getBytes().length;
+                    currPos = startPos; // + lastLine.getBytes().length;
                 }
             }
 
+            // there might be lineCount + 1 lines and the first line (now it is the last line)
+            // might not be complete
+            for (int index= lineCount; index < lastNLines.size(); index++)
+                lastNLines.removeElementAt(index);
+            
             // reverse the order of elements in lastNLines
             Collections.reverse(lastNLines);
             return lastNLines;
@@ -512,7 +515,7 @@ public class Utils {
                                                 int lineCount,
                                                 Vector<String> lastNLines) {
 
-        if(lastNLines.size() >= lineCount)
+        if(lastNLines.size() > lineCount)
             return true;
 
         // convert byte array to string
@@ -523,13 +526,23 @@ public class Utils {
         lastNChars = sb.reverse().toString();
 
         // tokenize the string using "\n"
-        StringTokenizer tokens = new StringTokenizer(lastNChars, "\n");
+        String[] tokens = lastNChars.split("\n");
 
         // append lines to lastNLines
-        while(tokens.hasMoreTokens()) {
-            StringBuffer sbLine = new StringBuffer((String) tokens.nextToken());
-            lastNLines.add(sbLine.reverse().toString());
-            if(lastNLines.size() == lineCount) {
+        for (int index=0; index < tokens.length; index++) {
+            StringBuffer sbLine = new StringBuffer(tokens[index]);
+            String newline = sbLine.reverse().toString();
+            
+            if (index == 0 && !lastNLines.isEmpty()) { // first line might not be a complete line
+                int lineNum = lastNLines.size();
+                String halfLine = lastNLines.get(lineNum - 1);
+                lastNLines.set(lineNum - 1, newline + halfLine);
+            }
+            else {
+                lastNLines.add(newline);
+            }
+            
+            if(lastNLines.size() > lineCount) {
                 return true;
             }
         }

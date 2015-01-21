@@ -24,9 +24,11 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
 import org.joda.time.Period;
 import org.joda.time.ReadablePeriod;
@@ -66,8 +68,14 @@ public class GuiUtils {
                                                                                                   " minutes")
                                                                                     .toFormatter();
 
+    
+    
     public DateTime now() {
     	return new DateTime();
+    }
+    
+    public String getShortTimeZone() {
+    	return DateTimeZone.getDefault().getShortName(new DateTime().getMillis());
     }
     
     public String formatDate(DateTime date) {
@@ -78,6 +86,10 @@ public class GuiUtils {
         return formatDate(date, "MM-dd-yyyy HH:mm:ss");
     }
 
+    public String formatDateTimeAndZone(DateTime date) {
+        return formatDate(date, "MM-dd-yyyy HH:mm:ss z");
+    }
+    
     public String formatDate(DateTime date, String format) {
         DateTimeFormatter f = DateTimeFormat.forPattern(format);
         return f.print(date);

@@ -2,6 +2,8 @@ package azkaban.flow;
 
 import org.junit.Assert;
 
+import azkaban.jobs.Status;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**

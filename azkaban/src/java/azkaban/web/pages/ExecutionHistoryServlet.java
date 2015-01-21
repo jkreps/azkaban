@@ -21,11 +21,17 @@ import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowExecutionHolder;
 import azkaban.flow.FlowManager;
 import azkaban.flow.Flows;
+import azkaban.jobs.JobExecutionException;
 import azkaban.web.AbstractAzkabanServlet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +39,7 @@ import java.util.List;
 public class ExecutionHistoryServlet extends AbstractAzkabanServlet {
 
     private static final long serialVersionUID = 1L;
-
+    private static final DateTimeFormatter ZONE_FORMATTER = DateTimeFormat.forPattern("z");
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
@@ -54,13 +60,16 @@ public class ExecutionHistoryServlet extends AbstractAzkabanServlet {
                     }
                     else {
                         Flows.resetFailedFlows(holder.getFlow());
-                        this.getApplication().getScheduler().scheduleNow(holder);
+                        this.getApplication().getJobExecutorManager().execute(holder);
 
                         addMessage(req, String.format("Flow[%s] restarted.", id));
                     }
                 }
                 catch (NumberFormatException e) {
                     addMessage(req, String.format("Apparently [%s] is not a valid long.", getParam(req, "id")));
+                }
+                catch (JobExecutionException e) {
+                	addMessage(req, "Error restarting " + getParam(req, "id") + ". " + e.getMessage());
                 }
             }
         }
@@ -84,11 +93,15 @@ public class ExecutionHistoryServlet extends AbstractAzkabanServlet {
                 execs.add(flow);
         }
 
+
         Page page = newPage(req, resp, "azkaban/web/pages/execution_history.vm");
         page.add("executions", execs);
         page.add("begin", begin);
         page.add("size", size);
+        page.add("currentTime", (new DateTime()).getMillis());
+        ExecutingJobUtils utils = new ExecutingJobUtils();
+        page.add("jsonExecution", utils.getExecutableFlowJSON(execs));
+        page.add("timezone", ZONE_FORMATTER.print(System.currentTimeMillis()));
         page.render();
     }
-
 }

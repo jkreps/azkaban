@@ -19,6 +19,8 @@ package azkaban.flow;
 import azkaban.common.utils.Props;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.Flow;
+import azkaban.jobs.Status;
+
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
@@ -103,6 +105,10 @@ public class CachingFlowManager implements FlowManager
     public ExecutableFlow createNewExecutableFlow(String name)
     {
         final ExecutableFlow retVal = baseManager.createNewExecutableFlow(name);
+
+        if (retVal == null) {
+            return null;
+        }
 
         return new WrappingExecutableFlow(retVal){
             @Override

@@ -3,6 +3,12 @@ package azkaban.flow;
 import azkaban.app.JobManager;
 import azkaban.common.jobs.Job;
 import azkaban.common.utils.Props;
+import azkaban.jobs.Status;
+import azkaban.jobs.builtin.ProcessJob;
+import azkaban.monitor.MonitorImpl;
+import azkaban.monitor.MonitorInternalInterface;
+import azkaban.monitor.MonitorInterface.WorkflowState;
+import azkaban.monitor.MonitorInternalInterface.WorkflowAction;
 
 import org.easymock.IAnswer;
 import org.easymock.classextension.EasyMock;
@@ -29,6 +35,7 @@ public class IndividualJobExecutableFlowTest
 
     private volatile AtomicBoolean assertionViolated;
     private volatile String reason;
+    private volatile MonitorImpl monitor;
 
     private static Throwable theException;
     private static Map<String,Throwable> theExceptions;
@@ -49,6 +56,8 @@ public class IndividualJobExecutableFlowTest
 
         assertionViolated = new AtomicBoolean(false);
         reason = "Default Reason";
+        
+        monitor = (MonitorImpl)MonitorImpl.getMonitor();
     }
 
     @After
@@ -56,6 +65,8 @@ public class IndividualJobExecutableFlowTest
     {
         Assert.assertFalse(reason, assertionViolated.get());
         EasyMock.verify(jobManager);
+        
+        MonitorImpl.unsetMonitor();
     }
 
     
@@ -69,7 +80,13 @@ public class IndividualJobExecutableFlowTest
         final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+        EasyMock.expect(mockJob.getId()).andReturn("success Job").anyTimes();
+        
+        monitor.workflowEvent("blah", 
+                System.currentTimeMillis(),              
+                WorkflowAction.SCHEDULE_WORKFLOW, 
+                WorkflowState.NOP,
+                "successJob");
 
         mockJob.run();
         EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
@@ -156,13 +173,22 @@ public class IndividualJobExecutableFlowTest
                 
         final CountDownLatch completionLatch = new CountDownLatch(1);
 
-        final Job mockJob = EasyMock.createMock(Job.class);
+        final ProcessJob mockJob = EasyMock.createMock(ProcessJob.class);
+        final Props props = new Props();
+        props.put("azkaban.flow.id", "23");
+        
         final Props overrideProps = new Props();
         final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("blah").times(1);
+        EasyMock.expect(mockJob.getId()).andReturn("failure Job").anyTimes();
+        EasyMock.expect(mockJob.getProps()).andReturn(props).anyTimes();
         
+        monitor.workflowEvent("23", 
+                System.currentTimeMillis(),              
+                WorkflowAction.SCHEDULE_WORKFLOW, 
+                WorkflowState.NOP,
+                "failureJob");        
         
         mockJob.run();
         EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
@@ -202,7 +228,7 @@ public class IndividualJobExecutableFlowTest
                     }
                 });
 
-        completionLatch.await(1000, TimeUnit.MILLISECONDS);
+        completionLatch.await(4000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.FAILED, executableFlow.getStatus());
         Assert.assertEquals(theExceptions, executableFlow.getExceptions());
 
@@ -231,12 +257,21 @@ public class IndividualJobExecutableFlowTest
         final CountDownLatch firstCallbackLatch = new CountDownLatch(1);
         final CountDownLatch secondCallbackLatch = new CountDownLatch(1);
 
-        final Job mockJob = EasyMock.createMock(Job.class);
+        final ProcessJob mockJob = EasyMock.createMock(ProcessJob.class);
+        final Props props = new Props();
+        props.put("azkaban.flow.id", "23");
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("23", "blah", jobManager);
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+        EasyMock.expect(mockJob.getId()).andReturn("success Job").anyTimes();
+        EasyMock.expect(mockJob.getProps()).andReturn(props).anyTimes();
+        
+        monitor.workflowEvent("23", 
+                System.currentTimeMillis(),              
+                WorkflowAction.SCHEDULE_WORKFLOW, 
+                WorkflowState.NOP,
+                "successJob");
 
         mockJob.run();
         EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
@@ -313,13 +348,22 @@ public class IndividualJobExecutableFlowTest
         final CountDownLatch firstCallbackLatch = new CountDownLatch(1);
         final CountDownLatch secondCallbackLatch = new CountDownLatch(1);
 
-        final Job mockJob = EasyMock.createMock(Job.class);
+        final ProcessJob mockJob = EasyMock.createMock(ProcessJob.class);
+        final Props props = new Props();
+        props.put("azkaban.flow.id", "23");
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("23", "blah", jobManager);
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("blah").times(1);
-
+        EasyMock.expect(mockJob.getId()).andReturn("success Job").anyTimes();
+        EasyMock.expect(mockJob.getProps()).andReturn(props).anyTimes();
+        
+        monitor.workflowEvent("23", 
+                System.currentTimeMillis(),              
+                WorkflowAction.SCHEDULE_WORKFLOW, 
+                WorkflowState.NOP,
+                "successJob");
+        
         mockJob.run();
         EasyMock.expectLastCall().andThrow(theException).once();
 
@@ -359,8 +403,8 @@ public class IndividualJobExecutableFlowTest
                     }
                 });
 
-        firstCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
-        secondCallbackLatch.await(1000, TimeUnit.MILLISECONDS);
+        firstCallbackLatch.await(5000, TimeUnit.MILLISECONDS);
+        secondCallbackLatch.await(5000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.FAILED, executableFlow.getStatus());
         Assert.assertEquals(theExceptions, executableFlow.getExceptions());
 
@@ -380,16 +424,25 @@ public class IndividualJobExecutableFlowTest
     {
         final CountDownLatch completionLatch = new CountDownLatch(1);
 
-        final Job mockJob = EasyMock.createMock(Job.class);
+        final ProcessJob mockJob = EasyMock.createMock(ProcessJob.class);
+        final Props props = new Props();
+        props.put("azkaban.flow.id", "23");
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("23", "blah", jobManager);
 
         final Props firstProps = new Props();
         final Props secondProps = new Props();
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
-        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(firstProps).once();
+        EasyMock.expect(mockJob.getId()).andReturn("success Job").anyTimes();
+        EasyMock.expect(mockJob.getProps()).andReturn(props).anyTimes();
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(firstProps).anyTimes();
+        
+        monitor.workflowEvent("23", 
+                System.currentTimeMillis(),              
+                WorkflowAction.SCHEDULE_WORKFLOW, 
+                WorkflowState.NOP,
+                "successJob");
 
         mockJob.run();
         EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
@@ -429,7 +482,7 @@ public class IndividualJobExecutableFlowTest
                     }
                 });
 
-        completionLatch.await(1000, TimeUnit.MILLISECONDS);
+        completionLatch.await(3000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
         Assert.assertEquals(emptyExceptions, executableFlow.getExceptions());
         Assert.assertEquals(firstProps, executableFlow.getReturnProps());
@@ -445,7 +498,8 @@ public class IndividualJobExecutableFlowTest
         Assert.assertEquals(null, executableFlow.getReturnProps());
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+        EasyMock.expect(mockJob.getId()).andReturn("success Job").anyTimes();
+        EasyMock.expect(mockJob.getProps()).andReturn(props).anyTimes();
         EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(secondProps).once();
 
         mockJob.run();
@@ -500,15 +554,24 @@ public class IndividualJobExecutableFlowTest
     {
         final CountDownLatch completionLatch = new CountDownLatch(1);
 
-        final Job mockJob = EasyMock.createMock(Job.class);
+        final ProcessJob mockJob = EasyMock.createMock(ProcessJob.class);
+        final Props props = new Props();
+        props.put("azkaban.flow.id", "23");
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("23", "blah", jobManager);
         executableFlow.setStatus(Status.FAILED);
 
         Assert.assertTrue("Should be able to reset the flow.", executableFlow.reset());
 
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andReturn(mockJob).once();
-        EasyMock.expect(mockJob.getId()).andReturn("success Job").once();
+        EasyMock.expect(mockJob.getId()).andReturn("success Job").anyTimes();
+        EasyMock.expect(mockJob.getProps()).andReturn(props).anyTimes();
+
+        monitor.workflowEvent("23", 
+                System.currentTimeMillis(),              
+                WorkflowAction.SCHEDULE_WORKFLOW, 
+                WorkflowState.NOP,
+                "successJob");
 
         mockJob.run();
         EasyMock.expectLastCall().andAnswer(new IAnswer<Void>()
@@ -550,7 +613,7 @@ public class IndividualJobExecutableFlowTest
                     }
                 });
 
-        completionLatch.await(1000, TimeUnit.MILLISECONDS);
+        completionLatch.await(3000, TimeUnit.MILLISECONDS);
         Assert.assertEquals(Status.SUCCEEDED, executableFlow.getStatus());
 
         EasyMock.verify(mockJob);
@@ -562,14 +625,16 @@ public class IndividualJobExecutableFlowTest
         final CountDownLatch cancelLatch = new CountDownLatch(1);
         final CountDownLatch runLatch = new CountDownLatch(1);
 
-        final Job mockJob = EasyMock.createMock(Job.class);
+        final ProcessJob mockJob = EasyMock.createMock(ProcessJob.class);
+        final Props props = new Props();
+        props.put("azkaban.flow.id", "23");
         final Props overrideProps = new Props();
-        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("blah", "blah", jobManager);
+        final IndividualJobExecutableFlow executableFlow = new IndividualJobExecutableFlow("23", "blah", jobManager);
 
         Assert.assertTrue("Should be able to reset the flow.", executableFlow.reset());
 
-        EasyMock.expect(mockJob.getId()).andReturn("blah").once();
-        mockJob.run();
+        EasyMock.expect(mockJob.getId()).andReturn("blah").anyTimes();
+        EasyMock.expect(mockJob.getProps()).andReturn(props).anyTimes();        mockJob.run();
         EasyMock.expect(jobManager.loadJob("blah", overrideProps, true)).andAnswer(new IAnswer<Job>()
         {
             @Override
@@ -582,7 +647,7 @@ public class IndividualJobExecutableFlowTest
             }
         }).once();
 
-        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(new Props()).once();
+        EasyMock.expect(mockJob.getJobGeneratedProperties()).andReturn(new Props()).anyTimes();
         
         EasyMock.replay(mockJob, jobManager);
 

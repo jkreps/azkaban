@@ -19,8 +19,10 @@ package azkaban.app;
 
 import azkaban.common.utils.Utils;
 import azkaban.jobs.AzkabanCommandLine;
+import azkaban.web.ApiServlet;
 import azkaban.web.AzkabanServletContextListener;
 import azkaban.web.JobManagerServlet;
+import azkaban.web.JobRunnerServlet;
 import azkaban.web.LogServlet;
 import azkaban.web.pages.ExecutionHistoryServlet;
 import azkaban.web.pages.FlowExecutionServlet;
@@ -28,6 +30,8 @@ import azkaban.web.pages.HdfsBrowserServlet;
 import azkaban.web.pages.IndexServlet;
 import azkaban.web.pages.JobDetailServlet;
 import azkaban.web.pages.JobUploadServlet;
+import azkaban.web.pages.RefreshJobsServlet;
+
 import java.io.File;
 import java.util.Arrays;
 import joptsimple.OptionParser;
@@ -48,7 +52,6 @@ public class AzkabanApp
 {
   private static final Logger logger = Logger.getLogger(AzkabanApp.class);
   private static final String DEFAULT_STATIC_DIR = "azkaban/web/static";
-  private static final String DEFAULT_PLUGIN_DIR = "azkaban/plugin";
 
   public static void main(String[] arguments) throws Exception {
       OptionParser parser = new OptionParser();
@@ -116,9 +119,12 @@ public class AzkabanApp
                           ExecutionHistoryServlet.class.getName());
       servlets.addServlet("Job Manager", "/api/jobs", JobManagerServlet.class.getName());
       servlets.addServlet("Job Upload", "/job-upload/*", JobUploadServlet.class.getName());
+      servlets.addServlet("Job Runner", "/job-runner/*", JobRunnerServlet.class.getName());
       servlets.addServlet("HDFS Browser", "/fs/*", HdfsBrowserServlet.class.getName());
+      servlets.addServlet("Api Servlet", "/call", ApiServlet.class.getName());
       servlets.addServlet("Flow Execution", "/flow", FlowExecutionServlet.class.getName());
       servlets.addServlet("favicon", "/favicon.ico", Default.class.getName());
+      servlets.addServlet("Refresh Jobs", "/refresh-jobs", RefreshJobsServlet.class.getName());
       
       try {
           server.start();

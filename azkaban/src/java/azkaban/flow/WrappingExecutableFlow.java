@@ -1,6 +1,8 @@
 package azkaban.flow;
 
 import azkaban.common.utils.Props;
+import azkaban.jobs.Status;
+
 import org.joda.time.DateTime;
 
 import java.util.List;

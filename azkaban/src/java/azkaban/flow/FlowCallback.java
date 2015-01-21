@@ -16,6 +16,8 @@
 
 package azkaban.flow;
 
+import azkaban.jobs.Status;
+
 /**
  * A callback to be used when running jobs through a Flow.
  *

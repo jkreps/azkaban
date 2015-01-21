@@ -137,6 +137,7 @@ a {
 
 .box {
 	min-height: 125px;
+	min-width: 800px;
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 
@@ -163,15 +164,16 @@ a {
 
 .box h3 {
 	color: #CCC;
-	font-size: 16pt;
+	font-size: 1.4em;
 }
 
 .box .h3like {
 	color: #CCC;
-	font-size: 14pt;
+	font-size: 12pt;
 }
 
 #variableWidth {
+	min-width: 820px;
 	-moz-border-radius: 15px;
 	-webkit-border-radius: 15px;
 	border-radius: 15px;
@@ -218,7 +220,7 @@ a {
 
 .jobfolder.expand .folderIcon {
 	background-image: url("../js/jqueryui/themes/custom-theme/images/ui-icons_cccccc_256x240.png");
-	background-position: -64px -16px;
+	background-position: -32px -16px;
 }
 
 .jobfolder.collapse .folderIcon{
@@ -338,27 +340,25 @@ a {
 
 /* Index page job list*/
 .joblist {
-	background-color: #CCC;
+
 	text-align: left;
 	margin-left: 20px;
 	margin-right: 20px;
-	margin-top: 15px;
+	margin-top: 0px;
 	padding: 2px 3px;
 	-moz-border-radius: 10px;
 	-webkit-border-radius: 10px;
 }
 
 .joblist a {
-	color: darkred;
-	font-size:110%;
+	color: #A7CEFF;
 	padding-left:3px;
 	text-decoration:none;
 	vertical-align:top;
 }
 
 .joblist a:hover {
-	color: #F00000;
-	font-size:110%;
+	color: #FFFFFF;
 	padding-left:3px;
 	text-decoration:none;
 	vertical-align:top;
@@ -398,7 +398,7 @@ a {
 
 .jobtable a {
 	text-decoration: none;
-	font-size: 13pt;
+	color: #A7CEFF;
 }
 
 .jobtable .job-name-FAILED {
@@ -426,7 +426,6 @@ a {
 }
 
 .jobdesc {
-	font-size: 14pt;
 	margin: 10px;
 	color: #AAA;
 }
@@ -623,4 +622,14 @@ rect.zoomLine {
 
 .ui-datepicker-calendar a {
 	text-decoration: none;
+}
+
+.currentTime {
+	margin-right: 50px;
+	text-align: right;
+}
+
+#executionHistory {
+  padding: 10px;
+  width: 90%;
 }

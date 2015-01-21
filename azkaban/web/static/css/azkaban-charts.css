@@ -1,0 +1,36 @@
+table.azkaban-charts {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+table.azkaban-charts tr{
+	width: 100%;
+}
+
+table.azkaban-charts td {
+	border-top: 0px none;
+	border-bottom: 0px none;
+	padding: 0px;
+	width: 100%;
+	border-collapse: collapse;
+}
+.azkaban-charts .treeline {
+	background: url(../images/treeview-default-line.gif) 0 0 no-repeat;
+	height: 22px;
+	width: 16px;
+	float: left;
+	overflow: hidden;
+}
+
+.azkaban-charts .treeline.last { background-position: 0 -1766px }
+
+.azkaban-charts .hitarea {
+	background-image: url("../js/jqueryui/themes/custom-theme/images/ui-icons_cccccc_256x240.png");
+	background-position: 0 -16px;
+	height: 16px;
+	width: 16px;
+	cursor: pointer;
+}
+
+.azkaban-charts .expandable-hitarea { 	background-position: -32px -16px; }
+.azkaban-charts .expandable-hitarea.collapse { 	background-position: 0 -16px; }

@@ -1,28 +1,42 @@
 <?xml version="1.0"?>
 
-<project name="azkaban-common" basedir="." default="all">
+<project name="azkaban-common" basedir="." default="all"  xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
 	<!-- set the base directory -->
 	<property name="batch.base.dir" value="${basedir}/.." />
 	<property file="${batch.base.dir}/build.properties" />
 
+	<!-- these will get set by the master build for mvn targets. -->
+	<property name="release.version" value="${curr.release.snapshot}"/>
+	<property name="mvn.repository.id" value="${mvn.repository.id.snapshot}"/>
+	<property name="mvn.repository.location" value="${mvn.repository.location.snapshot}"/>
 
 	<!-- Override/set  paths to module specific paths -->
 	<property name="module.dist.base" value="${batch.base.dir}/${dist.dir}/azkaban-common" />
 	<property name="module.dist.dir"
-		value="${batch.base.dir}/${dist.dir}/azkaban-common/jars" />
+		value="${batch.base.dir}/${dist.dir}/azkaban-common" />
 	<property name="module.classes.dir"
 		value="${batch.base.dir}/${dist.dir}/azkaban-common/classes" />
 	<property name="module.javadoc.dir"
 		value="${batch.base.dir}/${dist.dir}/azkaban-common/javadoc" />
+	<property name="module.dist.name" value="azkaban-common" />
 
 	<property name="module.java.dir" value="src/java" />
 	<property name="module.conf.dir" value="conf" />
 
 	<property name="module.distconf.dir" value="${module.dist.dir}" />
-	<property name="module.distjar.dir" value="${module.dist.dir}" />
-	<property name="module.jar.name" value="${module.distjar.dir}/${ant.project.name}.jar" />
+	<property name="module.distjar.dir" value="${module.dist.dir}/jars" />
+	<property name="module.jar.name" value="${module.distjar.dir}/${module.dist.name}-${release.version}.jar" />
+	<property name="module.srcjar.name" value="${module.distjar.dir}/${module.dist.name}-${release.version}-src.jar" />
 
+	<property name="unit.classes.dir" value="${module.dist.dir}/unit_classes" />
+        <property name="unit.java.dir" value="src/unit" />
+        <property name="unit.report.dir" value="${module.dist.dir}/unit_report" />
+        <property name="unit.html.dir" value="${module.dist.dir}/unit_html" />
+        <property name="unit.jar" value="${module.dist.dir}/${module.dist.name}-${release.version}-unit.jar" />
+
+        <property name="mvn.pom" value="${module.dist.dir}/${module.dist.name}-${release.version}.pom" />
+        
 	<path id="main-classpath">
 		<fileset dir="${batch.base.dir}/${lib.dir}">
 			<include name="*.jar" />
@@ -79,7 +93,7 @@
 	-->
 	<target name="jars" depends="build" description="Build server jar file">
 		<mkdir dir="${module.distjar.dir}" />
-		<jar destfile="${module.distjar.dir}/${name}-common-${curr.release}.jar">
+		<jar destfile="${module.jar.name}">
 			<fileset dir="${module.classes.dir}">
 				<include name="**/*.*" />
 			</fileset>
@@ -92,7 +106,7 @@
 
 	<target name="srcjar" description="Build source jar file">
 		<mkdir dir="${module.distjar.dir}" />
-		<jar destfile="${module.distjar.dir}/${name}-common-${curr.release}-src.jar">
+		<jar destfile="${module.srcjar.name}">
 			<fileset dir="${java.dir}">
 				<include name="**/*.java" />
 			</fileset>
@@ -109,12 +123,115 @@
 		</javadoc>
 	</target>
 
-	<target name="unit" description="Build and run unit tests">
-		<echo message="TODO: add unit tests for this package!"/>
-	</target>
 
 	<target name="clean_unit" description="Clean unit tests jars">
-		<echo message="TODO: add unit tests for this package!"/>
+		<echo message="Delete unit tests for this package!"/>
+		<delete dir="${unit.classes.dir}" />
+                <delete dir="${unit.report.dir}" />
+                <delete dir="${unit.html.dir}" />
+                <delete file="${unit.jar}" />
 	</target>
+
+	<target name="build_unit" description="Compile unit test java files">
+                <mkdir dir="${unit.classes.dir}" />
+                <javac fork="true" destdir="${unit.classes.dir}"
+                       target="1.6" debug="true" deprecation="false" failonerror="true">
+                        <src path="${unit.java.dir}" />
+                        <classpath refid="main-classpath" />
+                </javac>
+                <jar destfile="${unit.jar}" basedir="${unit.classes.dir}"/>
+        </target>
+
+	<target name="unit" depends="jars, clean_unit, build_unit" description="Compile and run unit tests" >
+		<mkdir dir="${unit.report.dir}" />
+		<mkdir dir="${unit.html.dir}" />
+
+		<junit printsummary="yes" showoutput="yes" failureProperty="unit.failure" dir="${basedir}">
+			<sysproperty key="tests.to.run" value="${tests.to.run} "/>
+			<jvmarg value="-Xms256m" />
+			<jvmarg value="-Xmx1g" />
+
+			<classpath refid="main-classpath" />
+			<classpath path="${unit.jar}" />
+
+			<formatter type="xml"  />
+			<batchtest fork="yes" todir="${unit.report.dir}" >
+				<fileset dir="${unit.classes.dir}" >
+					<include name="**/*Test.class" />
+				</fileset>
+			</batchtest>
+		</junit>
+
+
+		<junitreport todir="${unit.html.dir}" >
+			<fileset dir="${unit.report.dir}" > <include name="TEST-*.xml"/> </fileset>
+			<report todir="${unit.html.dir}" format="frames"/>
+		</junitreport> 
+
+		<fail message="Unit test(s) failed!" if="unit.failure" />
+	</target>
+
+        <target name="pomgen" description="Build a pom file." depends="jars, srcjar, unit">
+            <artifact:pom id="azkaban-common" groupId="azkaban" artifactId="azkaban-common" version="${release.version}" name="Azkaban Common">
+                <dependency groupId="voldemort" artifactId="voldemort" version="0.70.1"/>
+                <dependency groupId="voldemort" artifactId="voldemort-contrib" version="0.70.1"/>
+                <dependency groupId="org.apache.velocity" artifactId="velocity" version="1.6.3"/>
+                <dependency groupId="commons-io" artifactId="commons-io" version="1.4"/>
+                <dependency groupId="org.apache.hadoop" artifactId="hadoop-core" version="0.20.2">
+                    <exclusion groupID="org.mortbay.jetty" artifactId="jetty"/>
+                    <exclusion groupID="org.mortbay.jetty" artifactId="jetty-util"/>
+                    <exclusion groupID="org.mortbay.jetty" artifactId="servlet-api-2.5"/>
+                </dependency>
+                <dependency groupId="joda-time" artifactId="joda-time" version="1.6"/>
+                <dependency groupId="org.slf4j" artifactId="slf4j-api" version="1.5.6"/>
+                <dependency groupId="org.slf4j" artifactId="slf4j-log4j12" version="1.5.6"/>
+                <dependency groupId="com.google.collections" artifactId="google-collections" version="1.0-rc5"/>
+            </artifact:pom>
+            <echo message="creating pom: ${mvn.pom}"/>
+            <artifact:writepom pomRefId="azkaban-common" file="${mvn.pom}"/>
+        </target>
+
+        <target name="mvn-install" description="Install azkaban-common" depends="pomgen">
+            <exec executable="mvn">
+                <arg value="install:install-file"/>
+                <arg value="-Dfile=${module.jar.name}"/>
+                <arg value="-DpomFile=${mvn.pom}"/>
+                <arg value="-Dversion=${release.version}"/>
+                <arg value="-Dpackaging=jar"/>
+            </exec>
+            <exec executable="mvn">
+                <arg value="install:install-file"/>
+                <arg value="-Dfile=${module.srcjar.name}"/>
+                <arg value="-DgroupId=azkaban"/>
+                <arg value="-DartifactId=azkaban-common"/>
+                <arg value="-Dversion=${release.version}"/>
+                <arg value="-Dpackaging=jar"/>
+                <arg value="-Dclassifier=sources"/>
+            </exec>
+        </target>
+
+        <target name="mvn-deploy" description="Deploy azkaban-common" depends="pomgen">
+            <exec executable="mvn">
+                <arg value="deploy:deploy-file"/>
+                <arg value="-Durl=${mvn.repository.location}"/>
+                <arg value="-DrepositoryId=${mvn.repository.id}"/>
+                <arg value="-Dfile=${module.jar.name}"/>
+                <arg value="-DpomFile=${mvn.pom}"/>
+                <arg value="-Dversion=${release.version}"/>
+                <arg value="-Dpackaging=jar"/>
+            </exec>
+            <exec executable="mvn">
+                <arg value="deploy:deploy-file"/>
+                <arg value="-Durl=${mvn.repository.location}"/>
+                <arg value="-DrepositoryId=${mvn.repository.id}"/>
+                <arg value="-Dfile=${module.srcjar.name}"/>
+                <arg value="-DgroupId=azkaban"/>
+                <arg value="-DartifactId=azkaban-common"/>
+                <arg value="-Dversion=${release.version}"/>
+                <arg value="-Dpackaging=jar"/>
+                <arg value="-Dclassifier=sources"/>
+                <arg value="-DgeneratePom=false"/>
+            </exec>
+        </target>
 
 </project>

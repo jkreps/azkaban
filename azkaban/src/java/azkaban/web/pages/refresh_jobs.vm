@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>#appname()</title>
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/style.css"></link>
+    <link rel="stylesheet" type="text/css" href="${context}/static/css/azkaban-common.css"></link>
+  </head>
+  
+  <body>
+  
+      #appnamebox()
+    <div id="container">
+      #messages()
+          <h2>Refresh Jobs From Disk</h2>
+      <div>
+          <div style="margin: auto; width: 500px;  ">
+              <form method="post" action="$!context/refresh-jobs">
+                <input type="hidden" name="confirm" value="true"/>
+                <input type="submit" value="Refresh Jobs"/>
+              </form>
+          </div>
+        </div>
+    </div>
+  </body>
+</html>

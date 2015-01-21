@@ -22,12 +22,11 @@ import azkaban.flow.ComposedExecutableFlow;
 import azkaban.flow.ExecutableFlow;
 import azkaban.flow.FlowExecutionHolder;
 import azkaban.flow.FlowManager;
-import azkaban.flow.Flows;
-import azkaban.flow.GroupedExecutableFlow;
 import azkaban.flow.IndividualJobExecutableFlow;
 import azkaban.flow.MultipleDependencyExecutableFlow;
-import azkaban.flow.Status;
 import azkaban.flow.WrappingExecutableFlow;
+import azkaban.jobs.Status;
+import azkaban.util.json.JSONUtils;
 import azkaban.web.AbstractAzkabanServlet;
 import azkaban.workflow.Flow;
 import azkaban.workflow.flow.DagLayout;
@@ -39,19 +38,20 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
-import org.joda.time.Period;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
 public class FlowExecutionServlet extends AbstractAzkabanServlet {
+	private static final long serialVersionUID = 7234050895543142356L;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
@@ -198,12 +198,12 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        resp.setContentType("application/xhtml+xml");
+        resp.setContentType("application/json");
 
         final FlowManager allFlows = this.getApplication().getAllFlows();
         String action = getParam(req, "action");
         
-        if (action.equals("restart")) {   	
+        if (action.equals("restart")) {
         	String value = req.getParameter("disabled");
         	String[] disabledValues = value.split(",");
         	HashSet<String> disabledJobs = new HashSet<String>();
@@ -216,16 +216,28 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
         	long id = Long.parseLong(getParam(req, "id"));
            	FlowExecutionHolder holder = allFlows.loadExecutableFlow(id);
         	//Flows.resetFailedFlows(holder.getFlow());
-        	
+
         	// Disable all proper values
         	ExecutableFlow executableFlow = holder.getFlow();
-        	traverseFlow(disabledJobs, executableFlow);
+           	HashSet<String> visited = new HashSet<String>();
+           	traverseFlow(visited, disabledJobs, executableFlow);
         	
+    		PrintWriter writer = resp.getWriter();
+    		HashMap<String,Object> results = new HashMap<String,Object>();
+    		
         	try {
-        		this.getApplication().getScheduler().scheduleNow(holder);
-            	addMessage(req, String.format("Flow[%s] restarted.", id));
+        		this.getApplication().getJobExecutorManager().execute(holder);
+        		results.put("id", holder.getFlow().getId());
+        		results.put("success", true);
+        		results.put("message", String.format("Executing Flow[%s].", id));
         	} catch(Exception e) {
+        		results.put("id", holder.getFlow().getId());
+        		results.put("error", true);
+        		results.put("message", String.format("Error running Flow[%s]. " + e.getMessage(), id));
         	}
+        	
+        	writer.print(JSONUtils.toJSONString(results));
+        	writer.flush();
         }
         else if (action.equals("run")) {
         	String name = getParam(req, "name");
@@ -242,44 +254,59 @@ public class FlowExecutionServlet extends AbstractAzkabanServlet {
            	if (flow == null) {
         		addError(req, "Job " + name + " not found.");
            	}
-           	traverseFlow(disabledJobs, flow);
-           	
+           	HashSet<String> visited = new HashSet<String>();
+           	traverseFlow(visited, disabledJobs, flow);
+    		PrintWriter writer = resp.getWriter();
+    		HashMap<String,Object> results = new HashMap<String,Object>();
+    		
         	try {
-        		this.getApplication().getScheduler().scheduleNow(flow);
-            	addMessage(req, String.format("Flow[%s] running.", name));
+        		this.getApplication().getJobExecutorManager().execute(flow);
+        		results.put("success", true);
+        		results.put("message", String.format("Executing Flow[%s].", name));
+        		results.put("id", flow.getId());
+            	
         	} catch(Exception e) {
+        		results.put("error", true);
+        		results.put("message", String.format("Error running Flow[%s]. " + e.getMessage(), name));
         	}
+        	
+        	writer.print(JSONUtils.toJSONString(results));
+        	writer.flush();
         }
- 
         
-        resp.sendRedirect(req.getContextPath());
+       
     }
     
-    private void traverseFlow(HashSet<String> disabledJobs, ExecutableFlow flow) {
+    private void traverseFlow(HashSet<String> visitedJobs, HashSet<String> disabledJobs, ExecutableFlow flow) {
     	String name = flow.getName();
-		System.out.println("at " + name);
+    	// Pretty much mark visited nodes and prevent unnecessary traversals.
+    	if (visitedJobs.contains(name)) {
+    		return;
+    	}
+    	
     	flow.reset();
     	if (flow instanceof IndividualJobExecutableFlow && disabledJobs.contains(name)) {
     		IndividualJobExecutableFlow individualJob = (IndividualJobExecutableFlow)flow;
     		individualJob.setStatus(Status.IGNORED);
     		System.out.println("ignore " + name);
+    		visitedJobs.add(name);
     	}
     	else {
     		if (flow instanceof ComposedExecutableFlow) {
         		ExecutableFlow innerFlow = ((ComposedExecutableFlow) flow).getDepender();
-        		traverseFlow(disabledJobs, innerFlow);
+        		traverseFlow(visitedJobs, disabledJobs, innerFlow);
     		}
     		else if (flow instanceof MultipleDependencyExecutableFlow) {
-        		traverseFlow(disabledJobs, ((MultipleDependencyExecutableFlow) flow).getActualFlow());
+        		traverseFlow(visitedJobs, disabledJobs, ((MultipleDependencyExecutableFlow) flow).getActualFlow());
     		}
     		else if (flow instanceof WrappingExecutableFlow) {
-        		traverseFlow(disabledJobs, ((WrappingExecutableFlow) flow).getDelegateFlow());
+        		traverseFlow(visitedJobs, disabledJobs, ((WrappingExecutableFlow) flow).getDelegateFlow());
     		}
-    		
+
     		for(ExecutableFlow childFlow : flow.getChildren()) {
-    			traverseFlow(disabledJobs, childFlow);
+    			traverseFlow(visitedJobs, disabledJobs, childFlow);
     		}
     	}
-    	
+
     }
 }

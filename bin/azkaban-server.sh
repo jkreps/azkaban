@@ -16,6 +16,9 @@
 #  limitations under the License.
 #
 
+PRGDIR=`dirname "$0"`
+AZKABAN_HOME=`cd "$PRGDIR/.." ; pwd`
+
 base_dir=$(dirname $0)/..
 
 for file in $base_dir/lib/*.jar;
@@ -37,4 +40,4 @@ if [ -z $AZKABAN_OPTS ]; then
   AZKABAN_OPTS="-Xmx2G -server -Dcom.sun.management.jmxremote"
 fi
 
-java -Dlog4j.configuration=$base_dir/azkaban/log4j.xml $AZKABAN_OPTS -cp $CLASSPATH azkaban.app.AzkabanApp --static-dir $base_dir/azkaban/web/static $@
+java -Dlog4j.configuration=file://$AZKABAN_HOME/azkaban/log4j.xml $AZKABAN_OPTS -cp $CLASSPATH azkaban.app.AzkabanApp --static-dir $base_dir/azkaban/web/static $@
